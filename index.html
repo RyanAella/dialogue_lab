@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--Tab Titel-->
+    <title>Lab für Sozioinformatik: Gesprächstraining</title>
+
+    <link rel="icon" href="https://fav.farm/💬" />
+
+    <link rel="apple-touch-icon" href="https://fav.farm/💬" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <meta
+      name="description"
+      content="Ein interaktives Dialogue Lab zum Üben von Gesprächsführung."
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="flex h-screen bg-gray-50">
+    <aside
+      class="sidebar w-64 bg-white border-r border-gray-200 p-6 shadow-sm flex flex-col h-full"
+    >
+      <div class="sidebar-section mb-6">
+        <label
+          class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
+          >Wähle ein Szenario:</label
+        >
+        <select
+          id="scenarios"
+          class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="" selected disabled>Wähle eine Übung...</option>
+          <!-- <option value="">Szenario 1 (Placeholder)</option>
+          <option value="">Szenario 2 (Placeholder)</option>
+          <option value="">Szenario 3 (Placeholder)</option> -->
+        </select>
+      </div>
+
+      <div class="sidebar-section mb-6 pt-6 border-t border-slate-100">
+        <label class="block font-semibold mb-2 text-slate-700 text-sm"
+          >Ausgabe (Hören)</label
+        >
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs text-slate-500">Auto-Vorlesen</span>
+          <input
+            id="auto-speak-toggle"
+            type="checkbox"
+            class="w-9 h-5 rounded-full bg-gray-200 appearance-none checked:bg-blue-600 transition cursor-pointer relative after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:w-3 after:h-3 after:rounded-full checked:after:translate-x-4 after:transition"
+          />
+        </div>
+        <button
+          class="w-full text-[10px] text-red-400 bg-red-50 border border-red-100 py-1.5 rounded hover:bg-red-100 transition"
+        >
+          Alle Sprachausgaben stoppen 🔇
+        </button>
+      </div>
+
+      <div class="sidebar-status mb-8 pt-6 border-t border-slate-200">
+        <div
+          id="status-box"
+          class="status-box bg-slate-50 text-slate-500 p-3 rounded-xl border border-slate-200 text-xs font-medium flex items-center gap-2"
+        >
+          <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+          System bereit
+        </div>
+      </div>
+
+      <div
+        class="sidebar-actions mt-auto space-y-3 pt-6 border-t border-slate-100"
+      >
+        <button
+          id="feedback-btn"
+          onclick="handleFeedback()"
+          disabled
+          class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-sm shadow-md opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition"
+        >
+          <span>📊</span> Feedback erhalten
+        </button>
+        <button
+          id="reset-btn"
+          disabled
+          class="w-full border-2 border-red-50 text-red-500 py-3 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition"
+        >
+          <span>🔄</span> Neustart
+        </button>
+      </div>
+    </aside>
+
+    <main class="chat-main-container flex-1 flex flex-col p-10 ml-10">
+      <h1 class="main-title text-3xl font-bold text-slate-800">
+        Lab für Sozioinformatik: Gesprächstraining
+      </h1>
+      <p class="main-subtitle text-slate-500 mt-2">
+        Wähle links ein Szenario aus, um zu starten.
+      </p>
+
+      <section
+        class="briefing-card mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 max-w-3xl"
+      >
+        <div
+          class="briefing-click-area flex items-center justify-between cursor-pointer"
+          id="briefing-header"
+        >
+          <div class="briefing-title-group flex items-center gap-2">
+            <span class="briefing-icon text-2xl">📋</span>
+            <h2 class="briefing-headline text-xl font-semibold text-slate-800">
+              Deine Aufgabenstellung & Szenario-Details
+            </h2>
+          </div>
+          <span
+            id="chevron"
+            class="briefing-arrow text-slate-400 transition-transform"
+            >▼</span
+          >
+        </div>
+        <div
+          id="briefing-content"
+          class="briefing-body mt-4 space-y-4 text-slate-600 leading-relaxed overflow-hidden"
+        ></div>
+      </section>
+
+      <div
+        id="chat-window"
+        class="chat-display flex flex-col flex-1 mt-8 pr-4 space-y-6 bg-gray-50/50 overflow-y-auto scroll-smooth"
+      >
+        <div
+          id="start-info"
+          class="system-message flex justify-center my-6 w-100 hidden"
+        >
+          <div
+            class="bg-blue-50 border border-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-sm flex items-center gap-3 shadow-sm max-w-2xl"
+          >
+            <span class="text-lg">✨</span>
+            <p>
+              <strong>Bereit für das Gespräch.</strong> Eröffnen Sie den Dialog,
+              indem Sie unten eine Nachricht eingeben.
+            </p>
+          </div>
+        </div>
+        <div class="message-ai flex items-start gap-3">
+          <div
+            class="avatar bg-blue-600 text-white p-2 rounded-full flex-shrink-0"
+          >
+            🤖
+          </div>
+          <div
+            class="bubble bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-xl text-slate-700"
+          >
+            <p class="text-slate-700">
+              Hallo! Ich bin dein KI-Coach. Sobald du bereit bist, können wir
+              mit dem Gespräch beginnen. Was möchtest du als Erstes sagen?
+            </p>
+          </div>
+        </div>
+
+        <div class="message-user flex items-start gap-3 justify-end">
+          <div
+            class="bubble bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm max-w-xl"
+          >
+            <p>Hallo! Ich würde gerne über das letzte Reporting sprechen.</p>
+          </div>
+          <div
+            class="avatar bg-slate-200 text-slate-600 p-2 rounded-full flex-shrink-0"
+          >
+            👤
+          </div>
+        </div>
+      </div>
+
+      <footer class="input-area py-6 border-t border-slate-200 bg-white">
+        <div class="input-container max-w-3xl mx-auto flex gap-3 px-6 w-full">
+          <input
+            type="text"
+            id="user-input"
+            disabled
+            class="user-text-input flex-1 p-3.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-innerbg-gray-100 cursor-not-allowed"
+            placeholder="Wähle zuerst ein Szenario aus..."
+          />
+          <button
+            id="send-btn"
+            disabled
+            class="send-button opacity-50 cursor-not-allowed bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg"
+          >
+            Senden
+          </button>
+        </div>
+      </footer>
+    </main>
+
+    <div
+      id="loading-overlay"
+      class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm hidden z-[100] flex flex-col items-center justify-center text-white"
+    >
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"
+      ></div>
+      <p class="text-xl font-semibold">Mentor analysiert das Gespräch...</p>
+      <p class="text-sm text-gray-300">Dies kann einen Moment dauern.</p>
+    </div>
+
+    <div
+      id="feedback-modal"
+      class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[90vh]"
+      >
+        <div
+          class="flex justify-between items-center mb-4 border-b pb-2 flex-shrink-0"
+        >
+          <h2 class="text-2xl font-bold text-gray-800">📊 Mentor Feedback</h2>
+          <button
+            onclick="closeFeedbackModal()"
+            class="text-gray-500 hover:text-black text-xl"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div
+          id="feedback-text"
+          class="prose max-w-none whitespace-pre-wrap text-gray-700 overflow-y-auto flex-1 pr-2 mb-4"
+        ></div>
+
+        <div class="flex flex-wrap gap-3 mt-auto border-t pt-4 flex-shrink-0">
+          <button
+            id="download-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            📥 Protokoll & Feedback herunterladen
+          </button>
+          <button
+            onclick="location.reload()"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+          >
+            🔄 Neues Gespräch beginnen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="reset-modal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl transform transition-all scale-95"
+      >
+        <div class="text-center">
+          <div
+            class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4"
+          >
+            <span class="text-red-600 text-xl">🔄</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">
+            Übung neu starten?
+          </h3>
+          <p class="text-sm text-gray-500 mb-6">
+            Bist du sicher? Dein aktueller Chatverlauf und das bisherige
+            Feedback gehen dabei verloren.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            onclick="closeResetModal()"
+            class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition"
+          >
+            Abbrechen
+          </button>
+          <button
+            onclick="location.reload()"
+            class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition shadow-lg shadow-red-200"
+          >
+            Ja, Neustart
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.1.0] - 2026-03-30
+
+### Added
+
+- Initial project structure including `index.html` and Tailwind CSS integration.
+- Dynamic scenario loading from `.txt` files within the `scenarios/` directory.
+- Chat logic in `app.js` for communication with the AI partner via a PHP proxy (`chat.php`).
+- AI Mentor implementation to analyze conversation transcripts and provide constructive feedback.
+- Role-specific prompts for both partner and mentor roles.
+- UI Components:
+  - Status indicator (System Ready / Loading / Error).
+  - Feedback modal featuring a transcript download function.
+  - Reset modal for restarting exercises.
+  - Collapsible briefing section for task details.
+- Project documentation (`README.md`) and Git configuration (`.gitignore`).
+
+### Changed
+
+- Optimized role detection: The counterpart's name is now automatically extracted from the task description.
+- UI refinements for chat bubbles to enhance readability.
+
+### Security
+
+- Added sensitive files such as `chat.php` and `config.php` to `.gitignore` to prevent them from being committed to version control.
+
+---
+
+_Initial release of the Socio-Informatics Lab: Dialogue Training._
