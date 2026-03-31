@@ -578,3 +578,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Update text dynamically if window is resized
 window.addEventListener("resize", updateSubtitleText);
+
+// Test Commit
