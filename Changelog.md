@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.0] - 2026-03-31
+
+### Added
+
+- Responsive subtitle texts that adapt to screen width (Desktop vs. Mobile).
+- Automatically collapse the briefing on initial page load for a better overview.
+
+### Changed
+
+- Improved focus management: The input field automatically regains focus after sending a message.
+- Optimized Mobile UX: The sidebar now closes automatically once a scenario is selected.
+- Refined role detection logic: Better handling of German grammar patterns (e.g., converting dative plural forms like "Mitarbeitenden").
+
 ## [0.1.0] - 2026-03-30
 
 ### Added

@@ -10,6 +10,9 @@ const startInfo = document.getElementById("start-info");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
 const statusBox = document.getElementById("status-box");
+const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebar-overlay");
 
 // Store the loaded prompt contents here
 let currentConfig = {
@@ -251,6 +254,11 @@ async function handleSend() {
   const message = userInput.value.trim();
   // Check if a scenario is loaded and input is not empty
   if (!message || !currentConfig.systemPrompt) return;
+
+  if (!briefingContent.classList.contains("hidden")) {
+    briefingContent.classList.add("hidden");
+    chevron.style.transform = "rotate(90deg)"; // Zeigt nach rechts/unten (je nach CSS)
+  }
 
   sendBtn.disabled = true;
   userInput.disabled = true;
@@ -512,3 +520,61 @@ briefingHeader.addEventListener("click", () => {
   const isHidden = briefingContent.classList.toggle("hidden");
   chevron.style.transform = isHidden ? "rotate(90deg)" : "rotate(0deg)";
 });
+
+// =========================================================
+// 5. Mobile Menu Logic
+// =========================================================
+function toggleMobileMenu() {
+  const isClosed = sidebar.classList.contains("-translate-x-full");
+
+  if (isClosed) {
+    // Open menu
+    sidebar.classList.remove("-translate-x-full");
+    sidebarOverlay.classList.remove("hidden");
+    document.body.style.overflow = "hidden"; // Prevent background scroll
+  } else {
+    // Close menu
+    sidebar.classList.add("-translate-x-full");
+    sidebarOverlay.classList.add("hidden");
+    document.body.style.overflow = ""; // Restore scroll
+  }
+}
+
+mobileMenuBtn?.addEventListener("click", toggleMobileMenu);
+sidebarOverlay?.addEventListener("click", toggleMobileMenu);
+
+// Schließe das Menü automatisch, wenn ein Szenario gewählt wurde (auf Mobile)
+scenarioSelect.addEventListener("change", () => {
+  if (window.innerWidth < 1024) {
+    toggleMobileMenu();
+  }
+});
+
+// Function to update the subtitle based on screen width
+function updateSubtitleText() {
+  const mainSubtitle = document.getElementById("main-subtitle");
+  if (!mainSubtitle) return; // Safety check
+
+  if (window.innerWidth < 1024) {
+    mainSubtitle.textContent =
+      "Öffne das Menü oben rechts, um ein Szenario zu wählen.";
+  } else {
+    mainSubtitle.textContent = "Wähle links ein Szenario aus, um zu starten.";
+  }
+}
+
+// Execute when DOM is fully loaded
+document.addEventListener("DOMContentLoaded", () => {
+  updateSubtitleText();
+
+  // Also fold briefing by default on start
+  const briefingContent = document.getElementById("briefing-content");
+  const chevron = document.getElementById("chevron");
+  if (briefingContent && chevron) {
+    briefingContent.classList.add("hidden");
+    chevron.style.transform = "rotate(90deg)";
+  }
+});
+
+// Update text dynamically if window is resized
+window.addEventListener("resize", updateSubtitleText);

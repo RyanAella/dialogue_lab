@@ -20,9 +20,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
 
-  <body class="flex h-screen bg-gray-50">
+  <body class="flex flex-col lg:flex-row h-[100dvh] bg-gray-50 overflow-hidden">
+    <header
+      class="lg:hidden flex items-center justify-between bg-white border-b p-4 z-[80] w-full"
+    >
+      <h1 class="text-lg font-bold text-slate-800">Gesprächstraining</h1>
+      <button
+        id="mobile-menu-btn"
+        class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+      >
+        <span class="text-2xl">☰</span>
+      </button>
+    </header>
     <aside
-      class="sidebar w-64 bg-white border-r border-gray-200 p-6 shadow-sm flex flex-col h-full"
+      id="sidebar"
+      class="fixed inset-y-0 left-0 z-[90] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
     >
       <div class="sidebar-section mb-6">
         <label
@@ -90,12 +102,19 @@
       </div>
     </aside>
 
-    <main class="chat-main-container flex-1 flex flex-col p-10 ml-10">
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 bg-black/50 z-[85] hidden lg:hidden"
+    ></div>
+
+    <main
+      class="chat-main-container flex-1 flex flex-col p-4 md:p-10 overflow-x-hidden"
+    >
       <h1 class="main-title text-3xl font-bold text-slate-800">
         Lab für Sozioinformatik: Gesprächstraining
       </h1>
-      <p class="main-subtitle text-slate-500 mt-2">
-        Wähle links ein Szenario aus, um zu starten.
+      <p id="main-subtitle" class="main-subtitle text-slate-500 mt-2">
+        Wähle ein Szenario aus, um zu starten.
       </p>
 
       <section
@@ -171,19 +190,21 @@
         </div>
       </div>
 
-      <footer class="input-area py-6 border-t border-slate-200 bg-white">
-        <div class="input-container max-w-3xl mx-auto flex gap-3 px-6 w-full">
+      <footer
+        class="input-area py-4 border-t border-slate-200 bg-white flex-shrink-0"
+      >
+        <div class="input-container max-w-3xl mx-auto flex gap-2 px-4 w-full">
           <input
             type="text"
             id="user-input"
             disabled
-            class="user-text-input flex-1 p-3.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-innerbg-gray-100 cursor-not-allowed"
+            class="user-text-input flex-1 p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-gray-100 cursor-not-allowed text-sm"
             placeholder="Wähle zuerst ein Szenario aus..."
           />
           <button
             id="send-btn"
             disabled
-            class="send-button opacity-50 cursor-not-allowed bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg"
+            class="send-button opacity-50 cursor-not-allowed bg-blue-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg text-sm transition-all active:scale-95"
           >
             Senden
           </button>
