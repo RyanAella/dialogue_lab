@@ -281,8 +281,13 @@ async function handleSend() {
 
   // 3. Initialize chat history with system/role prompts on first message
   if (chatHistory.length === 0) {
-    chatHistory.push({ role: "system", content: currentConfig.systemPrompt });
-    chatHistory.push({ role: "system", content: currentConfig.partnerPrompt });
+    // Combine both prompts into one single system instruction
+    const combinedSystemInstructions = `${currentConfig.systemPrompt}\n\n${currentConfig.partnerPrompt}`;
+
+    chatHistory.push({
+      role: "system",
+      content: combinedSystemInstructions,
+    });
   }
 
   chatHistory.push({ role: "user", content: message });
@@ -578,5 +583,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Update text dynamically if window is resized
 window.addEventListener("resize", updateSubtitleText);
-
-// Test Commit
