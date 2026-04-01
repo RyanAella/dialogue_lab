@@ -257,7 +257,7 @@ async function handleSend() {
 
   if (!briefingContent.classList.contains("hidden")) {
     briefingContent.classList.add("hidden");
-    chevron.style.transform = "rotate(90deg)"; // Zeigt nach rechts/unten (je nach CSS)
+    chevron.style.transform = "rotate(90deg)";
   }
 
   sendBtn.disabled = true;
@@ -512,15 +512,23 @@ function updateStatus(type, message) {
 // =========================================================
 // 4. Execution & Listeners
 // =========================================================
-initScenarioDropdown();
-updateStatus("idle", "Wähle eine Übung...");
+async function startApp() {
+  await initScenarioDropdown(); // Dropdown füllen
 
+  // Falls Szenarien vorhanden sind, das erste sofort laden
+  if (scenarioFiles.length > 0) {
+    scenarioSelect.value = scenarioFiles[0];
+    scenarioSelect.dispatchEvent(new Event("change")); // Triggert den Ladevorgang
+  }
+}
+
+// Event Listener für Eingaben
 sendBtn.addEventListener("click", handleSend);
 userInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") handleSend();
 });
 
-// Toggle briefing visibility
+// Logik für das Auf-/Zuklappen des Briefings
 briefingHeader.addEventListener("click", () => {
   const isHidden = briefingContent.classList.toggle("hidden");
   chevron.style.transform = isHidden ? "rotate(90deg)" : "rotate(0deg)";
@@ -555,29 +563,38 @@ scenarioSelect.addEventListener("change", () => {
   }
 });
 
-// Function to update the subtitle based on screen width
 function updateSubtitleText() {
   const mainSubtitle = document.getElementById("main-subtitle");
-  if (!mainSubtitle) return; // Safety check
+  if (!mainSubtitle) return;
+
+  const baseText =
+    "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
 
   if (window.innerWidth < 1024) {
-    mainSubtitle.textContent =
-      "Öffne das Menü oben rechts, um ein Szenario zu wählen.";
+    // Wir fügen mobil nur die Info hinzu, wie man wechselt
+    mainSubtitle.innerHTML = `${baseText} <br><span class="text-xs text-blue-600">Szenario wechseln? Klicke oben rechts auf ☰</span>`;
   } else {
-    mainSubtitle.textContent = "Wähle links ein Szenario aus, um zu starten.";
+    mainSubtitle.textContent = baseText;
   }
 }
 
 // Execute when DOM is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
+  // Untertitel je nach Gerät anpassen
   updateSubtitleText();
 
-  // Also fold briefing by default on start
-  const briefingContent = document.getElementById("briefing-content");
-  const chevron = document.getElementById("chevron");
-  if (briefingContent && chevron) {
-    briefingContent.classList.add("hidden");
-    chevron.style.transform = "rotate(90deg)";
+  // Die App zentral starten
+  startApp();
+});
+
+// Briefing auf Mobilgeräten einklappen, sobald das Textfeld fokussiert wird
+userInput.addEventListener("focus", () => {
+  if (window.innerWidth < 1024) {
+    // 1024px ist der Tailwind-Breakpoint für 'lg'
+    if (!briefingContent.classList.contains("hidden")) {
+      briefingContent.classList.add("hidden");
+      chevron.style.transform = "rotate(90deg)";
+    }
   }
 });
 
