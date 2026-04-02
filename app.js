@@ -208,15 +208,24 @@ function appendMessage(text, sender) {
 
   // Create Avatar Element
   const avatar = document.createElement("div");
-  avatar.className = `w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 ${
+
+  // Prüfen, ob es sich um eine weibliche Rolle handelt (Endung "-in")
+  const isFemale =
+    sender !== "user" && currentConfig.roleName.toLowerCase().endsWith("in");
+
+  avatar.className = `flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 ${
     sender === "user"
-      ? "bg-blue-700 text-white border-2 border-blue-400"
-      : "bg-gray-300 text-gray-600 border-2 border-white"
+      ? "w-8 h-8 rounded-full bg-blue-700 text-white border-2 border-blue-400"
+      : isFemale
+        ? "w-12 h-16 rounded-xl bg-white border-2 border-white overflow-hidden"
+        : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
   }`;
   if (sender === "user") {
     avatar.innerHTML = "DU";
+  } else if (isFemale) {
+    avatar.innerHTML = `<img src="grafik.png" alt="${currentConfig.roleName}" class="w-full h-full object-cover">`;
   } else {
-    // Use the first two letters of the role as avatar initials (e.g., "MI" for Mitarbeiter)
+    // Zeige die ersten zwei Buchstaben für männliche oder neutrale Rollen (z.B. "MI" für Mitarbeiter)
     avatar.innerHTML = currentConfig.roleName.substring(0, 2).toUpperCase();
   }
 
