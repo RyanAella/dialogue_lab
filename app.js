@@ -51,6 +51,36 @@ let ichBotschaftModeConfig = {
 
 const scenarioFilesFallback = ["reporting_scenario.txt", "difficulties_scenario.txt"];
 const scenarioIndexFile = "scenarios/index.json";
+const ichBotschaftStatementsFallback = [
+  "Musst Du eigentlich immer dazwischenreden? Du solltest mal zu einem Diskutier-Kursus gehen.",
+  "Haben Sie eigentlich nichts zu tun? Sie stehen ja nur rum.",
+  "Dir kann man ja wirklich nichts anvertrauen.",
+  "Das können Sie als meine Mitarbeiterin unmöglich so an XY weitergeben.",
+  "Sie machen ja wohl immer die gleichen Fehler und werden es nie lernen, rechtzeitig Bescheid zu geben.",
+  "Sie melden sich ja auch nie, wenn irgendetwas ist - Sie können doch nicht erwarten, dass ich Gedanken lesen kann.",
+];
+const ichBotschaftFeedbackPromptFallback = `Du bist Kommunikationstrainer.
+Bewerte die folgende Umformulierung einer Du-Botschaft in eine Ich-Botschaft nicht mit Noten, sondern gib kurzes, lernförderliches Feedback.
+
+Prüfe:
+- Spricht die Antwort aus der Ich-Perspektive?
+- Ist die Wahrnehmung konkret?
+- Wird Wirkung oder Gefühl benannt?
+- Gibt es einen Wunsch / eine Erwartung?
+- Gibt es noch versteckte Vorwürfe oder Verallgemeinerungen?
+
+Antworte immer in diesem Format:
+
+Was schon gut gelingt:
+...
+
+Was noch stärker formuliert werden könnte:
+...
+
+Mögliche Formulierung:
+"..."
+
+Abschließend ein kurzer Satz mit Ermutigung.`;
 async function loadIchBotschaftFeedbackPrompt() {
   const response = await fetch(
     `${ichBotschaftModeConfig.feedbackPromptFile}?t=${Date.now()}`,
@@ -274,16 +304,23 @@ function enableInput(placeholderText) {
 }
 
 async function switchToIchBotschaftMode() {
+  const loadErrors = [];
+  await loadIchBotschaftModeConfig();
+
   try {
-    await loadIchBotschaftModeConfig();
-    await Promise.all([
-      loadIchBotschaftStatements(),
-      loadIchBotschaftFeedbackPrompt(),
-    ]);
+    await loadIchBotschaftStatements();
   } catch (error) {
     console.error(error);
-    updateStatus("error", "Modus-Dateien für Ich-Botschaften fehlen oder sind ungültig");
-    return;
+    ichBotschaftStatements = [...ichBotschaftStatementsFallback];
+    loadErrors.push("Aussagen-Datei");
+  }
+
+  try {
+    await loadIchBotschaftFeedbackPrompt();
+  } catch (error) {
+    console.error(error);
+    ichBotschaftFeedbackPrompt = ichBotschaftFeedbackPromptFallback;
+    loadErrors.push("Feedback-Prompt");
   }
 
   currentMode = "ich-botschaft";
@@ -307,14 +344,43 @@ async function switchToIchBotschaftMode() {
   }
   enableInput("Formuliere die Aussage als Ich-Botschaft...");
   appendExerciseTaskMessage();
-  updateStatus("idle", getIchBotschaftProgressText());
+  if (loadErrors.length > 0) {
+    updateStatus(
+      "error",
+      `Fallback aktiv: ${loadErrors.join(" + ")} konnte nicht geladen werden`,
+    );
+  } else {
+    updateStatus("idle", getIchBotschaftProgressText());
+  }
 }
 
 function switchToRoleplayMode() {
   currentMode = "roleplay";
+  exerciseAwaitingRevision = false;
+  pendingIchMessageType = null;
   setExerciseActionsVisible(false);
   setScenarioSelectionVisible(true);
   scenarioSelect.disabled = false;
+
+  // Clear exercise artifacts from chat and briefing
+  chatWindow.innerHTML = "";
+  briefingContent.classList.remove("hidden");
+  briefingContent.textContent = "Szenario wird geladen...";
+  briefingContent.style.whiteSpace = "pre-wrap";
+
+  // Restore roleplay input baseline
+  userInput.value = "";
+  userInput.disabled = true;
+  sendBtn.disabled = true;
+  sendBtn.classList.add("opacity-50", "cursor-not-allowed");
+  userInput.classList.add("bg-gray-100", "cursor-not-allowed");
+  userInput.placeholder = "Wähle zuerst ein Szenario aus...";
+
+  // Ensure scenario loading always triggers
+  if (!scenarioSelect.value && scenarioFiles.length > 0) {
+    scenarioSelect.value = scenarioFiles[0];
+  }
+
   setMainSubtitle("Lies das Briefing und starte das Gespräch mit einer Nachricht.");
   setModeBadge("roleplay");
   scenarioSelect.dispatchEvent(new Event("change"));
@@ -970,7 +1036,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Untertitel je nach Gerät anpassen
   updateSubtitleText();
 
-  // Die App zentral starten
+  // Respect restored browser state (e.g. after reload)
+  if (modeSelect?.value === "ich-botschaft") {
+    switchToIchBotschaftMode();
+    return;
+  }
+
+  // Die App zentral starten (default: Gesprächstraining)
   startApp();
 });
 
