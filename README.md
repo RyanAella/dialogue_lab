@@ -2,7 +2,10 @@
 
 ## 1. Übersicht
 
-Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung (z. B. Mitarbeitergespräche oder Konfliktmanagement). Nutzer können Szenarien auswählen und in einem Chat-Interface mit einer KI interagieren, die eine spezifische Rolle einnimmt. Am Ende der Übung kann Mentor-Feedback angefordert werden.
+Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung und Ich-Botschaften. Die App unterstützt aktuell zwei Modi:
+
+- **Gesprächstraining**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
+- **Ich-Botschaften**: Interaktive Umformulierung von Du-Botschaften mit kurzem KI-Feedback
 
 ## 2. Technische Architektur
 
@@ -16,17 +19,35 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 ## 3. Repository-Dateistruktur
 
 - `index.html`: UI / Layout.
-- `app.js`: Zentrale Logik (Szenario-Parsing, Chat-Management, Proxy-Aufrufe).
-- `scenarios/`: `.txt`-Szenariodateien.
+- `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
+- `app.js`: Zentrale Logik (Modi, Szenario-Parsing, Chat-Management, Proxy-Aufrufe).
+- `scenarios/`: Szenario- und Modus-Dateien (`index.json`, `*.txt`, `ich_botschaft_mode.json`).
 - `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`.
 
 Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
 
-## 4. Das Szenarien-System
+## 4. Szenarien und Modi
 
-Ein Szenario wird über eine Textdatei in `scenarios/` gesteuert. `app.js` parst die Datei anhand von Markern.
+### 4.1 Szenario-Index (`scenarios/index.json`)
 
-### 4.1 Der META-Block
+Die Szenarioliste für den Gesprächsmodus wird aus `scenarios/index.json` geladen:
+
+```json
+{
+  "scenarioFiles": [
+    "reporting_scenario.txt",
+    "difficulties_scenario.txt"
+  ]
+}
+```
+
+Wenn die Datei fehlt/ungültig ist, nutzt die App einen internen Fallback.
+
+### 4.2 Gesprächs-Szenarioformat (`*.txt`)
+
+Ein Gesprächsszenario wird über eine Textdatei in `scenarios/` gesteuert. `app.js` parst die Datei anhand von Markern.
+
+#### Der META-Block
 
 ```text
 ### META ###
@@ -40,11 +61,11 @@ _Die Prompt-Namen referenzieren Dateinamen in `prompts/<typ>/…` (ohne `.txt`).
 
 Optional (wenn genutzt): `role_label: Mitarbeiter` (überschreibt die automatische Rollen-Erkennung im UI).
 
-### 4.2 Die GUI Instruction
+#### Die GUI Instruction
 
 Alles nach dem Marker `### GUI INSTRUCTION ###` wird als Briefing angezeigt. Falls `role_label` nicht gesetzt ist, versucht die App, die Rolle heuristisch aus dem Text zu erkennen, um Labels/Platzhalter im Chat anzupassen.
 
-### 4.3 Validierung beim Laden
+#### Validierung beim Laden
 
 Beim Laden eines Szenarios prüft die App verpflichtend:
 
@@ -53,6 +74,16 @@ Beim Laden eines Szenarios prüft die App verpflichtend:
 - GUI-Instruction nicht leer
 
 Wenn eine dieser Bedingungen nicht erfüllt ist, zeigt die App eine klare Fehlermeldung im Status/Briefing statt stillschweigend mit unvollständigen Daten weiterzulaufen.
+
+### 4.3 Ich-Botschaften-Modus
+
+Der Ich-Botschaften-Modus ist dateibasiert konfiguriert:
+
+- `scenarios/ich_botschaft_mode.json`:
+  - `statementsFile` (Liste der Aussagen)
+  - `feedbackPromptFile` (System-Prompt für Feedback)
+- `scenarios/ich_botschaft_statements.txt`: Eine Aussage pro Zeile
+- `prompts/system/ich_botschaft_feedback_prompt.txt`: Feedback-Instruktion für das Modell
 
 ## 5. Lokale Entwicklung
 
@@ -81,15 +112,25 @@ Da das Frontend statisch ist, muss die Kommunikation mit der OpenAI API über ei
 2. **Proxy**: Proxy-Skript auf deinem Webserver deployen (HTTPS empfohlen).
 3. **Frontend-Konfiguration**: In `app.js` die Proxy-URL konsistent verwenden (z.B. eine Konstante `PROXY_URL`) und alle API-Calls darüber laufen lassen.
 
-## 8. Neues Szenario hinzufügen
+### 7.1 Frontend-Konfiguration
+
+Laufzeitwerte werden in `config.js` gepflegt (z.B. Modell und Temperaturwerte). `index.html` lädt zuerst `config.js`, danach `app.js`.
+
+## 8. Neues Gesprächsszenario hinzufügen
 
 1. Prompt-Dateien als `.txt` anlegen:
    - `prompts/system/<name>.txt`
    - `prompts/partner/<name>.txt`
    - `prompts/mentor/<name>.txt` (optional, falls Feedback genutzt wird)
 2. Neue Datei in `scenarios/` erstellen (mit `### META ###` und `### GUI INSTRUCTION ###`).
-3. Dateiname in `scenarioFiles` (in `app.js`) ergänzen.
+3. Dateiname in `scenarios/index.json` unter `scenarioFiles` ergänzen.
 4. Deployen – die App listet das Szenario im Dropdown.
+
+## 9. Ich-Botschaften-Inhalte pflegen
+
+1. Aussagen in `scenarios/ich_botschaft_statements.txt` bearbeiten (eine Aussage pro Zeile).
+2. Prompt in `prompts/system/ich_botschaft_feedback_prompt.txt` anpassen.
+3. Falls Pfade geändert werden, `scenarios/ich_botschaft_mode.json` aktualisieren.
 
 ---
 
@@ -101,7 +142,10 @@ _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht d
 
 ## 1. Overview
 
-The **Socio-Informatics Lab: Dialogue Training** is a web-based application designed for training communication skills (e.g., performance reviews or conflict management). Users can select scenarios and interact with an AI via a chat interface. At the end of a session, users can request mentor feedback.
+The **Socio-Informatics Lab: Dialogue Training** is a web-based application for communication practice and I-message training. The app currently supports two modes:
+
+- **Dialogue Training**: Scenario-based roleplay with optional mentor feedback
+- **I-Message Training**: Interactive rewriting of accusatory statements into constructive I-messages with short AI feedback
 
 ## 2. Technical Architecture
 
@@ -115,17 +159,35 @@ The application combines a static frontend with a server-side proxy (to protect 
 ## 3. Repository File Structure
 
 - `index.html`: UI / layout.
-- `app.js`: Core logic (scenario parsing, chat management, proxy calls).
-- `scenarios/`: `.txt` scenario files.
+- `config.js`: Central runtime configuration (proxy URL, model, temperatures).
+- `app.js`: Core logic (modes, scenario parsing, chat management, proxy calls).
+- `scenarios/`: Scenario and mode files (`index.json`, `*.txt`, `ich_botschaft_mode.json`).
 - `prompts/`: Prompt files in `system/`, `partner/`, `mentor/`.
 
 Note: A server-side proxy script like `chat.php` does **not** have to live in this repository. Keeping it separate helps prevent accidental commits of secrets.
 
-## 4. The Scenario System
+## 4. Scenarios and Modes
 
-Scenarios are controlled via text files in `scenarios/`. `app.js` parses them using markers.
+### 4.1 Scenario Index (`scenarios/index.json`)
 
-### 4.1 The META Block
+The list of dialogue scenarios is loaded from `scenarios/index.json`:
+
+```json
+{
+  "scenarioFiles": [
+    "reporting_scenario.txt",
+    "difficulties_scenario.txt"
+  ]
+}
+```
+
+If the file is missing or invalid, the app falls back to an internal default list.
+
+### 4.2 Dialogue Scenario Format (`*.txt`)
+
+Dialogue scenarios are controlled via text files in `scenarios/`. `app.js` parses them using markers.
+
+#### The META Block
 
 ```text
 ### META ###
@@ -139,11 +201,11 @@ _Prompt names reference files in `prompts/<type>/…` (without the `.txt` extens
 
 Optional (if used): `role_label: Employee` (overrides heuristic role detection in the UI).
 
-### 4.2 The GUI Instruction
+#### The GUI Instruction
 
 Everything after `### GUI INSTRUCTION ###` is shown as the briefing. If `role_label` is not set, the app tries to detect the role heuristically from the text to customize chat labels and placeholders.
 
-### 4.3 Runtime Validation
+#### Runtime Validation
 
 When loading a scenario, the app validates that:
 
@@ -152,6 +214,16 @@ When loading a scenario, the app validates that:
 - the GUI instruction section is not empty
 
 If any of these checks fail, the app shows a clear error message in status/briefing instead of continuing with incomplete data.
+
+### 4.3 I-Message Mode
+
+The I-message mode is configured via files:
+
+- `scenarios/ich_botschaft_mode.json`:
+  - `statementsFile` (list of statements)
+  - `feedbackPromptFile` (system prompt used for feedback)
+- `scenarios/ich_botschaft_statements.txt`: one statement per line
+- `prompts/system/ich_botschaft_feedback_prompt.txt`: feedback instruction prompt
 
 ## 5. Local Development
 
@@ -180,15 +252,25 @@ Because the frontend is static, calls to the OpenAI API must go through a server
 2. **Proxy**: Deploy the proxy script to your web server (HTTPS recommended).
 3. **Frontend configuration**: Use a single proxy URL in `app.js` (e.g. a `PROXY_URL` constant) and route all API calls through it.
 
-## 8. How to Add a New Scenario
+### 7.1 Frontend Configuration
+
+Runtime values are maintained in `config.js` (e.g. model and temperature values). `index.html` loads `config.js` before `app.js`.
+
+## 8. How to Add a New Dialogue Scenario
 
 1. Create prompt files as `.txt`:
    - `prompts/system/<name>.txt`
    - `prompts/partner/<name>.txt`
    - `prompts/mentor/<name>.txt` (optional, if mentor feedback is used)
 2. Create a new scenario file in `scenarios/` using the `### META ###` and `### GUI INSTRUCTION ###` format.
-3. Add the scenario filename to `scenarioFiles` (in `app.js`).
+3. Add the scenario filename to `scenarios/index.json` under `scenarioFiles`.
 4. Deploy — the scenario will appear in the dropdown.
+
+## 9. Maintaining I-Message Content
+
+1. Edit statements in `scenarios/ich_botschaft_statements.txt` (one per line).
+2. Adjust the feedback prompt in `prompts/system/ich_botschaft_feedback_prompt.txt`.
+3. If paths change, update `scenarios/ich_botschaft_mode.json`.
 
 ---
 

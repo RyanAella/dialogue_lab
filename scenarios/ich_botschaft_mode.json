@@ -1,0 +1,4 @@
+{
+  "statementsFile": "scenarios/ich_botschaft_statements.txt",
+  "feedbackPromptFile": "prompts/system/ich_botschaft_feedback_prompt.txt"
+}

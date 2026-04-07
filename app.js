@@ -13,10 +13,17 @@ const statusBox = document.getElementById("status-box");
 const mobileMenuBtn = document.getElementById("mobile-menu-btn");
 const sidebar = document.getElementById("sidebar");
 const sidebarOverlay = document.getElementById("sidebar-overlay");
-const PROXY_URL = "https://kite2.site/chat.php";
-const MODEL = "gpt-4o";
-const CHAT_TEMPERATURE = 0.7;
-const MENTOR_TEMPERATURE = 0.3;
+const modeSelect = document.getElementById("mode-select");
+const exerciseActions = document.getElementById("exercise-actions");
+const reviseBtn = document.getElementById("revise-btn");
+const nextExerciseBtn = document.getElementById("next-exercise-btn");
+const APP_CONFIG = window.APP_CONFIG || {};
+const PROXY_URL = APP_CONFIG.PROXY_URL || "https://kite2.site/chat.php";
+const MODEL = APP_CONFIG.MODEL || "gpt-4o";
+const CHAT_TEMPERATURE = APP_CONFIG.CHAT_TEMPERATURE ?? 0.7;
+const MENTOR_TEMPERATURE = APP_CONFIG.MENTOR_TEMPERATURE ?? 0.3;
+const ICH_BOTSCHAFT_TEMPERATURE = APP_CONFIG.ICH_BOTSCHAFT_TEMPERATURE ?? 0.4;
+const ICH_BOTSCHAFT_MODE_CONFIG_FILE = "scenarios/ich_botschaft_mode.json";
 
 // Store the loaded prompt contents here
 let currentConfig = {
@@ -27,9 +34,34 @@ let currentConfig = {
 };
 
 let chatHistory = [];
+let currentMode = "roleplay";
+let exerciseIndex = 0;
+let exerciseAwaitingRevision = false;
+let ichBotschaftStatements = [];
+let ichBotschaftFeedbackPrompt = "";
+let scenarioFiles = [];
+let ichBotschaftModeConfig = {
+  statementsFile: "scenarios/ich_botschaft_statements.txt",
+  feedbackPromptFile: "prompts/system/ich_botschaft_feedback_prompt.txt",
+};
 
-// List of scenario files to be loaded into the dropdown
-const scenarioFiles = ["reporting_scenario.txt", "difficulties_scenario.txt"];
+const scenarioFilesFallback = ["reporting_scenario.txt", "difficulties_scenario.txt"];
+const scenarioIndexFile = "scenarios/index.json";
+async function loadIchBotschaftFeedbackPrompt() {
+  const response = await fetch(
+    `${ichBotschaftModeConfig.feedbackPromptFile}?t=${Date.now()}`,
+  );
+  if (!response.ok) {
+    throw new Error("Feedback-Prompt-Datei konnte nicht geladen werden.");
+  }
+
+  const content = (await response.text()).trim();
+  if (!content) {
+    throw new Error("Feedback-Prompt-Datei ist leer.");
+  }
+
+  ichBotschaftFeedbackPrompt = content;
+}
 
 function appendTextWithLineBreaks(container, text) {
   const lines = String(text).split("\n");
@@ -111,6 +143,134 @@ function parseScenarioContent(rawScenario) {
   }
 
   return parsed;
+}
+
+async function loadScenarioIndex() {
+  try {
+    const response = await fetch(`${scenarioIndexFile}?t=${Date.now()}`);
+    if (!response.ok) {
+      scenarioFiles = [...scenarioFilesFallback];
+      return;
+    }
+
+    const indexData = await response.json();
+    if (
+      Array.isArray(indexData?.scenarioFiles) &&
+      indexData.scenarioFiles.length > 0
+    ) {
+      scenarioFiles = indexData.scenarioFiles;
+      return;
+    }
+
+    scenarioFiles = [...scenarioFilesFallback];
+  } catch (error) {
+    console.error("Szenario-Index konnte nicht geladen werden:", error);
+    scenarioFiles = [...scenarioFilesFallback];
+  }
+}
+
+function setExerciseActionsVisible(visible) {
+  if (!exerciseActions) return;
+  exerciseActions.classList.toggle("hidden", !visible);
+}
+
+function setMainSubtitle(text) {
+  const mainSubtitle = document.getElementById("main-subtitle");
+  if (!mainSubtitle) return;
+  mainSubtitle.textContent = text;
+}
+
+async function loadIchBotschaftStatements() {
+  const response = await fetch(
+    `${ichBotschaftModeConfig.statementsFile}?t=${Date.now()}`,
+  );
+  if (!response.ok) {
+    throw new Error("Aussagen-Datei konnte nicht geladen werden.");
+  }
+
+  const content = await response.text();
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+
+  if (lines.length === 0) {
+    throw new Error("Aussagen-Datei ist leer.");
+  }
+
+  ichBotschaftStatements = lines;
+}
+
+async function loadIchBotschaftModeConfig() {
+  const response = await fetch(`${ICH_BOTSCHAFT_MODE_CONFIG_FILE}?t=${Date.now()}`);
+  if (!response.ok) {
+    return;
+  }
+
+  const modeConfig = await response.json();
+  if (modeConfig?.statementsFile && modeConfig?.feedbackPromptFile) {
+    ichBotschaftModeConfig = modeConfig;
+  }
+}
+
+function appendExerciseTaskMessage() {
+  const statement = ichBotschaftStatements[exerciseIndex];
+  appendMessage(
+    `Aussage ${exerciseIndex + 1}:\n"${statement}"\n\nFormuliere diese Aussage als Ich-Botschaft.`,
+    "partner",
+  );
+}
+
+function enableInput(placeholderText) {
+  userInput.disabled = false;
+  sendBtn.disabled = false;
+  sendBtn.classList.remove("opacity-50", "cursor-not-allowed");
+  userInput.classList.remove("bg-gray-100", "cursor-not-allowed");
+  userInput.classList.add("bg-slate-50");
+  userInput.placeholder = placeholderText;
+}
+
+async function switchToIchBotschaftMode() {
+  try {
+    await loadIchBotschaftModeConfig();
+    await Promise.all([
+      loadIchBotschaftStatements(),
+      loadIchBotschaftFeedbackPrompt(),
+    ]);
+  } catch (error) {
+    console.error(error);
+    updateStatus("error", "Ich-Botschaften konnten nicht geladen werden");
+    return;
+  }
+
+  currentMode = "ich-botschaft";
+  exerciseIndex = 0;
+  exerciseAwaitingRevision = false;
+  chatHistory = [];
+  chatWindow.innerHTML = "";
+  briefingContent.classList.remove("hidden");
+  briefingContent.textContent =
+    "Du übst hier die Umformulierung von Du-Botschaften in Ich-Botschaften. Die KI gibt dir kurzes Feedback, danach kannst du überarbeiten oder zur nächsten Aussage gehen.";
+  briefingContent.style.whiteSpace = "pre-wrap";
+  setMainSubtitle("Ich-Botschaften: Formuliere jede Aussage konstruktiv um.");
+  setExerciseActionsVisible(false);
+  scenarioSelect.disabled = true;
+  const feedbackBtn = document.getElementById("feedback-btn");
+  if (feedbackBtn) {
+    feedbackBtn.disabled = true;
+    feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
+  }
+  enableInput("Formuliere die Aussage als Ich-Botschaft...");
+  appendExerciseTaskMessage();
+  updateStatus("idle", "Ich-Botschaften aktiv");
+}
+
+function switchToRoleplayMode() {
+  currentMode = "roleplay";
+  setExerciseActionsVisible(false);
+  scenarioSelect.disabled = false;
+  setMainSubtitle("Lies das Briefing und starte das Gespräch mit einer Nachricht.");
+  scenarioSelect.dispatchEvent(new Event("change"));
 }
 
 // =========================================================
@@ -347,6 +507,11 @@ function appendMessage(text, sender) {
  * Handles message input and simulated response.
  */
 async function handleSend() {
+  if (currentMode === "ich-botschaft") {
+    await handleIchBotschaftSend();
+    return;
+  }
+
   const message = userInput.value.trim();
   // Check if a scenario is loaded and input is not empty
   if (!message || !currentConfig.systemPrompt) return;
@@ -434,6 +599,46 @@ async function handleSend() {
 
     // Set focus back to input so the user can keep typing immediately
     userInput.focus();
+  }
+}
+
+async function handleIchBotschaftSend() {
+  const userAnswer = userInput.value.trim();
+  if (!userAnswer) return;
+
+  appendMessage(userAnswer, "user");
+  userInput.value = "";
+  enableInput("Feedback wird erstellt...");
+  userInput.disabled = true;
+  sendBtn.disabled = true;
+  sendBtn.classList.add("opacity-50", "cursor-not-allowed");
+  updateStatus("loading", "Trainer gibt Feedback...");
+
+  const statement = ichBotschaftStatements[exerciseIndex];
+  const messages = [
+    { role: "system", content: ichBotschaftFeedbackPrompt },
+    {
+      role: "user",
+      content: `Du-Botschaft:\n${statement}\n\nAntwort der Nutzer*in:\n${userAnswer}`,
+    },
+  ];
+
+  try {
+    const data = await callChatApi(messages, ICH_BOTSCHAFT_TEMPERATURE);
+    if (!data.choices || !data.choices[0]) {
+      throw new Error("Unexpected API response format");
+    }
+
+    appendMessage(data.choices[0].message.content, "partner");
+    setExerciseActionsVisible(true);
+    exerciseAwaitingRevision = true;
+    updateStatus("idle", "Feedback bereit");
+  } catch (error) {
+    console.error("Ich-Botschaft Feedback Fehler:", error);
+    appendMessage("Feedback konnte nicht geladen werden. Bitte erneut versuchen.", "partner");
+    updateStatus("error", "Feedback fehlgeschlagen");
+  } finally {
+    enableInput("Überarbeite deine Antwort oder gehe zur nächsten Aussage.");
   }
 }
 
@@ -583,6 +788,7 @@ function updateStatus(type, message) {
 // 4. Execution & Listeners
 // =========================================================
 async function startApp() {
+  await loadScenarioIndex();
   await initScenarioDropdown(); // Dropdown füllen
 
   // Falls Szenarien vorhanden sind, das erste sofort laden
@@ -596,6 +802,41 @@ async function startApp() {
 sendBtn.addEventListener("click", handleSend);
 userInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") handleSend();
+});
+
+modeSelect?.addEventListener("change", (event) => {
+  if (event.target.value === "ich-botschaft") {
+    switchToIchBotschaftMode();
+    return;
+  }
+  switchToRoleplayMode();
+});
+
+reviseBtn?.addEventListener("click", () => {
+  if (!exerciseAwaitingRevision) return;
+  userInput.focus();
+  updateStatus("idle", "Überarbeite deine Antwort");
+});
+
+nextExerciseBtn?.addEventListener("click", () => {
+  if (currentMode !== "ich-botschaft") return;
+
+  if (exerciseIndex >= ichBotschaftStatements.length - 1) {
+    appendMessage(
+      "Sehr gut! Du hast alle Aussagen bearbeitet. Wenn du möchtest, kannst du den Modus wechseln oder die Übung neu starten.",
+      "partner",
+    );
+    setExerciseActionsVisible(false);
+    updateStatus("idle", "Übung abgeschlossen");
+    return;
+  }
+
+  exerciseIndex += 1;
+  exerciseAwaitingRevision = false;
+  setExerciseActionsVisible(false);
+  appendExerciseTaskMessage();
+  enableInput("Formuliere die Aussage als Ich-Botschaft...");
+  updateStatus("idle", `Aussage ${exerciseIndex + 1} von ${ichBotschaftStatements.length}`);
 });
 
 // Logik für das Auf-/Zuklappen des Briefings
