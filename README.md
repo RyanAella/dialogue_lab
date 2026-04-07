@@ -85,6 +85,16 @@ Der Ich-Botschaften-Modus ist dateibasiert konfiguriert:
 - `scenarios/ich_botschaft_statements.txt`: Eine Aussage pro Zeile
 - `prompts/system/ich_botschaft_feedback_prompt.txt`: Feedback-Instruktion für das Modell
 
+UI-Verhalten im Ich-Botschaften-Modus:
+
+- Szenarioauswahl wird ausgeblendet
+- Modus-Badge zeigt den aktiven Modus
+- Nachrichten sind visuell getrennt (`Aufgabe` vs. `Feedback`)
+- Übungsaktionen stehen direkt unter dem Chat-Eingabebereich:
+  - `Überarbeiten`
+  - `Nächste Aussage`
+  - `Übung neu starten`
+
 ## 5. Lokale Entwicklung
 
 - Projekt in VS Code öffnen
@@ -224,6 +234,16 @@ The I-message mode is configured via files:
   - `feedbackPromptFile` (system prompt used for feedback)
 - `scenarios/ich_botschaft_statements.txt`: one statement per line
 - `prompts/system/ich_botschaft_feedback_prompt.txt`: feedback instruction prompt
+
+UI behavior in I-message mode:
+
+- Scenario selection is hidden
+- A mode badge shows the active mode
+- Messages are visually separated (`Task` vs. `Feedback`)
+- Exercise actions are shown directly above the input:
+  - `Revise`
+  - `Next statement`
+  - `Restart exercise`
 
 ## 5. Local Development
 

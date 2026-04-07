@@ -13,8 +13,11 @@ const statusBox = document.getElementById("status-box");
 const mobileMenuBtn = document.getElementById("mobile-menu-btn");
 const sidebar = document.getElementById("sidebar");
 const sidebarOverlay = document.getElementById("sidebar-overlay");
+const modeBadge = document.getElementById("mode-badge");
+const scenarioLabel = document.getElementById("scenario-label");
 const modeSelect = document.getElementById("mode-select");
 const exerciseActions = document.getElementById("exercise-actions");
+const restartExerciseBtn = document.getElementById("restart-exercise-btn");
 const reviseBtn = document.getElementById("revise-btn");
 const nextExerciseBtn = document.getElementById("next-exercise-btn");
 const APP_CONFIG = window.APP_CONFIG || {};
@@ -39,6 +42,7 @@ let exerciseIndex = 0;
 let exerciseAwaitingRevision = false;
 let ichBotschaftStatements = [];
 let ichBotschaftFeedbackPrompt = "";
+let pendingIchMessageType = null;
 let scenarioFiles = [];
 let ichBotschaftModeConfig = {
   statementsFile: "scenarios/ich_botschaft_statements.txt",
@@ -174,10 +178,36 @@ function setExerciseActionsVisible(visible) {
   exerciseActions.classList.toggle("hidden", !visible);
 }
 
+function setScenarioSelectionVisible(visible) {
+  scenarioSelect.classList.toggle("hidden", !visible);
+  scenarioLabel?.classList.toggle("hidden", !visible);
+}
+
 function setMainSubtitle(text) {
   const mainSubtitle = document.getElementById("main-subtitle");
   if (!mainSubtitle) return;
   mainSubtitle.textContent = text;
+}
+
+function setModeBadge(mode) {
+  if (!modeBadge) return;
+  if (mode === "ich-botschaft") {
+    modeBadge.textContent = "Modus: Ich-Botschaften";
+    modeBadge.className =
+      "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
+    return;
+  }
+
+  modeBadge.textContent = "Modus: Gesprächstraining";
+  modeBadge.className =
+    "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
+}
+
+function getIchBotschaftProgressText() {
+  if (!ichBotschaftStatements.length) {
+    return "Ich-Botschaften bereit";
+  }
+  return `Aussage ${exerciseIndex + 1} von ${ichBotschaftStatements.length}`;
 }
 
 async function loadIchBotschaftStatements() {
@@ -214,11 +244,24 @@ async function loadIchBotschaftModeConfig() {
 }
 
 function appendExerciseTaskMessage() {
+  pendingIchMessageType = "task";
   const statement = ichBotschaftStatements[exerciseIndex];
   appendMessage(
     `Aussage ${exerciseIndex + 1}:\n"${statement}"\n\nFormuliere diese Aussage als Ich-Botschaft.`,
     "partner",
   );
+}
+
+function restartIchBotschaftExercise() {
+  if (currentMode !== "ich-botschaft") return;
+
+  exerciseIndex = 0;
+  exerciseAwaitingRevision = false;
+  chatWindow.innerHTML = "";
+  setExerciseActionsVisible(false);
+  appendExerciseTaskMessage();
+  enableInput("Formuliere die Aussage als Ich-Botschaft...");
+  updateStatus("idle", `${getIchBotschaftProgressText()} (neu gestartet)`);
 }
 
 function enableInput(placeholderText) {
@@ -239,7 +282,7 @@ async function switchToIchBotschaftMode() {
     ]);
   } catch (error) {
     console.error(error);
-    updateStatus("error", "Ich-Botschaften konnten nicht geladen werden");
+    updateStatus("error", "Modus-Dateien für Ich-Botschaften fehlen oder sind ungültig");
     return;
   }
 
@@ -253,7 +296,9 @@ async function switchToIchBotschaftMode() {
     "Du übst hier die Umformulierung von Du-Botschaften in Ich-Botschaften. Die KI gibt dir kurzes Feedback, danach kannst du überarbeiten oder zur nächsten Aussage gehen.";
   briefingContent.style.whiteSpace = "pre-wrap";
   setMainSubtitle("Ich-Botschaften: Formuliere jede Aussage konstruktiv um.");
+  setModeBadge("ich-botschaft");
   setExerciseActionsVisible(false);
+  setScenarioSelectionVisible(false);
   scenarioSelect.disabled = true;
   const feedbackBtn = document.getElementById("feedback-btn");
   if (feedbackBtn) {
@@ -262,15 +307,18 @@ async function switchToIchBotschaftMode() {
   }
   enableInput("Formuliere die Aussage als Ich-Botschaft...");
   appendExerciseTaskMessage();
-  updateStatus("idle", "Ich-Botschaften aktiv");
+  updateStatus("idle", getIchBotschaftProgressText());
 }
 
 function switchToRoleplayMode() {
   currentMode = "roleplay";
   setExerciseActionsVisible(false);
+  setScenarioSelectionVisible(true);
   scenarioSelect.disabled = false;
   setMainSubtitle("Lies das Briefing und starte das Gespräch mit einer Nachricht.");
+  setModeBadge("roleplay");
   scenarioSelect.dispatchEvent(new Event("change"));
+  updateStatus("idle", "Gesprächstraining aktiv");
 }
 
 // =========================================================
@@ -422,12 +470,12 @@ scenarioSelect.addEventListener("change", async (event) => {
       chatWindow.appendChild(startInfo);
     }
 
-    updateStatus("idle", "Übung aktiv");
+    updateStatus("idle", "Gesprächstraining bereit");
   } catch (error) {
     briefingContent.innerHTML =
       '<p class="text-red-500 p-4">Fehler beim Laden der Übung.</p>';
     console.error(error);
-    updateStatus("error", "Ladefehler");
+    updateStatus("error", "Szenario- oder Prompt-Datei konnte nicht geladen werden");
   }
 });
 
@@ -442,12 +490,13 @@ scenarioSelect.addEventListener("change", async (event) => {
  */
 function appendMessage(text, sender) {
   const wrapper = document.createElement("div");
+  const isIchMode = currentMode === "ich-botschaft";
 
   // Layout: Reverse for user (Avatar right), Normal for partner (Avatar left)
   wrapper.className =
     sender === "user"
-      ? "flex flex-row-reverse items-start mb-6 gap-3 ml-auto max-w-[85%]"
-      : "flex flex-row items-start mb-6 gap-3 mr-auto max-w-[85%]";
+      ? `flex flex-row-reverse items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} ml-auto max-w-[85%]`
+      : `flex flex-row items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} mr-auto max-w-[85%]`;
 
   // Create Avatar Element
   const avatar = document.createElement("div");
@@ -463,17 +512,19 @@ function appendMessage(text, sender) {
         ? "w-12 h-16 rounded-xl bg-white border-2 border-white overflow-hidden"
         : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
   }`;
-  if (sender === "user") {
-    avatar.textContent = "DU";
-  } else if (isFemale) {
-    const avatarImg = document.createElement("img");
-    avatarImg.src = "grafik.png";
-    avatarImg.alt = currentConfig.roleName;
-    avatarImg.className = "w-full h-full object-cover";
-    avatar.appendChild(avatarImg);
-  } else {
-    // Zeige die ersten zwei Buchstaben für männliche oder neutrale Rollen (z.B. "MI" für Mitarbeiter)
-    avatar.textContent = currentConfig.roleName.substring(0, 2).toUpperCase();
+  if (!isIchMode) {
+    if (sender === "user") {
+      avatar.textContent = "DU";
+    } else if (isFemale) {
+      const avatarImg = document.createElement("img");
+      avatarImg.src = "grafik.png";
+      avatarImg.alt = currentConfig.roleName;
+      avatarImg.className = "w-full h-full object-cover";
+      avatar.appendChild(avatarImg);
+    } else {
+      // Zeige die ersten zwei Buchstaben für männliche oder neutrale Rollen (z.B. "MI" für Mitarbeiter)
+      avatar.textContent = currentConfig.roleName.substring(0, 2).toUpperCase();
+    }
   }
 
   // Create Content Container
@@ -484,23 +535,45 @@ function appendMessage(text, sender) {
   // Add name label above the bubble
   const nameLabel = document.createElement("span");
   nameLabel.className = "text-xs text-gray-500 mb-1 px-1";
-  nameLabel.textContent =
-    sender === "user" ? "Du (Führungskraft)" : currentConfig.roleName;
+  if (isIchMode) {
+    nameLabel.textContent = sender === "user" ? "Deine Antwort" : "Trainer";
+  } else {
+    nameLabel.textContent =
+      sender === "user" ? "Du (Führungskraft)" : currentConfig.roleName;
+  }
 
   // Create Message Bubble
   const msgBubble = document.createElement("div");
-  msgBubble.className =
-    sender === "user"
-      ? "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md"
-      : "bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-md border border-gray-100";
+  if (sender === "user") {
+    msgBubble.className =
+      "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md";
+  } else if (currentMode === "ich-botschaft" && pendingIchMessageType === "task") {
+    msgBubble.className =
+      "bg-sky-50 text-sky-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-sky-200";
+    nameLabel.textContent = "Aufgabe";
+  } else if (
+    sender !== "user" &&
+    currentMode === "ich-botschaft" &&
+    pendingIchMessageType === "feedback"
+  ) {
+    msgBubble.className =
+      "bg-violet-50 text-violet-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-violet-200";
+    nameLabel.textContent = "Feedback";
+  } else {
+    msgBubble.className =
+      "bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-md border border-gray-100";
+  }
   appendTextWithLineBreaks(msgBubble, text);
 
   contentDiv.appendChild(nameLabel);
   contentDiv.appendChild(msgBubble);
-  wrapper.appendChild(avatar);
+  if (!isIchMode) {
+    wrapper.appendChild(avatar);
+  }
   wrapper.appendChild(contentDiv);
   chatWindow.appendChild(wrapper);
   chatWindow.scrollTop = chatWindow.scrollHeight;
+  pendingIchMessageType = null;
 }
 
 /**
@@ -578,7 +651,7 @@ async function handleSend() {
 
     document.getElementById("feedback-area")?.classList.remove("hidden");
 
-    updateStatus("idle", "Übung aktiv");
+    updateStatus("idle", "Gesprächstraining aktiv");
   } catch (error) {
     updateStatus("error", "Verbindung unterbrochen");
     console.error("Error during API call:", error);
@@ -629,14 +702,15 @@ async function handleIchBotschaftSend() {
       throw new Error("Unexpected API response format");
     }
 
+    pendingIchMessageType = "feedback";
     appendMessage(data.choices[0].message.content, "partner");
     setExerciseActionsVisible(true);
     exerciseAwaitingRevision = true;
-    updateStatus("idle", "Feedback bereit");
+    updateStatus("idle", `${getIchBotschaftProgressText()} - Feedback bereit`);
   } catch (error) {
     console.error("Ich-Botschaft Feedback Fehler:", error);
     appendMessage("Feedback konnte nicht geladen werden. Bitte erneut versuchen.", "partner");
-    updateStatus("error", "Feedback fehlgeschlagen");
+    updateStatus("error", "Feedback fehlgeschlagen (Proxy oder API nicht erreichbar)");
   } finally {
     enableInput("Überarbeite deine Antwort oder gehe zur nächsten Aussage.");
   }
@@ -681,9 +755,9 @@ async function handleFeedback() {
       showFeedbackModal(feedbackContent, transcript);
     }
 
-    updateStatus("idle", "Analyse abgeschlossen");
+    updateStatus("idle", "Mentor-Analyse abgeschlossen");
   } catch (error) {
-    updateStatus("error", "Analyse fehlgeschlagen");
+    updateStatus("error", "Mentor-Analyse fehlgeschlagen (Proxy oder API nicht erreichbar)");
     console.error("Feedback Fehler:", error);
     document.body.style.overflow = "auto";
   } finally {
@@ -827,7 +901,7 @@ nextExerciseBtn?.addEventListener("click", () => {
       "partner",
     );
     setExerciseActionsVisible(false);
-    updateStatus("idle", "Übung abgeschlossen");
+    updateStatus("idle", "Ich-Botschaften abgeschlossen");
     return;
   }
 
@@ -836,8 +910,10 @@ nextExerciseBtn?.addEventListener("click", () => {
   setExerciseActionsVisible(false);
   appendExerciseTaskMessage();
   enableInput("Formuliere die Aussage als Ich-Botschaft...");
-  updateStatus("idle", `Aussage ${exerciseIndex + 1} von ${ichBotschaftStatements.length}`);
+  updateStatus("idle", getIchBotschaftProgressText());
 });
+
+restartExerciseBtn?.addEventListener("click", restartIchBotschaftExercise);
 
 // Logik für das Auf-/Zuklappen des Briefings
 briefingHeader.addEventListener("click", () => {
