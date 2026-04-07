@@ -2,30 +2,31 @@
 
 ## 1. Übersicht
 
-Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung (z. B. Mitarbeitergespräche oder Konfliktmanagement). Nutzer können verschiedene Szenarien auswählen und in einem Chat-Interface mit einer KI interagieren, die eine spezifische Rolle einnimmt. Am Ende der Übung kann ein Mentor-Feedback angefordert werden.
+Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung (z. B. Mitarbeitergespräche oder Konfliktmanagement). Nutzer können Szenarien auswählen und in einem Chat-Interface mit einer KI interagieren, die eine spezifische Rolle einnimmt. Am Ende der Übung kann Mentor-Feedback angefordert werden.
 
 ## 2. Technische Architektur
 
-Die Anwendung nutzt eine moderne Frontend-Struktur mit einer sicheren Backend-Brücke:
+Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy (für API-Key-Schutz):
 
-- **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), gehostet auf **GitHub Pages**.
-- **Backend-Proxy**: Eine PHP-Datei (`chat.php`) auf einem **Strato-Server**. Dies ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
-- **Sicherheit (CORS)**: Der Proxy ist so konfiguriert, dass er nur Anfragen von der offiziellen GitHub-Pages-Domain akzeptiert.
-- **KI-Modell**: OpenAI GPT-4o.
+- **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
+- **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
+- **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
+- **KI-Modell**: OpenAI (wird in `app.js` als `model` übergeben).
 
-## 3. Dateistruktur
+## 3. Repository-Dateistruktur
 
-- `index.html`: Das visuelle Grundgerüst und die UI-Komponenten.
-- `app.js`: Die zentrale Logik (Szenarien-Parsing, Chat-Management, API-Kommunikation).
-- `scenarios/`: Verzeichnis für `.txt`-Szenariodateien.
-- `prompts/`: Unterordner (`system/`, `partner/`, `mentor/`) für die KI-Instruktionen.
-- `chat.php`: Das PHP-Skript auf dem externen Server.
+- `index.html`: UI / Layout.
+- `app.js`: Zentrale Logik (Szenario-Parsing, Chat-Management, Proxy-Aufrufe).
+- `scenarios/`: `.txt`-Szenariodateien.
+- `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`.
+
+Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
 
 ## 4. Das Szenarien-System
 
-Ein Szenario wird über eine Textdatei gesteuert. Das JavaScript parst die Datei anhand von Markern:
+Ein Szenario wird über eine Textdatei in `scenarios/` gesteuert. `app.js` parst die Datei anhand von Markern.
 
-### Der META-Block
+### 4.1 Der META-Block
 
 ```text
 ### META ###
@@ -35,45 +36,64 @@ partner_prompt: reporting_partner_prompt
 mentor_prompt: reporting_mentor_prompt
 ```
 
-_Die Namen bei den Prompts beziehen sich auf die Dateinamen im `prompts/`-Verzeichnis._
+_Die Prompt-Namen referenzieren Dateinamen in `prompts/<typ>/…` (ohne `.txt`)._
 
-### Die GUI-Instruction
+Optional (wenn genutzt): `role_label: Mitarbeiter` (überschreibt die automatische Rollen-Erkennung im UI).
 
-Alles nach dem Marker `### GUI INSTRUCTION ###` wird dem Nutzer als Briefing angezeigt. Die App extrahiert daraus automatisch die Rolle (z. B. "Gespräch mit dem Mitarbeiter"), um die Chat-Labels anzupassen.
+### 4.2 Die GUI Instruction
 
-## 5. Kernfunktionen der `app.js`
+Alles nach dem Marker `### GUI INSTRUCTION ###` wird als Briefing angezeigt. Falls `role_label` nicht gesetzt ist, versucht die App, die Rolle heuristisch aus dem Text zu erkennen, um Labels/Platzhalter im Chat anzupassen.
 
-- **Konfiguration**: Zu Beginn der Datei wird die `PROXY_URL` definiert, die auf den Strato-Server zeigt.
-- **Dynamisches Laden**: `initScenarioDropdown()` befüllt das Menü basierend auf dem Array `scenarioFiles`.
-- **Fehlerbehandlung**: Sollte ein Prompt oder ein Szenario nicht geladen werden können (z. B. 404-Fehler), wird dies in der **Status-Box** unter dem Chat für den Nutzer sichtbar ausgegeben.
-- **Chat-Historie**: Der Verlauf wird lokal im Array `chatHistory` gehalten und bei jeder Anfrage als Kontext mitgesendet.
+### 4.3 Validierung beim Laden
 
-## 6. Einrichtung & Deployment
+Beim Laden eines Szenarios prüft die App verpflichtend:
 
-### Lokale Entwicklung & Konfiguration
+- Marker `### GUI INSTRUCTION ###` vorhanden
+- `system_prompt`, `partner_prompt` und `mentor_prompt` im META-Block vorhanden
+- GUI-Instruction nicht leer
 
-1.  Öffne das Projekt in **VS Code**.
-2.  Stelle in der `app.js` sicher, dass die Variable `PROXY_URL` korrekt gesetzt ist:
-    `const PROXY_URL = "https://deine-domain.de/path/to/chat.php";`
-3.  Starte den **Live Server**, um die Anwendung lokal zu testen.
+Wenn eine dieser Bedingungen nicht erfüllt ist, zeigt die App eine klare Fehlermeldung im Status/Briefing statt stillschweigend mit unvollständigen Daten weiterzulaufen.
 
-### Online bringen
+## 5. Lokale Entwicklung
 
-1.  **GitHub**: Lade alle Dateien (außer der PHP) hoch und aktiviere **GitHub Pages** in den Repository-Einstellungen.
-2.  **Strato**: Lade die `chat.php` hoch. Stelle sicher, dass dein SSL-Zertifikat aktiv ist (**https://**).
+- Projekt in VS Code öffnen
+- Mit einem statischen Server starten (z.B. „Live Server“)
+- Hinweis: Für echte API-Calls braucht die App eine erreichbare Proxy-URL (siehe nächster Abschnitt)
 
-## 7. Anleitung: Ein neues Szenario hinzufügen
+## 6. Proxy-Setup (serverseitig) & Sicherheit
 
-1.  Erstelle die drei benötigten Prompt-Dateien (System, Partner, Mentor) als `.txt`.
-2.  Erstelle eine neue Datei im Ordner `scenarios/` mit dem `### META ###` und `### GUI INSTRUCTION ###` Aufbau.
-3.  Füge den Dateinamen zum Array `scenarioFiles` am Anfang der `app.js` hinzu.
-4.  Speichern und hochladen – die App erkennt das Szenario automatisch.
+Da das Frontend statisch ist, muss die Kommunikation mit der OpenAI API über einen serverseitigen Proxy erfolgen (z.B. `chat.php`), damit der API-Key nicht im Browser landet.
+
+### 6.1 API-Key
+
+- Der OpenAI API-Schlüssel darf **niemals** im Frontend-Code stehen.
+- Hinterlege den Key ausschließlich **serverseitig** (z.B. als Umgebungsvariable oder in einer Konfigurationsdatei, die nicht versioniert wird).
+- Der Proxy setzt den Header `Authorization: Bearer ...` serverseitig.
+
+### 6.2 CORS / Origin-Whitelist
+
+- Der Proxy sollte nur Requests vom **Origin** der Webanwendung akzeptieren (z.B. `https://ryanaella.github.io`).
+- Vermeide nach Möglichkeit `Access-Control-Allow-Origin: *`, damit nicht beliebige Webseiten den Proxy missbrauchen können.
+
+## 7. Deployment (Beispiel: GitHub Pages + eigener Proxy)
+
+1. **Frontend**: Repository pushen und GitHub Pages aktivieren.
+2. **Proxy**: Proxy-Skript auf deinem Webserver deployen (HTTPS empfohlen).
+3. **Frontend-Konfiguration**: In `app.js` die Proxy-URL konsistent verwenden (z.B. eine Konstante `PROXY_URL`) und alle API-Calls darüber laufen lassen.
+
+## 8. Neues Szenario hinzufügen
+
+1. Prompt-Dateien als `.txt` anlegen:
+   - `prompts/system/<name>.txt`
+   - `prompts/partner/<name>.txt`
+   - `prompts/mentor/<name>.txt` (optional, falls Feedback genutzt wird)
+2. Neue Datei in `scenarios/` erstellen (mit `### META ###` und `### GUI INSTRUCTION ###`).
+3. Dateiname in `scenarioFiles` (in `app.js`) ergänzen.
+4. Deployen – die App listet das Szenario im Dropdown.
 
 ---
 
-_Hinweis: Ein Klick auf "Neu starten" setzt die gesamte Anwendung zurück und löscht den aktuellen Chatverlauf aus dem Arbeitsspeicher des Browsers._
-
----
+_Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht den aktuellen Chatverlauf aus dem Arbeitsspeicher des Browsers._
 
 ---
 
@@ -81,30 +101,31 @@ _Hinweis: Ein Klick auf "Neu starten" setzt die gesamte Anwendung zurück und l�
 
 ## 1. Overview
 
-The **Socio-Informatics Lab: Dialogue Training** is a web-based application designed for training communication skills (e.g., performance reviews or conflict management). Users can select various scenarios and interact with an AI via a chat interface. The AI takes on a specific persona, and at the end of the session, users can request detailed "Mentor Feedback."
+The **Socio-Informatics Lab: Dialogue Training** is a web-based application designed for training communication skills (e.g., performance reviews or conflict management). Users can select scenarios and interact with an AI via a chat interface. At the end of a session, users can request mentor feedback.
 
 ## 2. Technical Architecture
 
-The application uses a hybrid architecture to combine ease of hosting with high security:
+The application combines a static frontend with a server-side proxy (to protect the API key):
 
-- **Frontend**: A static website (HTML5, Tailwind CSS, Vanilla JavaScript) hosted on **GitHub Pages**.
-- **Backend Proxy**: A PHP script (`chat.php`) hosted on a **Strato Server**. This acts as a secure bridge to the OpenAI API, ensuring that API keys are never exposed in the client-side code.
-- **Security (CORS)**: The proxy is configured to only accept requests from your specific GitHub Pages domain.
-- **AI Model**: OpenAI GPT-4o.
+- **Frontend**: Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g. hosted on **GitHub Pages**.
+- **Backend proxy**: A small server-side script (e.g. PHP `chat.php`) running on any web server/hosting. This is required because API keys must never be exposed in client-side code.
+- **Security (CORS)**: The proxy should only accept requests from the web app’s **origin** (e.g. `https://ryanaella.github.io`). Important: **origin = scheme + domain**, not the path (so not `.../dialogue_lab/`).
+- **AI model**: OpenAI (passed as `model` from `app.js`).
 
-## 3. File Structure
+## 3. Repository File Structure
 
-- `index.html`: The visual layout and UI components.
-- `app.js`: Core logic (parsing scenarios, managing chat history, API communication).
-- `scenarios/`: Directory containing `.txt` files for each training exercise.
-- `prompts/`: Subdirectories (`system/`, `partner/`, `mentor/`) for the underlying AI instructions.
-- `chat.php`: The PHP script located on the external server.
+- `index.html`: UI / layout.
+- `app.js`: Core logic (scenario parsing, chat management, proxy calls).
+- `scenarios/`: `.txt` scenario files.
+- `prompts/`: Prompt files in `system/`, `partner/`, `mentor/`.
+
+Note: A server-side proxy script like `chat.php` does **not** have to live in this repository. Keeping it separate helps prevent accidental commits of secrets.
 
 ## 4. The Scenario System
 
-Scenarios are controlled via text files. The JavaScript logic parses these files using specific markers:
+Scenarios are controlled via text files in `scenarios/`. `app.js` parses them using markers.
 
-### The META Block
+### 4.1 The META Block
 
 ```text
 ### META ###
@@ -114,40 +135,62 @@ partner_prompt: reporting_partner_prompt
 mentor_prompt: reporting_mentor_prompt
 ```
 
-_The prompt names refer to the filenames within the `prompts/` directory._
+_Prompt names reference files in `prompts/<type>/…` (without the `.txt` extension)._
 
-### The GUI Instruction
+Optional (if used): `role_label: Employee` (overrides heuristic role detection in the UI).
 
-Everything following the `### GUI INSTRUCTION ###` marker is displayed as a briefing to the user. The app automatically extracts the role (e.g., "Conversation with the Employee") to customize the chat labels.
+### 4.2 The GUI Instruction
 
-## 5. Key Functions in `app.js`
+Everything after `### GUI INSTRUCTION ###` is shown as the briefing. If `role_label` is not set, the app tries to detect the role heuristically from the text to customize chat labels and placeholders.
 
-- **Configuration**: The `PROXY_URL` variable at the top of the file points to your external backend.
-- **Dynamic Loading**: `initScenarioDropdown()` populates the menu based on the `scenarioFiles` array.
-- **Error Handling**: If a prompt or scenario fails to load (e.g., 404 error), a clear message is displayed in the **Status Box** below the chat.
-- **Chat History**: The conversation is stored in a local `chatHistory` array and sent as context with every new request.
+### 4.3 Runtime Validation
 
-## 6. Setup & Deployment
+When loading a scenario, the app validates that:
 
-### Local Development & Configuration
+- the `### GUI INSTRUCTION ###` marker exists
+- `system_prompt`, `partner_prompt`, and `mentor_prompt` exist in the META block
+- the GUI instruction section is not empty
 
-1. Open the project in **VS Code**.
-2. Ensure the `PROXY_URL` variable in `app.js` is set correctly:
-   `const PROXY_URL = "https://your-domain.com/path/to/chat.php";`
-3. Launch **Live Server** to test the application locally.
+If any of these checks fail, the app shows a clear error message in status/briefing instead of continuing with incomplete data.
 
-### Going Live
+## 5. Local Development
 
-1. **GitHub**: Push all files (except the PHP file) and enable **GitHub Pages** in the repository settings.
-2. **Strato**: Upload the `chat.php`. Ensure your SSL certificate is active (**https://**).
+- Open the project in VS Code
+- Serve it with a static server (e.g. “Live Server”)
+- Note: Real API calls require a reachable proxy URL (see next section)
 
-## 7. How to Add a New Scenario
+## 6. Proxy Setup (Server-Side) & Security
 
-1. Create the three required prompt files (System, Partner, Mentor) as `.txt` files in their respective folders.
-2. Create a new scenario file in the `scenarios/` folder using the `### META ###` and `### GUI INSTRUCTION ###` format.
-3. Add the filename to the `scenarioFiles` array at the beginning of `app.js`.
-4. Save and upload—the app will automatically detect and list the new scenario.
+Because the frontend is static, calls to the OpenAI API must go through a server-side proxy (e.g. `chat.php`) so the API key never reaches the browser.
+
+### 6.1 API key
+
+- The OpenAI API key must **never** be stored in client-side code.
+- Store the key **server-side only** (e.g. as an environment variable or in a non-versioned config file).
+- The proxy sets the `Authorization: Bearer ...` header on the server.
+
+### 6.2 CORS / origin whitelist
+
+- The proxy should only allow requests from the web app’s **origin** (e.g. `https://ryanaella.github.io`).
+- Avoid `Access-Control-Allow-Origin: *` where possible to prevent other sites from abusing your proxy.
+
+## 7. Deployment (Example: GitHub Pages + your proxy)
+
+1. **Frontend**: Push the repository and enable GitHub Pages.
+2. **Proxy**: Deploy the proxy script to your web server (HTTPS recommended).
+3. **Frontend configuration**: Use a single proxy URL in `app.js` (e.g. a `PROXY_URL` constant) and route all API calls through it.
+
+## 8. How to Add a New Scenario
+
+1. Create prompt files as `.txt`:
+   - `prompts/system/<name>.txt`
+   - `prompts/partner/<name>.txt`
+   - `prompts/mentor/<name>.txt` (optional, if mentor feedback is used)
+2. Create a new scenario file in `scenarios/` using the `### META ###` and `### GUI INSTRUCTION ###` format.
+3. Add the scenario filename to `scenarioFiles` (in `app.js`).
+4. Deploy — the scenario will appear in the dropdown.
 
 ---
 
-_Note: Clicking "Restart" will reset the application and wipe the current chat history from the browser's memory._
+_Note: Clicking “Restart” resets the application and clears the current chat history from the browser's memory._
+

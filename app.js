@@ -13,6 +13,10 @@ const statusBox = document.getElementById("status-box");
 const mobileMenuBtn = document.getElementById("mobile-menu-btn");
 const sidebar = document.getElementById("sidebar");
 const sidebarOverlay = document.getElementById("sidebar-overlay");
+const PROXY_URL = "https://kite2.site/chat.php";
+const MODEL = "gpt-4o";
+const CHAT_TEMPERATURE = 0.7;
+const MENTOR_TEMPERATURE = 0.3;
 
 // Store the loaded prompt contents here
 let currentConfig = {
@@ -26,6 +30,88 @@ let chatHistory = [];
 
 // List of scenario files to be loaded into the dropdown
 const scenarioFiles = ["reporting_scenario.txt", "difficulties_scenario.txt"];
+
+function appendTextWithLineBreaks(container, text) {
+  const lines = String(text).split("\n");
+  lines.forEach((line, index) => {
+    container.appendChild(document.createTextNode(line));
+    if (index < lines.length - 1) {
+      container.appendChild(document.createElement("br"));
+    }
+  });
+}
+
+function renderBoldMarkdownWithLineBreaks(container, text) {
+  container.textContent = "";
+
+  // Very small markdown subset: **bold**
+  const parts = String(text).split(/\*\*(.*?)\*\*/g);
+  parts.forEach((part, index) => {
+    if (!part) return;
+
+    if (index % 2 === 1) {
+      const strong = document.createElement("strong");
+      appendTextWithLineBreaks(strong, part);
+      container.appendChild(strong);
+      return;
+    }
+
+    appendTextWithLineBreaks(container, part);
+  });
+}
+
+async function callChatApi(messages, temperature) {
+  const response = await fetch(PROXY_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages,
+      temperature,
+    }),
+  });
+
+  return response.json();
+}
+
+function parseMetaValue(metaSection, key) {
+  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = metaSection.match(new RegExp(`^\\s*${escapedKey}:\\s*(.+)$`, "mi"));
+  return match?.[1].trim() || "";
+}
+
+function parseScenarioContent(rawScenario) {
+  const parts = rawScenario.split(/###\s*GUI INSTRUCTION\s*###/i);
+  if (parts.length < 2) {
+    throw new Error("Szenarioformat ungültig: Marker '### GUI INSTRUCTION ###' fehlt.");
+  }
+
+  const metaSection = parts[0];
+  const instructionSection = parts.slice(1).join("### GUI INSTRUCTION ###").trim();
+
+  if (!instructionSection) {
+    throw new Error("Szenarioformat ungültig: GUI Instruction ist leer.");
+  }
+
+  const parsed = {
+    title: parseMetaValue(metaSection, "title"),
+    systemPromptFile: parseMetaValue(metaSection, "system_prompt"),
+    partnerPromptFile: parseMetaValue(metaSection, "partner_prompt"),
+    mentorPromptFile: parseMetaValue(metaSection, "mentor_prompt"),
+    roleLabel: parseMetaValue(metaSection, "role_label"),
+    instructionSection,
+  };
+
+  if (!parsed.systemPromptFile || !parsed.partnerPromptFile || !parsed.mentorPromptFile) {
+    throw new Error(
+      "Szenarioformat ungültig: 'system_prompt', 'partner_prompt' und 'mentor_prompt' sind erforderlich.",
+    );
+  }
+
+  return parsed;
+}
 
 // =========================================================
 // 2. Scenario & Dropdown Logic
@@ -84,21 +170,18 @@ scenarioSelect.addEventListener("change", async (event) => {
     const response = await fetch(`scenarios/${fileName}`);
     const text = await response.text();
 
-    // Split the file content at the GUI INSTRUCTION marker
-    const parts = text.split(/###\s*GUI INSTRUCTION\s*###/);
-    const metaSection = parts[0];
-    const instructionSection = parts[1] ? parts[1].trim() : "";
+    const parsedScenario = parseScenarioContent(text);
+    const {
+      systemPromptFile,
+      partnerPromptFile,
+      mentorPromptFile,
+      roleLabel,
+      instructionSection,
+    } = parsedScenario;
 
-    // --- EXTRACT FILENAMES FROM META ---
-    const systemFile = metaSection.match(/system_prompt:\s*(.*)/)?.[1].trim();
-    const partnerFile = metaSection.match(/partner_prompt:\s*(.*)/)?.[1].trim();
-    const mentorFile = metaSection.match(/mentor_prompt:\s*(.*)/)?.[1].trim();
-
-    const roleMatchMeta = metaSection.match(/role_label:\s*(.*)/);
-
-    if (roleMatchMeta) {
+    if (roleLabel) {
       // Use role label if explicitly defined in META
-      currentConfig.roleName = roleMatchMeta[1].trim();
+      currentConfig.roleName = roleLabel;
     } else {
       // Attempt to extract the role name automatically from the "Deine Aufgabe" section
       const taskSection =
@@ -138,14 +221,14 @@ scenarioSelect.addEventListener("change", async (event) => {
 
     // --- FETCH ACTUAL PROMPT CONTENTS ---
     const [sys, part, ment] = await Promise.all([
-      fetch(`prompts/system/${systemFile}.txt?t=${Date.now()}`).then((r) =>
+      fetch(`prompts/system/${systemPromptFile}.txt?t=${Date.now()}`).then((r) =>
         r.text(),
       ),
-      fetch(`prompts/partner/${partnerFile}.txt?t=${Date.now()}`).then((r) =>
+      fetch(`prompts/partner/${partnerPromptFile}.txt?t=${Date.now()}`).then((r) =>
         r.text(),
       ),
-      mentorFile
-        ? fetch(`prompts/mentor/${mentorFile}.txt?t=${Date.now()}`).then((r) =>
+      mentorPromptFile
+        ? fetch(`prompts/mentor/${mentorPromptFile}.txt?t=${Date.now()}`).then((r) =>
             r.text(),
           )
         : Promise.resolve(""),
@@ -221,12 +304,16 @@ function appendMessage(text, sender) {
         : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
   }`;
   if (sender === "user") {
-    avatar.innerHTML = "DU";
+    avatar.textContent = "DU";
   } else if (isFemale) {
-    avatar.innerHTML = `<img src="grafik.png" alt="${currentConfig.roleName}" class="w-full h-full object-cover">`;
+    const avatarImg = document.createElement("img");
+    avatarImg.src = "grafik.png";
+    avatarImg.alt = currentConfig.roleName;
+    avatarImg.className = "w-full h-full object-cover";
+    avatar.appendChild(avatarImg);
   } else {
     // Zeige die ersten zwei Buchstaben für männliche oder neutrale Rollen (z.B. "MI" für Mitarbeiter)
-    avatar.innerHTML = currentConfig.roleName.substring(0, 2).toUpperCase();
+    avatar.textContent = currentConfig.roleName.substring(0, 2).toUpperCase();
   }
 
   // Create Content Container
@@ -246,7 +333,7 @@ function appendMessage(text, sender) {
     sender === "user"
       ? "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md"
       : "bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-md border border-gray-100";
-  msgBubble.innerHTML = text.replace(/\n/g, "<br>");
+  appendTextWithLineBreaks(msgBubble, text);
 
   contentDiv.appendChild(nameLabel);
   contentDiv.appendChild(msgBubble);
@@ -303,19 +390,7 @@ async function handleSend() {
 
   try {
     // 4. API Call via proxy
-    const response = await fetch("https://kite2.site/chat.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: chatHistory,
-        temperature: 0.7,
-      }),
-    });
-
-    const data = await response.json();
+    const data = await callChatApi(chatHistory, CHAT_TEMPERATURE);
 
     if (chatWindow.contains(typingIndicator)) {
       chatWindow.removeChild(typingIndicator);
@@ -394,17 +469,7 @@ async function handleFeedback() {
   ];
 
   try {
-    const response = await fetch("https://kite2.site/chat.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: mentorMessages,
-        temperature: 0.3, // Low temperature for more analytical results
-      }),
-    });
-
-    const data = await response.json();
+    const data = await callChatApi(mentorMessages, MENTOR_TEMPERATURE); // Low temperature for more analytical results
 
     if (data.choices && data.choices[0]) {
       const feedbackContent = data.choices[0].message.content;
@@ -426,11 +491,7 @@ function showFeedbackModal(feedback, transcript) {
   const modal = document.getElementById("feedback-modal");
   const container = document.getElementById("feedback-text");
 
-  // Basic markdown bold formatting
-  container.innerHTML = feedback.replace(
-    /\*\*(.*?)\*\*/g,
-    "<strong>$1</strong>",
-  );
+  renderBoldMarkdownWithLineBreaks(container, feedback);
 
   modal.classList.remove("hidden");
 
