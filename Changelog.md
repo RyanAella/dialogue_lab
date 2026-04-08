@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.0] - 2026-04-08
+
+### Added
+
+- **Centralized Exercise Configuration:** `exercises.json` now serves as the single source of truth for all exercise types (Transformation and Simulation), replacing `scenarios/index.json` and `scenarios/ich_botschaft_mode.json`.
+- **Dedicated Folder Structure for Transformation Exercises:** Introduced `scenarios/transformations/` for content files (e.g., `ich_botschaft_statements.txt`, `ich_botschaft_instructions.txt`) and `prompts/trainers/` for feedback prompts (e.g., `ich_botschaft_trainer.txt`).
+- **Generic Transformation Mode Function:** Implemented `switchToTransformationMode` to handle all transformation-based exercises dynamically, making it easier to add new exercise types.
+- **Unified Input UI Control:** Added `updateInputUI` helper function for consistent styling and state management of input elements across different modes and error states.
+- **Modal-Sidebar Interaction:** Implemented logic to automatically close the mobile sidebar when a modal (feedback or reset) is opened, improving UX on smaller screens.
+
+### Changed
+
+- **Removed Redundant Configuration Files:** `scenarios/index.json` and `scenarios/ich_botschaft_mode.json` have been removed, as their functionality is now integrated into `exercises.json`.
+- **Consistent Prompt Management:** Prompt references are now exclusively managed via `META` blocks in content files (e.g., `trainer_prompt` for transformation exercises), removing direct file paths from `exercises.json`.
+- **Dynamic Exercise Titles:** Exercise titles are now dynamically loaded from `META` blocks in instruction/scenario files, removing redundant title fields from `exercises.json`.
+- **Improved Text Rendering:** Implemented consistent use of `white-space: pre-wrap` for rendering text from `.txt` files and simplified rendering functions (`appendText`, `renderBoldMarkdownWithLineBreaks`) to avoid double line breaks and ensure accurate display of content.
+- **Updated I-Message Content:** The content of `scenarios/transformations/ich_botschaft_instructions.txt` and `prompts/trainers/ich_botschaft_trainer.txt` has been updated for clarity, improved formatting, and adherence to the new `pre-wrap` rendering.
+- **Refactored Mobile Menu Logic:** Simplified `toggleMobileMenu` function for clearer behavior and removed redundant scroll-locking commands.
+
+### Fixed
+
+- **Critical Bug: Double Reading of Response Body:** Corrected the `loadIchBotschaftStatements` function to prevent double reading of `response.text()`, which caused script errors.
+- **Initialization Race Condition:** Resolved a race condition in `DOMContentLoaded` and `startApp` that caused "Configuration for I-Messages not found" errors by ensuring `exercises.json` is fully loaded before attempting to switch modes.
+- **Robust Error Handling:** Removed hardcoded fallback values for scenario files and prompts in `app.js`. The application now displays explicit, user-friendly error messages and disables input if configurations or content files are missing or invalid, preventing interaction with an incomplete state.
+- **UI State Consistency on Error:** Ensured that input fields remain disabled and error messages are prominently visible when loading fails, providing clear feedback to the user.
+- **Syntax Errors:** Corrected various syntax errors and `this` references in `app.js` related to the `updateInputUI` helper function and the `switchToTransformationMode` function.
+- **Z-Index Overlap:** Adjusted `z-index` values in `index.html` for modals, sidebar, and overlays to ensure correct visual layering.
+- **`closeMobileMenuIfOpen` Scope:** Ensured `closeMobileMenuIfOpen` is defined in the global scope to be accessible by modal functions, resolving `ReferenceError`.
+- **Enhanced API Error Reporting:** Updated `callChatApi` to provide detailed error logs including HTTP status and response text for better debugging.
+
+---
+
 ## [0.6.0] - 2026-04-07
 
 ### Added

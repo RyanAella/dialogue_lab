@@ -22,7 +22,7 @@
 
   <body class="flex flex-col lg:flex-row h-[100dvh] bg-gray-50 overflow-hidden">
     <header
-      class="lg:hidden flex items-center justify-between bg-white border-b p-4 z-[80] w-full"
+      class="lg:hidden flex items-center justify-between bg-white border-b p-4 z-[40] w-full"
     >
       <h1 class="text-lg font-bold text-slate-800">Gesprächstraining</h1>
       <button
@@ -34,7 +34,7 @@
     </header>
     <aside
       id="sidebar"
-      class="fixed inset-y-0 left-0 z-[90] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
+      class="fixed inset-y-0 left-0 z-[60] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
     >
       <div class="sidebar-section mb-6">
         <label class="block font-semibold mb-2 text-slate-700 text-sm"
@@ -115,7 +115,7 @@
 
     <div
       id="sidebar-overlay"
-      class="fixed inset-0 bg-black/50 z-[85] hidden lg:hidden"
+      class="fixed inset-0 bg-black/50 z-[50] hidden lg:hidden"
     ></div>
 
     <main
@@ -239,7 +239,7 @@
 
     <div
       id="feedback-modal"
-      class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 bg-black/50 hidden z-[110] flex items-center justify-center p-4"
     >
       <div
         class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[90vh]"
@@ -280,7 +280,7 @@
 
     <div
       id="reset-modal"
-      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4"
     >
       <div
         class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl transform transition-all scale-95"
