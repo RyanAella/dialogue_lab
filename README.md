@@ -2,7 +2,7 @@
 
 ## 1. Übersicht
 
-Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung und Ich-Botschaften. Die App unterstützt aktuell zwei Modi:
+Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung und Gesprächstechniken. Die App unterstützt aktuell zwei Modi:
 
 - **Simulationen**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
 - **Übungen**: Interaktive Umformulierung von Aussagen (z.B. Ich-Botschaften, Positive Unterstellung) mit kurzem KI-Feedback
