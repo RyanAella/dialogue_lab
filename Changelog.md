@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.8.0] - 2026-04-09
+
+### Added
+
+- **New Exercise Type:** Integrated "Positive Unterstellung" (Positive Assumption) into the Exercises mode, including dedicated statements, instructions, and trainer prompts.
+
+### Changed
+
+- **Mode Renaming:** Renamed "Gesprächstraining" to **Simulationen** (Simulations) and "Ich-Botschaften" to **Übungen** (Exercises) to better reflect the broader range of available content.
+- **Layout Architecture:** Switched to a unified scroll layout where the main container (Briefing and Chat) scrolls as a single unit while the input area remains fixed at the bottom. This eliminates nested scrollbars for a better user experience.
+- **Briefing Visibility:** Updated both modes to show the briefing expanded by default, ensuring immediate access to task instructions without hiding the first chat message.
+- **Enhanced Scroll Logic:** Improved message appending to support conditional scrolling; the view now stays at the top when a new exercise loads but scrolls automatically during active conversation.
+- **Refactored Mode Switching:** Made mode and scenario transitions more robust by properly awaiting asynchronous dropdown population and metadata loading.
+
+### Fixed
+
+- **Z-Index Hierarchy:** Corrected z-index values in `index.html` to ensure modals (Feedback/Reset) always appear above the sidebar and mobile overlays.
+- **Scenario Dropdown Synchronization:** Fixed a bug where the scenario list wouldn't update correctly or fail to load the initial briefing when switching between Simulation and Exercise modes.
+- **Layout Regressions:** Resolved issues where the input field was incorrectly positioned or covered by chat content on certain screen sizes.
+- **Message Styling:** Fixed a logic error in `appendMessage` to ensure "Task" and "Feedback" bubbles in Exercise mode receive the correct visual styling and labels.
+- **Mobile Sidebar Interaction:** Ensured the mobile menu closes automatically when opening modals to prevent UI overlapping.
+- **Initialization Race Conditions:** Patched several async/await gaps in `app.js` that caused intermittent "Configuration not found" or "File not found" errors during rapid mode switching.
+
+---
+
 ## [0.7.0] - 2026-04-08
 
 ### Added

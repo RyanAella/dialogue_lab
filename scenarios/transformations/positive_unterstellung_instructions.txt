@@ -1,0 +1,26 @@
+### META ###
+title: Positive Unterstellung
+trainer_prompt: positive_unterstellung_trainer
+
+### GUI INSTRUCTION ###
+**Konzept: Positive Unterstellung**
+In dieser Übung geht es darum, Aussagen nicht vorschnell als Kritik zu verstehen, sondern die positiven, wertschätzenden Botschaften darin zu erkennen.
+Auch hinter schwierigen oder frustrierten Aussagen stecken oft:
+•	ein Wunsch (z. B. nach Anerkennung oder Sinn),
+•	ein Bedürfnis (z. B. nach Klarheit oder Unterstützung),
+•	oder ein Vertrauenssignal.
+
+**Deine Aufgabe:**
+Lies die Aussage und formuliere:
+•	Ich-Botschaften (Was sagt die Person über sich selbst? Gefühle, Bedürfnisse, Motive?)
+•	Du-Botschaften (Was sagt sie über das Gegenüber? Erwartungen, Zuschreibungen?)
+
+Formuliere möglichst konkret und wohlwollend – suche aktiv nach dem positiven Kern.
+
+Gehe davon aus, dass die Person etwas verbessern möchte und sich an dich wendet, um eine Lösung zu finden.
+
+**Ablauf:**
+Die KI gibt dir kurzes Feedback. Danach kannst du überarbeiten oder zur nächsten Aussage gehen.
+
+**Ziel:**
+Du lernst, auch in schwierigen Aussagen eine konstruktive Bedeutung zu erkennen – als Grundlage für ein gutes Gespräch.

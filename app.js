@@ -41,8 +41,6 @@ let exerciseIndex = 0;
 let exerciseAwaitingRevision = false;
 let ichBotschaftStatements = [];
 let ichBotschaftFeedbackPrompt = "";
-let pendingIchMessageType = null;
-let scenarioFiles = [];
 let allExercises = [];
 
 async function loadPromptContent(type, promptName) {
@@ -162,14 +160,8 @@ async function loadExercises() {
     if (!Array.isArray(data))
       throw new Error("Exercises file is not a valid JSON array.");
     allExercises = data;
-
-    // Extrahiere Dateinamen für SIMULATION Szenarien (Präfix entfernen für Kompatibilität mit dem bestehenden Dropdown)
-    scenarioFiles = allExercises
-      .filter((ex) => ex.type === "SIMULATION")
-      .map((ex) => ex.config.scenarioFile.replace(/^scenarios\//, ""));
   } catch (error) {
-    console.error("Exercises konnten nicht geladen werden:", error);
-    scenarioFiles = []; // If exercises.json fails, no scenarios are available
+    console.error("Fehler beim Laden der Übungen:", error);
     updateStatus("error", `Fehler beim Laden der Übungen: ${error.message}`);
     briefingContent.innerHTML = `<p class="text-red-500 p-4">Fehler beim Laden der Übungen: ${error.message}</p>`;
     briefingContent.classList.remove("hidden"); // Ensure briefing is visible on error
@@ -196,13 +188,13 @@ function setMainSubtitle(text) {
 function setModeBadge(mode) {
   if (!modeBadge) return;
   if (mode === "ich-botschaft") {
-    modeBadge.textContent = "Modus: Ich-Botschaften";
+    modeBadge.textContent = "Modus: Übungen";
     modeBadge.className =
       "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
     return;
   }
 
-  modeBadge.textContent = "Modus: Gesprächstraining";
+  modeBadge.textContent = "Modus: Simulationen";
   modeBadge.className =
     "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
 }
@@ -230,12 +222,13 @@ async function loadIchBotschaftStatements(filePath) {
   ichBotschaftStatements = lines;
 }
 
-function appendExerciseTaskMessage() {
-  pendingIchMessageType = "task";
-  const statement = ichBotschaftStatements[exerciseIndex];
+function appendExerciseTaskMessage(shouldScroll = true) {
+  const statement = ichBotschaftStatements[exerciseIndex]; // Re-added this line
   appendMessage(
     `Aussage ${exerciseIndex + 1}:\n"${statement}"\n\nFormuliere diese Aussage als Ich-Botschaft.`,
     "partner",
+    "task",
+    shouldScroll,
   );
 }
 
@@ -246,7 +239,7 @@ function restartIchBotschaftExercise() {
   exerciseAwaitingRevision = false;
   chatWindow.innerHTML = "";
   setExerciseActionsVisible(false);
-  appendExerciseTaskMessage();
+  appendExerciseTaskMessage(false);
   enableInput("Formuliere die Aussage als Ich-Botschaft...");
   updateStatus("idle", `${getIchBotschaftProgressText()} (neu gestartet)`);
 }
@@ -255,96 +248,6 @@ function enableInput(placeholderText) {
   userInput.disabled = false;
   sendBtn.disabled = false;
   updateInputUI(false, placeholderText);
-}
-
-async function switchToTransformationMode(
-  exerciseId = "ich_botschaften_basis",
-) {
-  const loadErrors = [];
-  const config = allExercises.find((ex) => ex.id === exerciseId)?.config;
-
-  if (!config) {
-    updateStatus("error", "Konfiguration für Ich-Botschaften nicht gefunden");
-    return;
-  }
-
-  try {
-    await loadIchBotschaftStatements(config.sourceFile);
-  } catch (error) {
-    console.error(error);
-    loadErrors.push(`Aussagen-Datei: ${error.message}`);
-  }
-
-  currentMode = "ich-botschaft";
-  exerciseIndex = 0;
-  exerciseAwaitingRevision = false;
-  chatHistory = [];
-  chatWindow.innerHTML = "";
-  briefingContent.classList.remove("hidden");
-
-  if (config?.instructionFile) {
-    try {
-      const response = await fetch(`${config.instructionFile}?t=${Date.now()}`);
-      const text = await response.text();
-
-      // Einheitliches Parsing von META und Instruction
-      const parts = text.split(/###\s*GUI INSTRUCTION\s*###/i);
-      const metaSection = parts[0];
-      const instructionText = parts.length > 1 ? parts[1].trim() : text.trim();
-
-      // Trainer-Prompt aus META beziehen (inhaltlich wie ein Mentor, aber interaktiv)
-      const trainerPromptName = parseMetaValue(metaSection, "trainer_prompt");
-      if (trainerPromptName) {
-        ichBotschaftFeedbackPrompt = await loadPromptContent(
-          "trainers",
-          trainerPromptName,
-        );
-      } else {
-        throw new Error(
-          "Kein trainer_prompt in META der Instruktionsdatei gefunden.",
-        );
-      }
-
-      // Titel dynamisch aus META beziehen
-      const pageTitle =
-        parseMetaValue(metaSection, "title") || "Ich-Botschaften";
-      setMainSubtitle(`${pageTitle}: Formuliere jede Aussage konstruktiv um.`);
-
-      renderBoldMarkdownWithLineBreaks(briefingContent, instructionText);
-    } catch (error) {
-      console.error("Fehler beim Laden der Instruktion:", error);
-      ichBotschaftFeedbackPrompt = ""; // Clear prompt if loading fails
-      loadErrors.push(`Instruktion/Feedback-Prompt: ${error.message}`);
-      briefingContent.textContent = `Fehler beim Laden der Ich-Botschaften-Instruktionen: ${error.message}`;
-    }
-  } else {
-    loadErrors.push("Instruktionsdatei fehlt in der Konfiguration.");
-    briefingContent.textContent =
-      "Fehler: Keine Instruktionsdatei für Ich-Botschaften definiert.";
-  }
-
-  briefingContent.style.whiteSpace = "pre-wrap";
-  setModeBadge("ich-botschaft");
-  setExerciseActionsVisible(false);
-  setScenarioSelectionVisible(false);
-  scenarioSelect.disabled = true;
-  const feedbackBtn = document.getElementById("feedback-btn");
-  if (feedbackBtn) {
-    feedbackBtn.disabled = true;
-    feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
-  }
-  enableInput("Formuliere die Aussage als Ich-Botschaft...");
-  appendExerciseTaskMessage();
-  if (loadErrors.length > 0) {
-    // If there are errors, disable input and show error status
-    disableInput("Fehler beim Laden der Ich-Botschaften-Übung.");
-    updateStatus(
-      "error",
-      `Fehler beim Laden der Ich-Botschaften: ${loadErrors.join(" + ")}`,
-    );
-  } else {
-    updateStatus("idle", getIchBotschaftProgressText());
-  }
 }
 
 /**
@@ -370,13 +273,9 @@ function disableInput(placeholderText = "Eingabe deaktiviert") {
   userInput.classList.add("bg-gray-100", "cursor-not-allowed");
   userInput.placeholder = placeholderText;
 }
-function switchToRoleplayMode() {
+async function switchToRoleplayMode() {
   currentMode = "roleplay";
   exerciseAwaitingRevision = false;
-  pendingIchMessageType = null;
-  setExerciseActionsVisible(false);
-  setScenarioSelectionVisible(true);
-  scenarioSelect.disabled = false;
 
   // Clear exercise artifacts from chat and briefing
   chatWindow.innerHTML = "";
@@ -386,21 +285,30 @@ function switchToRoleplayMode() {
 
   // Restore roleplay input baseline
   disableInput("Wähle zuerst ein Szenario aus...");
-  // Ensure scenario loading always triggers
-  if (!scenarioSelect.value && scenarioFiles.length > 0) {
-    scenarioSelect.value = scenarioFiles[0];
-    // No need to dispatch event here, startApp will do it if scenarioFiles.length > 0
-  }
 
+  await initScenarioDropdown(); // Dropdown für Rollenspiele füllen
+
+  const simulationExercises = allExercises.filter(
+    (ex) => ex.type === "SIMULATION",
+  );
+  if (simulationExercises.length > 0) {
+    // If no scenario is currently selected, or the selected one is not a simulation, select the first simulation
+    if (
+      !scenarioSelect.value ||
+      !simulationExercises.some((ex) => ex.id === scenarioSelect.value)
+    ) {
+      scenarioSelect.value = simulationExercises[0].id;
+    }
+    scenarioSelect.dispatchEvent(new Event("change")); // Triggert den Ladevorgang
+  } else {
+    updateStatus("idle", "Keine Rollenspiel-Szenarien verfügbar.");
+    disableInput("Keine Szenarien verfügbar.");
+  }
   setMainSubtitle(
     "Lies das Briefing und starte das Gespräch mit einer Nachricht.",
   );
   setModeBadge("roleplay");
-  scenarioSelect.dispatchEvent(new Event("change"));
-  // Only update status if scenarios are actually available
-  if (scenarioFiles.length > 0) {
-    updateStatus("idle", "Gesprächstraining aktiv");
-  }
+  updateStatus("idle", "Simulationen aktiv");
   // If scenarioFiles is empty, status will already be set by loadExercises or initScenarioDropdown
 }
 
@@ -412,44 +320,61 @@ function switchToRoleplayMode() {
  * Fills the dropdown and adds a disabled placeholder option.
  */
 async function initScenarioDropdown() {
-  // Clear existing options and add the disabled placeholder
   scenarioSelect.innerHTML =
     '<option value="" selected disabled>Wähle eine Übung...</option>';
 
-  if (scenarioFiles.length === 0) {
-    // If no scenarios, disable dropdown and show appropriate message
+  // Filtere Übungen basierend auf dem aktuellen Modus
+  const targetType =
+    currentMode === "roleplay" ? "SIMULATION" : "TRANSFORMATION";
+  const filtered = allExercises.filter((ex) => ex.type === targetType);
+
+  if (filtered.length === 0) {
     scenarioSelect.innerHTML =
       '<option value="" selected disabled>Keine Szenarien verfügbar</option>';
     scenarioSelect.disabled = true;
+    return;
   }
 
-  for (const fileName of scenarioFiles) {
+  for (const ex of filtered) {
     try {
-      const response = await fetch(`scenarios/${fileName}?t=${Date.now()}`);
+      // Pfad bestimmen (Simulation nutzt scenarioFile, Transformation nutzt instructionFile für den Titel)
+      const filePath =
+        ex.type === "SIMULATION"
+          ? ex.config.scenarioFile
+          : ex.config.instructionFile;
+
+      const response = await fetch(`${filePath}?t=${Date.now()}`);
       const content = await response.text();
 
       // Extract the title from the ### META ### block
       const titleMatch = content.match(/title:\s*(.*)/);
-      const title = titleMatch ? titleMatch[1].trim() : fileName;
+      const title = titleMatch ? titleMatch[1].trim() : ex.id;
 
       const option = document.createElement("option");
-      option.value = fileName;
+      option.value = ex.id; // Wir nutzen jetzt die ID als Value
       option.textContent = title;
       scenarioSelect.appendChild(option);
     } catch (e) {
-      console.error("Error loading scenario metadata:", fileName, e);
+      console.error("Error loading exercise metadata:", ex.id, e);
     }
   }
-  // If scenarios were loaded, ensure dropdown is enabled
-  if (scenarioFiles.length > 0) scenarioSelect.disabled = false;
+  scenarioSelect.disabled = false;
 }
 
 /**
  * Loads scenario details AND the corresponding prompt files
  */
 scenarioSelect.addEventListener("change", async (event) => {
-  const fileName = event.target.value;
-  if (!fileName) return;
+  const exerciseId = event.target.value;
+  if (!exerciseId) return;
+
+  if (currentMode === "ich-botschaft") {
+    await switchToTransformationMode(exerciseId);
+    return;
+  }
+
+  const exConfig = allExercises.find((ex) => ex.id === exerciseId)?.config;
+  if (!exConfig) return;
 
   updateStatus("loading", "Szenario wird geladen...");
 
@@ -469,7 +394,7 @@ scenarioSelect.addEventListener("change", async (event) => {
 
   // Load scenario content from file
   try {
-    const response = await fetch(`scenarios/${fileName}`);
+    const response = await fetch(exConfig.scenarioFile);
     const text = await response.text();
 
     const parsedScenario = parseScenarioContent(text);
@@ -588,16 +513,16 @@ scenarioSelect.addEventListener("change", async (event) => {
  * Appends a message bubble with an avatar and name.
  * @param {string} text - Message content.
  * @param {string} sender - 'user' or 'partner'.
+ * @param {string} [messageType='default'] - 'task', 'feedback', or 'default' for ich-botschaft mode.
  */
-function appendMessage(text, sender) {
+function appendMessage(
+  text,
+  sender,
+  messageType = "default",
+  shouldScroll = true,
+) {
   const wrapper = document.createElement("div");
   const isIchMode = currentMode === "ich-botschaft";
-
-  // Layout: Reverse for user (Avatar right), Normal for partner (Avatar left)
-  wrapper.className =
-    sender === "user"
-      ? `flex flex-row-reverse items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} ml-auto max-w-[85%]`
-      : `flex flex-row items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} mr-auto max-w-[85%]`;
 
   // Create Avatar Element
   const avatar = document.createElement("div");
@@ -633,40 +558,50 @@ function appendMessage(text, sender) {
   contentDiv.className =
     sender === "user" ? "flex flex-col items-end" : "flex flex-col items-start";
 
-  // Add name label above the bubble
-  const nameLabel = document.createElement("span");
-  nameLabel.className = "text-xs text-gray-500 mb-1 px-1";
-  if (isIchMode) {
-    nameLabel.textContent = sender === "user" ? "Deine Antwort" : "Trainer";
-  } else {
-    nameLabel.textContent =
-      sender === "user" ? "Du (Führungskraft)" : currentConfig.roleName;
-  }
+  let finalNameLabelText = "";
+  let msgBubbleClasses = "";
 
-  // Create Message Bubble
-  const msgBubble = document.createElement("div");
+  // Determine name label and bubble classes based on sender and mode/messageType
   if (sender === "user") {
-    msgBubble.className =
+    finalNameLabelText = "Deine Antwort";
+    msgBubbleClasses =
       "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md";
-  } else if (
-    currentMode === "ich-botschaft" &&
-    pendingIchMessageType === "task"
-  ) {
-    msgBubble.className =
-      "bg-sky-50 text-sky-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-sky-200";
-    nameLabel.textContent = "Aufgabe";
-  } else if (
-    sender !== "user" &&
-    currentMode === "ich-botschaft" &&
-    pendingIchMessageType === "feedback"
-  ) {
-    msgBubble.className =
-      "bg-violet-50 text-violet-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-violet-200";
-    nameLabel.textContent = "Feedback";
+  } else if (isIchMode) {
+    if (messageType === "task") {
+      finalNameLabelText = "Aufgabe";
+      msgBubbleClasses =
+        "bg-sky-50 text-sky-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-sky-200";
+    } else if (messageType === "feedback") {
+      finalNameLabelText = "Feedback";
+      msgBubbleClasses =
+        "bg-violet-50 text-violet-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-violet-200";
+    } else {
+      // Fallback for other partner messages in ich-botschaft mode (should not happen often)
+      finalNameLabelText = "Trainer";
+      msgBubbleClasses =
+        "bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-md border border-gray-100";
+    }
   } else {
-    msgBubble.className =
+    // Roleplay mode for partner
+    finalNameLabelText = currentConfig.roleName;
+    msgBubbleClasses =
       "bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-md border border-gray-100";
   }
+
+  // Layout: Reverse for user (Avatar right), Normal for partner (Avatar left)
+  wrapper.className =
+    sender === "user"
+      ? `flex flex-row-reverse items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} ml-auto max-w-[85%]`
+      : `flex flex-row items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} mr-auto max-w-[85%]`;
+
+  const nameLabel = document.createElement("span");
+  nameLabel.className = "text-xs text-gray-500 mb-1 px-1";
+  // Create Message Bubble
+  const msgBubble = document.createElement("div");
+
+  nameLabel.textContent = finalNameLabelText;
+  msgBubble.className = msgBubbleClasses;
+
   msgBubble.style.whiteSpace = "pre-wrap";
   msgBubble.textContent = text;
 
@@ -677,8 +612,16 @@ function appendMessage(text, sender) {
   }
   wrapper.appendChild(contentDiv);
   chatWindow.appendChild(wrapper);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-  pendingIchMessageType = null;
+
+  // Sicherstellen, dass das Scrolling erst nach dem Rendern der Nachricht erfolgt
+  if (shouldScroll) {
+    requestAnimationFrame(() => {
+      const mainContainer = chatWindow.closest("main");
+      if (mainContainer) {
+        mainContainer.scrollTop = mainContainer.scrollHeight;
+      }
+    });
+  }
 }
 
 /**
@@ -716,7 +659,13 @@ async function handleSend() {
     "self-start text-xs text-gray-400 italic mb-4 animate-pulse";
   typingIndicator.textContent = `${currentConfig.roleName} schreibt...`;
   chatWindow.appendChild(typingIndicator);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+
+  requestAnimationFrame(() => {
+    const mainContainer = chatWindow.closest("main");
+    if (mainContainer) {
+      mainContainer.scrollTop = mainContainer.scrollHeight;
+    }
+  });
 
   // 3. Initialize chat history with system/role prompts on first message
   if (chatHistory.length === 0) {
@@ -807,8 +756,8 @@ async function handleIchBotschaftSend() {
       throw new Error("Unexpected API response format");
     }
 
-    pendingIchMessageType = "feedback";
-    appendMessage(data.choices[0].message.content, "partner");
+    // Set pendingIchMessageType before appending the message to correctly style it as feedback
+    appendMessage(data.choices[0].message.content, "partner", "feedback"); // Updated call
     setExerciseActionsVisible(true);
     exerciseAwaitingRevision = true;
     updateStatus("idle", `${getIchBotschaftProgressText()} - Feedback bereit`);
@@ -823,7 +772,6 @@ async function handleIchBotschaftSend() {
       "Feedback fehlgeschlagen (Proxy oder API nicht erreichbar)",
     );
   } finally {
-    enableInput("Überarbeite deine Antwort oder gehe zur nächsten Aussage.");
   }
 }
 
@@ -979,15 +927,128 @@ function updateStatus(type, message) {
 // =========================================================
 async function startApp() {
   await loadExercises();
-  await initScenarioDropdown(); // Dropdown füllen
 
-  // Prüfen, welcher Modus beim Start aktiv sein soll (z.B. nach Reload)
+  // Set currentMode based on the initial value of modeSelect
+  currentMode = modeSelect?.value || "roleplay"; // Default to roleplay if modeSelect is not found
+
+  await initScenarioDropdown(); // Populate dropdown based on the determined currentMode
+
   if (modeSelect?.value === "ich-botschaft") {
-    await switchToTransformationMode();
-  } else if (scenarioFiles.length > 0) {
-    // Falls Szenarien vorhanden sind, das erste sofort laden
-    scenarioSelect.value = scenarioFiles[0];
-    scenarioSelect.dispatchEvent(new Event("change")); // Triggert den Ladevorgang
+    const firstTransformationExercise = allExercises.find(
+      (ex) => ex.type === "TRANSFORMATION",
+    );
+    if (firstTransformationExercise) {
+      scenarioSelect.value = firstTransformationExercise.id; // Erste Übung auswählen
+      await switchToTransformationMode(firstTransformationExercise.id); // And load it
+    } else {
+      updateStatus("error", "Keine Transformations-Übungen gefunden.");
+      disableInput("Keine Übungen verfügbar.");
+    }
+  } else {
+    // Standardmäßig in den Rollenspiel-Modus wechseln
+    await switchToRoleplayMode();
+  }
+}
+
+async function switchToTransformationMode(
+  exerciseId = "ich_botschaften_basis",
+) {
+  // Set selection to current exercise if we are in this mode (and it's not already selected)
+  if (scenarioSelect.value !== exerciseId) {
+    scenarioSelect.value = exerciseId;
+  }
+
+  const loadErrors = [];
+  const config = allExercises.find((ex) => ex.id === exerciseId)?.config;
+
+  if (!config) {
+    updateStatus("error", `Konfiguration für ${exerciseId} nicht gefunden`);
+    return;
+  }
+
+  try {
+    await loadIchBotschaftStatements(config.sourceFile);
+  } catch (error) {
+    console.error("Fehler beim Laden der Statements:", error);
+    loadErrors.push(`Aussagen-Datei: ${error.message}`);
+  }
+
+  setScenarioSelectionVisible(true); // Auswahl sichtbar lassen, um zwischen Übungen zu wechseln
+
+  currentMode = "ich-botschaft"; // Ensure mode is set
+  exerciseIndex = 0;
+  exerciseAwaitingRevision = false;
+  chatHistory = [];
+  chatWindow.innerHTML = "";
+
+  // Ensure briefing is visible and expanded by default in transformation mode
+  briefingContent.classList.remove("hidden");
+  chevron.style.transform = "rotate(0deg)"; // Ensure chevron points down (expanded)
+
+  // Reset scroll position to top
+  const mainContainer = chatWindow.closest("main");
+  if (mainContainer) mainContainer.scrollTop = 0;
+
+  if (config?.instructionFile) {
+    try {
+      const response = await fetch(`${config.instructionFile}?t=${Date.now()}`);
+      const text = await response.text();
+
+      // Einheitliches Parsing von META und Instruction
+      const parts = text.split(/###\s*GUI INSTRUCTION\s*###/i);
+      const metaSection = parts[0];
+      const instructionText = parts.length > 1 ? parts[1].trim() : text.trim();
+
+      // Trainer-Prompt aus META beziehen (inhaltlich wie ein Mentor, aber interaktiv)
+      const trainerPromptName = parseMetaValue(metaSection, "trainer_prompt");
+      if (trainerPromptName) {
+        ichBotschaftFeedbackPrompt = await loadPromptContent(
+          "trainers",
+          trainerPromptName,
+        );
+      } else {
+        throw new Error(
+          "Kein trainer_prompt in META der Instruktionsdatei gefunden.",
+        );
+      }
+
+      // Titel dynamisch aus META beziehen
+      const pageTitle =
+        parseMetaValue(metaSection, "title") || "Ich-Botschaften";
+      setMainSubtitle(`${pageTitle}: Formuliere die Aussagen konstruktiv um.`);
+
+      renderBoldMarkdownWithLineBreaks(briefingContent, instructionText);
+    } catch (error) {
+      console.error("Fehler beim Laden der Instruktion:", error);
+      ichBotschaftFeedbackPrompt = ""; // Clear prompt if loading fails
+      loadErrors.push(`Instruktion/Feedback-Prompt: ${error.message}`);
+      briefingContent.textContent = `Fehler beim Laden der Ich-Botschaften-Instruktionen: ${error.message}`;
+    }
+  } else {
+    loadErrors.push("Instruktionsdatei fehlt in der Konfiguration.");
+    briefingContent.textContent =
+      "Fehler: Keine Instruktionsdatei für Ich-Botschaften definiert.";
+  }
+
+  briefingContent.style.whiteSpace = "pre-wrap";
+  setModeBadge("ich-botschaft");
+  setExerciseActionsVisible(false);
+  const feedbackBtn = document.getElementById("feedback-btn");
+  if (feedbackBtn) {
+    feedbackBtn.disabled = true;
+    feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
+  }
+  enableInput("Formuliere die Aussage als Ich-Botschaft...");
+  appendExerciseTaskMessage(false);
+  if (loadErrors.length > 0) {
+    // If there are errors, disable input and show error status
+    disableInput("Fehler beim Laden der Ich-Botschaften-Übung.");
+    updateStatus(
+      "error",
+      `Fehler beim Laden der Ich-Botschaften: ${loadErrors.join(" + ")}`,
+    );
+  } else {
+    updateStatus("idle", getIchBotschaftProgressText());
   }
 }
 
@@ -997,12 +1058,23 @@ userInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") handleSend();
 });
 
-modeSelect?.addEventListener("change", (event) => {
+modeSelect?.addEventListener("change", async (event) => {
   if (event.target.value === "ich-botschaft") {
-    switchToTransformationMode();
+    currentMode = "ich-botschaft"; // Set mode first
+    await initScenarioDropdown(); // Populate dropdown with transformation exercises
+    const firstTransformationExercise = allExercises.find(
+      (ex) => ex.type === "TRANSFORMATION",
+    );
+    if (firstTransformationExercise) {
+      scenarioSelect.value = firstTransformationExercise.id; // Select the first one
+      scenarioSelect.dispatchEvent(new Event("change")); // Trigger change event to load it
+    } else {
+      updateStatus("error", "Keine Transformations-Übungen gefunden.");
+      disableInput("Keine Übungen verfügbar.");
+    }
     return;
   }
-  switchToRoleplayMode();
+  await switchToRoleplayMode();
 });
 
 reviseBtn?.addEventListener("click", () => {

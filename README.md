@@ -4,8 +4,8 @@
 
 Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung und Ich-Botschaften. Die App unterstützt aktuell zwei Modi:
 
-- **Gesprächstraining**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
-- **Ich-Botschaften**: Interaktive Umformulierung von Du-Botschaften mit kurzem KI-Feedback
+- **Simulationen**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
+- **Übungen**: Interaktive Umformulierung von Aussagen (z.B. Ich-Botschaften, Positive Unterstellung) mit kurzem KI-Feedback
 
 ## 2. Technische Architektur
 
@@ -34,16 +34,13 @@ Die Szenarioliste für den Gesprächsmodus wird aus `scenarios/index.json` gelad
 
 ```json
 {
-  "scenarioFiles": [
-    "reporting_scenario.txt",
-    "difficulties_scenario.txt"
-  ]
+  "scenarioFiles": ["reporting_scenario.txt", "difficulties_scenario.txt"]
 }
 ```
 
 Wenn die Datei fehlt/ungültig ist, nutzt die App einen internen Fallback.
 
-### 4.2 Gesprächs-Szenarioformat (`*.txt`)
+### 4.2 Simulations-Szenarioformat (`*.txt`)
 
 Ein Gesprächsszenario wird über eine Textdatei in `scenarios/` gesteuert. `app.js` parst die Datei anhand von Markern.
 
@@ -76,6 +73,8 @@ Beim Laden eines Szenarios prüft die App verpflichtend:
 Wenn eine dieser Bedingungen nicht erfüllt ist, zeigt die App eine klare Fehlermeldung im Status/Briefing statt stillschweigend mit unvollständigen Daten weiterzulaufen.
 
 ### 4.3 Ich-Botschaften-Modus
+
+### 4.3 Übungs-Modus (Transformationen)
 
 Der Ich-Botschaften-Modus ist dateibasiert konfiguriert:
 
@@ -184,10 +183,7 @@ The list of dialogue scenarios is loaded from `scenarios/index.json`:
 
 ```json
 {
-  "scenarioFiles": [
-    "reporting_scenario.txt",
-    "difficulties_scenario.txt"
-  ]
+  "scenarioFiles": ["reporting_scenario.txt", "difficulties_scenario.txt"]
 }
 ```
 
@@ -293,6 +289,3 @@ Runtime values are maintained in `config.js` (e.g. model and temperature values)
 3. If paths change, update `scenarios/ich_botschaft_mode.json`.
 
 ---
-
-_Note: Clicking “Restart” resets the application and clears the current chat history from the browser's memory._
-
