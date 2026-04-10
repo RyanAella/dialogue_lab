@@ -14,31 +14,50 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
 - **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
 - **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
-- **KI-Modell**: OpenAI (wird in `app.js` als `model` übergeben).
+- **KI-Modell**: OpenAI (Konfigurationswerte aus `config.js` werden von der `app.js` als Parameter an die Methoden der `api.js` übergeben).
 
 ## 3. Repository-Dateistruktur
 
 - `index.html`: UI / Layout.
 - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-- `app.js`: Zentrale Logik (Modi, Szenario-Parsing, Chat-Management, Proxy-Aufrufe).
-- `scenarios/`: Szenario- und Modus-Dateien (`index.json`, `*.txt`, `ich_botschaft_mode.json`).
+- `utils.js`: Hilfsfunktionen für Text-Parsing, Markdown-Rendering und Rollen-Erkennung.
+- `api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
+- `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
+- `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
+- `scenarios/`: Szenario- und Übungsdateien (`exercises.json` als zentrale Konfiguration, `*.txt` für Szenarioinhalte).
 - `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`.
 
 Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
 
 ## 4. Szenarien und Modi
 
-### 4.1 Szenario-Index (`scenarios/index.json`)
+### 4.1 Übungs- und Szenario-Konfiguration (`exercises.json`)
 
-Die Szenarioliste für den Gesprächsmodus wird aus `scenarios/index.json` geladen:
+Die zentrale Konfiguration aller Simulationen und Transformationen erfolgt über `exercises.json`. Diese Datei definiert die `id`, den `type` (`SIMULATION` oder `TRANSFORMATION`) und die `config` für jede Übung.
 
 ```json
-{
-  "scenarioFiles": ["reporting_scenario.txt", "difficulties_scenario.txt"]
-}
+[
+  {
+    "id": "ich_botschaften_basis",
+    "type": "TRANSFORMATION",
+    "config": {
+      "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt",
+      "instructionFile": "scenarios/transformations/ich_botschaft_instructions.txt"
+    }
+  },
+  {
+    "id": "simulation_reporting",
+    "type": "SIMULATION",
+    "config": {
+      "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
+    }
+  }
+]
 ```
 
-Wenn die Datei fehlt/ungültig ist, nutzt die App einen internen Fallback.
+- `sourceFile`: Für `TRANSFORMATION`-Übungen, enthält die Liste der umzuformulierenden Aussagen (eine pro Zeile).
+- `instructionFile`: Für `TRANSFORMATION`-Übungen, enthält das Briefing und den Trainer-Prompt im META-Block.
+- `scenarioFile`: Für `SIMULATION`-Übungen, enthält das Briefing und alle Prompt-Referenzen im META-Block.
 
 ### 4.2 Simulations-Szenarioformat (`*.txt`)
 
@@ -51,7 +70,7 @@ Ein Gesprächsszenario wird über eine Textdatei in `scenarios/` gesteuert. `app
 title: Kritikgespräch: Verspätetes Reporting
 system_prompt: reporting_system_prompt
 partner_prompt: reporting_partner_prompt
-mentor_prompt: reporting_mentor_prompt
+mentor_prompt: reporting_mentor_prompt # Optional, falls Feedback genutzt wird
 ```
 
 _Die Prompt-Namen referenzieren Dateinamen in `prompts/<typ>/…` (ohne `.txt`)._
@@ -72,17 +91,12 @@ Beim Laden eines Szenarios prüft die App verpflichtend:
 
 Wenn eine dieser Bedingungen nicht erfüllt ist, zeigt die App eine klare Fehlermeldung im Status/Briefing statt stillschweigend mit unvollständigen Daten weiterzulaufen.
 
-### 4.3 Ich-Botschaften-Modus
-
 ### 4.3 Übungs-Modus (Transformationen)
 
-Der Ich-Botschaften-Modus ist dateibasiert konfiguriert:
+Der Übungs-Modus (ehemals Ich-Botschaften-Modus) ist über die `exercises.json` konfiguriert. Er nutzt Transformation-Szenarien, um spezifische Techniken zu trainieren.
 
-- `scenarios/ich_botschaft_mode.json`:
-  - `statementsFile` (Liste der Aussagen)
-  - `feedbackPromptFile` (System-Prompt für Feedback)
-- `scenarios/ich_botschaft_statements.txt`: Eine Aussage pro Zeile
-- `prompts/system/ich_botschaft_feedback_prompt.txt`: Feedback-Instruktion für das Modell
+- `sourceFile` (z.B. `scenarios/transformations/ich_botschaft_statements.txt`): Enthält eine Liste von Aussagen (eine pro Zeile).
+- `instructionFile` (z.B. `scenarios/transformations/ich_botschaft_instructions.txt`): Enthält das Briefing und den `trainer_prompt` im META-Block.
 
 UI-Verhalten im Ich-Botschaften-Modus:
 
@@ -123,7 +137,7 @@ Da das Frontend statisch ist, muss die Kommunikation mit der OpenAI API über ei
 
 ### 7.1 Frontend-Konfiguration
 
-Laufzeitwerte werden in `config.js` gepflegt (z.B. Modell und Temperaturwerte). `index.html` lädt zuerst `config.js`, danach `app.js`.
+Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `config.js` gepflegt. Die `app.js` orchestriert den Datenfluss, indem sie diese Werte ausliest und bei Bedarf an die zustandslosen Funktionen in der `api.js` weiterreicht.
 
 ## 8. Neues Gesprächsszenario hinzufügen
 
@@ -132,14 +146,14 @@ Laufzeitwerte werden in `config.js` gepflegt (z.B. Modell und Temperaturwerte). 
    - `prompts/partner/<name>.txt`
    - `prompts/mentor/<name>.txt` (optional, falls Feedback genutzt wird)
 2. Neue Datei in `scenarios/` erstellen (mit `### META ###` und `### GUI INSTRUCTION ###`).
-3. Dateiname in `scenarios/index.json` unter `scenarioFiles` ergänzen.
+3. Eintrag in `exercises.json` ergänzen.
 4. Deployen – die App listet das Szenario im Dropdown.
 
 ## 9. Ich-Botschaften-Inhalte pflegen
 
-1. Aussagen in `scenarios/ich_botschaft_statements.txt` bearbeiten (eine Aussage pro Zeile).
-2. Prompt in `prompts/system/ich_botschaft_feedback_prompt.txt` anpassen.
-3. Falls Pfade geändert werden, `scenarios/ich_botschaft_mode.json` aktualisieren.
+1. Aussagen in der jeweiligen `sourceFile` bearbeiten (z.B. `scenarios/transformations/ich_botschaft_statements.txt`).
+2. Trainer-Prompt in `prompts/trainers/` anpassen.
+3. Falls Pfade oder Übungen dazukommen, `exercises.json` aktualisieren.
 
 ---
 
@@ -163,31 +177,50 @@ The application combines a static frontend with a server-side proxy (to protect 
 - **Frontend**: Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g. hosted on **GitHub Pages**.
 - **Backend proxy**: A small server-side script (e.g. PHP `chat.php`) running on any web server/hosting. This is required because API keys must never be exposed in client-side code.
 - **Security (CORS)**: The proxy should only accept requests from the web app’s **origin** (e.g. `https://ryanaella.github.io`). Important: **origin = scheme + domain**, not the path (so not `.../dialogue_lab/`).
-- **AI model**: OpenAI (passed as `model` from `app.js`).
+- **AI model**: OpenAI (configuration values from `config.js` are passed as parameters by `app.js` to the methods in `api.js`).
 
 ## 3. Repository File Structure
 
 - `index.html`: UI / layout.
 - `config.js`: Central runtime configuration (proxy URL, model, temperatures).
-- `app.js`: Core logic (modes, scenario parsing, chat management, proxy calls).
-- `scenarios/`: Scenario and mode files (`index.json`, `*.txt`, `ich_botschaft_mode.json`).
+- `utils.js`: Utility functions for text parsing, Markdown rendering, and role detection.
+- `api.js`: Manages communication with the proxy and loading/parsing of scenario and prompt files.
+- `ui.js`: Responsible for all DOM manipulations and visual rendering of the user interface.
+- `app.js`: Core application logic (state management, event handling, mode control) as a controller.
+- `scenarios/`: Scenario and exercise files (`exercises.json` as central configuration, `*.txt` for scenario content).
 - `prompts/`: Prompt files in `system/`, `partner/`, `mentor/`.
 
 Note: A server-side proxy script like `chat.php` does **not** have to live in this repository. Keeping it separate helps prevent accidental commits of secrets.
 
 ## 4. Scenarios and Modes
 
-### 4.1 Scenario Index (`scenarios/index.json`)
+### 4.1 Exercise and Scenario Configuration (`exercises.json`)
 
-The list of dialogue scenarios is loaded from `scenarios/index.json`:
+The central configuration for all simulations and transformations is handled via `exercises.json`. This file defines the `id`, `type` (`SIMULATION` or `TRANSFORMATION`), and `config` for each exercise.
 
 ```json
-{
-  "scenarioFiles": ["reporting_scenario.txt", "difficulties_scenario.txt"]
-}
+[
+  {
+    "id": "ich_botschaften_basis",
+    "type": "TRANSFORMATION",
+    "config": {
+      "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt",
+      "instructionFile": "scenarios/transformations/ich_botschaft_instructions.txt"
+    }
+  },
+  {
+    "id": "simulation_reporting",
+    "type": "SIMULATION",
+    "config": {
+      "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
+    }
+  }
+]
 ```
 
-If the file is missing or invalid, the app falls back to an internal default list.
+- `sourceFile`: For `TRANSFORMATION` exercises, contains the list of statements (one per line).
+- `instructionFile`: For `TRANSFORMATION` exercises, contains the briefing and the `trainer_prompt` reference in the META block.
+- `scenarioFile`: For `SIMULATION` exercises, contains the briefing and all prompt references in the META block.
 
 ### 4.2 Dialogue Scenario Format (`*.txt`)
 
@@ -203,9 +236,9 @@ partner_prompt: reporting_partner_prompt
 mentor_prompt: reporting_mentor_prompt
 ```
 
-_Prompt names reference files in `prompts/<type>/…` (without the `.txt` extension)._
+_Prompt names reference files in `prompts/<type>/...` (without the `.txt` extension)._
 
-Optional (if used): `role_label: Employee` (overrides heuristic role detection in the UI).
+Optional: `role_label: Employee` (overrides heuristic role detection in the UI).
 
 #### The GUI Instruction
 
@@ -215,28 +248,25 @@ Everything after `### GUI INSTRUCTION ###` is shown as the briefing. If `role_la
 
 When loading a scenario, the app validates that:
 
-- the `### GUI INSTRUCTION ###` marker exists
-- `system_prompt`, `partner_prompt`, and `mentor_prompt` exist in the META block
-- the GUI instruction section is not empty
+- the `### GUI INSTRUCTION ###` marker is present
+- `system_prompt`, `partner_prompt`, and `mentor_prompt` (or `trainer_prompt`) are defined in the META block
+- the GUI instruction is not empty
 
 If any of these checks fail, the app shows a clear error message in status/briefing instead of continuing with incomplete data.
 
-### 4.3 I-Message Mode
+### 4.3 Exercise Mode (Transformations)
 
-The I-message mode is configured via files:
+The exercise mode (formerly I-Message Mode) is configured via `exercises.json`. It uses transformation scenarios to train specific techniques.
 
-- `scenarios/ich_botschaft_mode.json`:
-  - `statementsFile` (list of statements)
-  - `feedbackPromptFile` (system prompt used for feedback)
-- `scenarios/ich_botschaft_statements.txt`: one statement per line
-- `prompts/system/ich_botschaft_feedback_prompt.txt`: feedback instruction prompt
+- `sourceFile` (e.g., `scenarios/transformations/ich_botschaft_statements.txt`): Contains the list of statements (one per line).
+- `instructionFile` (e.g., `scenarios/transformations/ich_botschaft_instructions.txt`): Contains the briefing and the `trainer_prompt` reference in the META block.
 
-UI behavior in I-message mode:
+UI behavior in Exercise mode:
 
 - Scenario selection is hidden
 - A mode badge shows the active mode
 - Messages are visually separated (`Task` vs. `Feedback`)
-- Exercise actions are shown directly above the input:
+- Exercise actions are available directly below the chat input:
   - `Revise`
   - `Next statement`
   - `Restart exercise`
@@ -266,11 +296,11 @@ Because the frontend is static, calls to the OpenAI API must go through a server
 
 1. **Frontend**: Push the repository and enable GitHub Pages.
 2. **Proxy**: Deploy the proxy script to your web server (HTTPS recommended).
-3. **Frontend configuration**: Use a single proxy URL in `app.js` (e.g. a `PROXY_URL` constant) and route all API calls through it.
+3. **Frontend configuration**: Adjust the `PROXY_URL` in `config.js`.
 
 ### 7.1 Frontend Configuration
 
-Runtime values are maintained in `config.js` (e.g. model and temperature values). `index.html` loads `config.js` before `app.js`.
+Runtime values (model, temperatures, proxy URL) are maintained in `config.js`. The `app.js` orchestrates the data flow by reading these values and passing them to the stateless functions in `api.js` as needed.
 
 ## 8. How to Add a New Dialogue Scenario
 
@@ -278,14 +308,14 @@ Runtime values are maintained in `config.js` (e.g. model and temperature values)
    - `prompts/system/<name>.txt`
    - `prompts/partner/<name>.txt`
    - `prompts/mentor/<name>.txt` (optional, if mentor feedback is used)
-2. Create a new scenario file in `scenarios/` using the `### META ###` and `### GUI INSTRUCTION ###` format.
-3. Add the scenario filename to `scenarios/index.json` under `scenarioFiles`.
+2. Create a new scenario file in `scenarios/simulations/` using the `### META ###` and `### GUI INSTRUCTION ###` format.
+3. Add an entry to `exercises.json`.
 4. Deploy — the scenario will appear in the dropdown.
 
 ## 9. Maintaining I-Message Content
 
-1. Edit statements in `scenarios/ich_botschaft_statements.txt` (one per line).
-2. Adjust the feedback prompt in `prompts/system/ich_botschaft_feedback_prompt.txt`.
-3. If paths change, update `scenarios/ich_botschaft_mode.json`.
+1. Edit statements in the respective `sourceFile` (e.g., `scenarios/transformations/ich_botschaft_statements.txt`).
+2. Adjust the trainer prompt in `prompts/trainers/`.
+3. If paths or exercises are added, update `exercises.json`.
 
 ---

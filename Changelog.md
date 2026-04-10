@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.9.0] - 2026-04-10
+
+### Added
+
+- **Modular Architecture:** Split the monolithic `app.js` into specialized, namespaced modules: `api.js` (communication), `ui.js` (DOM/View), and `utils.js` (parsing/logic helpers) to improve maintainability and code clarity.
+- **Centralized State Management:** Introduced a global `STATE` object in `app.js` to encapsulate chat history, configuration, and exercise progress, providing a "single source of truth" for the application.
+- **Unified Initialization Helper:** Added `prepareModeSwitch` to standardize UI resets (clearing chat, scrolling to top, visibility toggles) when switching between modes.
+
+### Changed
+
+- **Stateless API Design:** Refactored `api.js` functions to be stateless; configuration values (URL, model, temperatures) are now passed as parameters from the controller (`app.js`), reducing hidden dependencies.
+- **Decoupled Logic:** Moved heuristic role detection and complex text parsing from the controller to `utils.js`.
+- **Orchestrated Data Flow:** `app.js` now acts strictly as a controller, orchestrating the flow between data services (`api.js`) and the user interface (`ui.js`).
+- **Documentation Sync:** Fully updated `README.md` in both German and English to reflect the new modular structure, the dependency injection pattern, and the central role of `exercises.json`.
+
+### Fixed
+
+- **Global Scope Pollution:** Fixed issues where helper functions and variables were leaking into the global window object by using explicit namespacing (`window.UI`, `window.API`, etc.).
+- **Reference Errors:** Resolved "assignment to undeclared variable" errors that occurred during the migration of global variables into the `STATE` object.
+- **Race Conditions:** Improved initialization sequence to ensure `config.js` and `exercises.json` are fully processed before the UI starts interacting with modules.
+
+---
+
 ## [0.8.0] - 2026-04-09
 
 ### Added
