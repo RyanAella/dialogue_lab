@@ -1,6 +1,7 @@
 ### META ###
-title: Ich-Botschaften
+title: Ich-Botschaft
 trainer_prompt: ich_botschaft_trainer
+short_instruction: Formuliere die Aussage konstruktiv um.
 
 ### GUI INSTRUCTION ###
 **Konzept: Ich-Botschaften**

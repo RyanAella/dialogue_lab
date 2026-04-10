@@ -1,6 +1,7 @@
 ### META ###
 title: Positive Unterstellung
 trainer_prompt: positive_unterstellung_trainer
+short_instruction: Identifiziere die positive Ich- und Du-Botschaft
 
 ### GUI INSTRUCTION ###
 **Konzept: Positive Unterstellung**
@@ -21,4 +22,4 @@ Gehe davon aus, dass die Person bei aller Kritik eine positive Absicht verfolgt.
 Die KI gibt dir kurzes Feedback. Danach kannst du überarbeiten oder zur nächsten Aussage gehen.
 
 **Ziel:**
-Du lernst, auch in negativen Aussagen eine konstruktive Bedeutung zu erkennen – als Grundlage für ein gutes Gespräch.
+Du lernst, auch in negativen Aussagen eine konstruktive Bedeutung zu erkennen – als Grundlage für ein gute
