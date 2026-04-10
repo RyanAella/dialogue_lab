@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.9.1] - 2026-04-10
+
+### Added
+
+- **Dynamic Short Instructions:** Moved exercise-specific instruction strings (e.g., "Formuliere die Aussage konstruktiv um") from the source code into the `### META ###` block of scenario and instruction files using the `short_instruction` key.
+
+### Changed
+
+- **UI Consistency:** Synchronized the instruction text displayed in the main subtitle with the text shown in the initial chat bubble to prevent user confusion.
+- **Data Architecture:** Updated `api.js` to parse the new metadata field and `app.js` to reactively update the UI based on the loaded exercise configuration.
+- **Clean Code:** Removed the last remaining hardcoded German strings from the controller logic, making the application fully data-driven.
+
+---
+
 ## [0.9.0] - 2026-04-10
 
 ### Added

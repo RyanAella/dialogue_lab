@@ -36,6 +36,7 @@ window.API = {
       partnerFile: Utils.parseMetaValue(metaSection, "partner_prompt"),
       mentorFile: Utils.parseMetaValue(metaSection, "mentor_prompt"),
       instructionSection,
+      shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
     // Alle benötigten Prompts parallel laden

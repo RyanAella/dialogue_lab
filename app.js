@@ -9,6 +9,7 @@ const STATE = {
     partnerPrompt: "",
     mentorPrompt: "",
     roleName: "Teammitglied",
+    shortInstruction: "",
   },
   chatHistory: [],
   currentMode: "roleplay",
@@ -63,7 +64,7 @@ function restartIchBotschaftExercise() {
   UI.setExerciseActionsVisible(false);
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
   UI.appendMessage(
-    `Aussage 1:\n"${statement}"\n\nFormuliere diese als Ich-Botschaft.`,
+    `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`,
     "partner",
     { messageType: "task", isIchMode: true, shouldScroll: false },
   );
@@ -343,8 +344,10 @@ async function switchToTransformationMode(
   const data = await API.fetchCompleteScenario(config.instructionFile);
   STATE.ichBotschaftFeedbackPrompt = data.prompts.trainer;
 
+  STATE.config.shortInstruction =
+    data.shortInstruction || "Bearbeite die Aussage.";
   document.getElementById("main-subtitle").textContent =
-    `${data.title}: Umformulieren.`;
+    `${data.title}: ${STATE.config.shortInstruction}`;
   Utils.renderBoldMarkdownWithLineBreaks(
     UI.elements.briefingContent,
     data.instructionSection,
@@ -354,7 +357,7 @@ async function switchToTransformationMode(
   UI.updateInputUI(false, "Eingabe...");
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
   UI.appendMessage(
-    `Aussage 1:\n"${statement}"\n\nFormuliere diese als Ich-Botschaft.`,
+    `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`,
     "partner",
     { messageType: "task", isIchMode: true, shouldScroll: false },
   );
@@ -390,7 +393,7 @@ UI.elements.nextExerciseBtn?.addEventListener("click", () => {
   UI.setExerciseActionsVisible(false);
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
   UI.appendMessage(
-    `Aussage ${STATE.exerciseIndex + 1}:\n"${statement}"\n\nFormuliere diese als Ich-Botschaft.`,
+    `Aussage ${STATE.exerciseIndex + 1}:\n"${statement}"\n\n${STATE.config.shortInstruction}`,
     "partner",
     { messageType: "task", isIchMode: true },
   );

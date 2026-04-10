@@ -25,7 +25,7 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
 - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
 - `scenarios/`: Szenario- und Übungsdateien (`exercises.json` als zentrale Konfiguration, `*.txt` für Szenarioinhalte).
-- `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`.
+- `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`, `trainers/`.
 
 Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
 
@@ -59,23 +59,37 @@ Die zentrale Konfiguration aller Simulationen und Transformationen erfolgt über
 - `instructionFile`: Für `TRANSFORMATION`-Übungen, enthält das Briefing und den Trainer-Prompt im META-Block.
 - `scenarioFile`: Für `SIMULATION`-Übungen, enthält das Briefing und alle Prompt-Referenzen im META-Block.
 
-### 4.2 Simulations-Szenarioformat (`*.txt`)
-
-Ein Gesprächsszenario wird über eine Textdatei in `scenarios/` gesteuert. `app.js` parst die Datei anhand von Markern.
+### 4.2 Szenarioformat (`*.txt`)
 
 #### Der META-Block
+
+Die Felder im `META`-Block sind nun strikt nach dem Übungstyp getrennt, um Inkonsistenzen zu vermeiden. Der `title` ist das einzige Feld, das in jedem Modus vorhanden sein muss.
+
+**Variante A: Simulationen (Gesprächstraining)**
+Wird genutzt, wenn in der `exercises.json` der Typ `SIMULATION` gesetzt ist.
 
 ```text
 ### META ###
 title: Kritikgespräch: Verspätetes Reporting
 system_prompt: reporting_system_prompt
 partner_prompt: reporting_partner_prompt
-mentor_prompt: reporting_mentor_prompt # Optional, falls Feedback genutzt wird
+mentor_prompt: reporting_mentor_prompt
 ```
 
-_Die Prompt-Namen referenzieren Dateinamen in `prompts/<typ>/…` (ohne `.txt`)._
+- `system_prompt`, `partner_prompt`, `mentor_prompt`: Referenzieren die jeweiligen Dateien in den Unterordnern von `prompts/`.
 
-Optional (wenn genutzt): `role_label: Mitarbeiter` (überschreibt die automatische Rollen-Erkennung im UI).
+**Variante B: Transformationen (Übung-Modus)**
+Wird genutzt, wenn in der `exercises.json` der Typ `TRANSFORMATION` gesetzt ist.
+
+```text
+### META ###
+title: Positive Unterstellung
+trainer_prompt: positive_unterstellung_trainer
+short_instruction: Identifiziere die positive Ich- und Du-Botschaft
+```
+
+- `trainer_prompt`: Referenziert die Datei im Ordner `prompts/trainers/`.
+- `short_instruction`: Ein String, der im UI als direkte Handlungsanweisung über dem Chat-Eingabebereich erscheint.
 
 #### Die GUI Instruction
 
@@ -86,7 +100,8 @@ Alles nach dem Marker `### GUI INSTRUCTION ###` wird als Briefing angezeigt. Fal
 Beim Laden eines Szenarios prüft die App verpflichtend:
 
 - Marker `### GUI INSTRUCTION ###` vorhanden
-- `system_prompt`, `partner_prompt` und `mentor_prompt` im META-Block vorhanden
+- **Simulation**: Prüft auf `system_prompt`, `partner_prompt` und `mentor_prompt`.
+- **Transformation**: Prüft auf `trainer_prompt` und `short_instruction`.
 - GUI-Instruction nicht leer
 
 Wenn eine dieser Bedingungen nicht erfüllt ist, zeigt die App eine klare Fehlermeldung im Status/Briefing statt stillschweigend mit unvollständigen Daten weiterzulaufen.
@@ -145,6 +160,7 @@ Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `config.js` gepflegt. 
    - `prompts/system/<name>.txt`
    - `prompts/partner/<name>.txt`
    - `prompts/mentor/<name>.txt` (optional, falls Feedback genutzt wird)
+   - `prompts/trainers/<name>.txt` (für Übungen / Transformationen)
 2. Neue Datei in `scenarios/` erstellen (mit `### META ###` und `### GUI INSTRUCTION ###`).
 3. Eintrag in `exercises.json` ergänzen.
 4. Deployen – die App listet das Szenario im Dropdown.
@@ -188,7 +204,7 @@ The application combines a static frontend with a server-side proxy (to protect 
 - `ui.js`: Responsible for all DOM manipulations and visual rendering of the user interface.
 - `app.js`: Core application logic (state management, event handling, mode control) as a controller.
 - `scenarios/`: Scenario and exercise files (`exercises.json` as central configuration, `*.txt` for scenario content).
-- `prompts/`: Prompt files in `system/`, `partner/`, `mentor/`.
+- `prompts/`: Prompt files in `system/`, `partner/`, `mentor/`, `trainers/`.
 
 Note: A server-side proxy script like `chat.php` does **not** have to live in this repository. Keeping it separate helps prevent accidental commits of secrets.
 
@@ -224,9 +240,12 @@ The central configuration for all simulations and transformations is handled via
 
 ### 4.2 Dialogue Scenario Format (`*.txt`)
 
-Dialogue scenarios are controlled via text files in `scenarios/`. `app.js` parses them using markers.
-
 #### The META Block
+
+The fields within the `META` block are now strictly categorized by exercise type to ensure consistency. The `title` is mandatory for all modes.
+
+**Option A: Simulations (Dialogue Training)**
+Used when the type is set to `SIMULATION` in `exercises.json`.
 
 ```text
 ### META ###
@@ -236,9 +255,20 @@ partner_prompt: reporting_partner_prompt
 mentor_prompt: reporting_mentor_prompt
 ```
 
-_Prompt names reference files in `prompts/<type>/...` (without the `.txt` extension)._
+- `system_prompt`, `partner_prompt`, `mentor_prompt`: References to the respective `.txt` files in the `prompts/` subdirectories.
 
-Optional: `role_label: Employee` (overrides heuristic role detection in the UI).
+**Option B: Transformations (Exercise Mode)**
+Used when the type is set to `TRANSFORMATION` in `exercises.json`.
+
+```text
+### META ###
+title: Positive Assumption
+trainer_prompt: positive_assumption_trainer
+short_instruction: Identify the positive I- and You-messages
+```
+
+- `trainer_prompt`: Reference to the file in the `prompts/trainers/` folder.
+- `short_instruction`: A concise task instruction displayed in the UI directly above the input area.
 
 #### The GUI Instruction
 
@@ -249,7 +279,8 @@ Everything after `### GUI INSTRUCTION ###` is shown as the briefing. If `role_la
 When loading a scenario, the app validates that:
 
 - the `### GUI INSTRUCTION ###` marker is present
-- `system_prompt`, `partner_prompt`, and `mentor_prompt` (or `trainer_prompt`) are defined in the META block
+- **Simulation**: Validates presence of `system_prompt`, `partner_prompt`, and `mentor_prompt`.
+- **Transformation**: Validates presence of `trainer_prompt` and `short_instruction`.
 - the GUI instruction is not empty
 
 If any of these checks fail, the app shows a clear error message in status/briefing instead of continuing with incomplete data.
@@ -308,6 +339,7 @@ Runtime values (model, temperatures, proxy URL) are maintained in `config.js`. T
    - `prompts/system/<name>.txt`
    - `prompts/partner/<name>.txt`
    - `prompts/mentor/<name>.txt` (optional, if mentor feedback is used)
+   - `prompts/trainers/<name>.txt` (for exercises / transformations)
 2. Create a new scenario file in `scenarios/simulations/` using the `### META ###` and `### GUI INSTRUCTION ###` format.
 3. Add an entry to `exercises.json`.
 4. Deploy — the scenario will appear in the dropdown.
