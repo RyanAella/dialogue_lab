@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.9.3] - 2026-04-14
+
+### Fixed
+
+- **Exercise Mode UX:** Resolved an issue where the input field and send button remained deactivated after the first exercise interaction.
+- **UI State Logic:** Improved the flow in Exercise mode; the input field now stays disabled while exercise actions (Revise, Next Statement, Restart) are visible to prevent conflicting inputs.
+- **Error Recovery:** Added logic to re-enable the input field specifically after API errors to allow users to retry their submission.
+
+### Added
+
+- **Action Handlers:** Implemented dedicated event listeners for "Revise" and "Restart" buttons to ensure the UI state (input focus and activation) is correctly restored.
+
+### Changed
+
+- **Documentation:** Updated README.md (EN/DE) to document the multi-branch deployment strategy and the subdirectory routing for partner-specific test branches.
+
+---
+
 ## [0.9.2] - 2026-04-13
 
 ### Added
