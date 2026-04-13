@@ -146,11 +146,19 @@ Da das Frontend statisch ist, muss die Kommunikation mit der OpenAI API über ei
 
 ## 7. Deployment (Beispiel: GitHub Pages + eigener Proxy)
 
-1. **Frontend**: Repository pushen und GitHub Pages aktivieren.
+1. **Frontend**: Repository pushen. Der GitHub Actions Workflow (`deploy.yml`) übernimmt das Deployment automatisch.
 2. **Proxy**: Proxy-Skript auf deinem Webserver deployen (HTTPS empfohlen).
 3. **Frontend-Konfiguration**: In `app.js` die Proxy-URL konsistent verwenden (z.B. eine Konstante `PROXY_URL`) und alle API-Calls darüber laufen lassen.
 
-### 7.1 Frontend-Konfiguration
+### 7.1 Multi-Branch Deployment
+
+Die Anwendung nutzt ein dynamisches Deployment-Modell. Jeder Push auf einen Branch löst ein Deployment aus:
+
+- **Main-Branch**: Erreichbar unter der Root-URL (z. B. `https://ryanaella.github.io/dialogue_lab/`).
+- **Andere Branches**: Erreichbar in Unterordnern (z. B. `https://ryanaella.github.io/dialogue_lab/exercises-only/`).
+  Dies erlaubt es, spezialisierte Versionen für Partner oder Tests parallel bereitzustellen, ohne die Hauptversion zu beeinflussen.
+
+### 7.2 Frontend-Konfiguration
 
 Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `config.js` gepflegt. Die `app.js` orchestriert den Datenfluss, indem sie diese Werte ausliest und bei Bedarf an die zustandslosen Funktionen in der `api.js` weiterreicht.
 
@@ -325,11 +333,19 @@ Because the frontend is static, calls to the OpenAI API must go through a server
 
 ## 7. Deployment (Example: GitHub Pages + your proxy)
 
-1. **Frontend**: Push the repository and enable GitHub Pages.
+1. **Frontend**: Push the repository. The GitHub Actions workflow (`deploy.yml`) handles deployment automatically.
 2. **Proxy**: Deploy the proxy script to your web server (HTTPS recommended).
 3. **Frontend configuration**: Adjust the `PROXY_URL` in `config.js`.
 
-### 7.1 Frontend Configuration
+### 7.1 Multi-Branch Deployment
+
+The application uses a dynamic deployment model. Every push to a branch triggers a deployment:
+
+- **Main Branch**: Accessible at the root URL (e.g., `https://ryanaella.github.io/dialogue_lab/`).
+- **Other Branches**: Accessible in subdirectories (e.g., `https://ryanaella.github.io/dialogue_lab/exercises-only/`).
+  This allows providing specialized versions for partners or testing in parallel without affecting the main version.
+
+### 7.2 Frontend Configuration
 
 Runtime values (model, temperatures, proxy URL) are maintained in `config.js`. The `app.js` orchestrates the data flow by reading these values and passing them to the stateless functions in `api.js` as needed.
 
