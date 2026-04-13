@@ -1,0 +1,51 @@
+name: Multi-Branch Deployment to GitHub Pages
+
+# Trigger the workflow on pushes to specific branches
+on:
+  push:
+    branches:
+      - main
+      - "**" # This wildcard triggers the workflow for EVERY branch push
+  # Allow manual triggering from the Actions tab
+  workflow_dispatch:
+
+# Required permissions to write to the gh-pages branch
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Public Artifact Folder
+        # Gather all static files and directories needed for the production build
+        run: |
+          mkdir -p public
+          cp index.html config.js utils.js api.js ui.js app.js public/
+          cp -r scenarios public/
+          cp -r prompts public/
+
+      - name: Determine Branch Subpath
+        # Logic: deploy 'main' to root, other branches to subfolders named after the branch
+        id: subpath
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "SUB_PATH=." >> $GITHUB_ENV
+          else
+            # Convert branch name to lowercase and replace special characters with hyphens
+            CLEAN_NAME=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
+            echo "SUB_PATH=$CLEAN_NAME" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: public # The folder containing our artifacts
+          target-folder: ${{ env.SUB_PATH }} # Deployment destination path
+          branch: gh-pages # The branch where the site is hosted
+          clean: false # Prevent deployments of other branches from being deleted
+          token: ${{ secrets.GITHUB_TOKEN }}

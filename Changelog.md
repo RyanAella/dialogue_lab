@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.9.2] - 2026-04-13
+
+### Added
+
+- **Multi-Branch CI/CD:** Implemented a fully automated GitHub Actions workflow that supports deploying every branch to GitHub Pages.
+- **Dynamic Branch Routing:** Branches other than `main` are now automatically deployed into their own subdirectories (e.g., `.../exercises-only/`), enabling parallel testing of different features.
+- **Deployment Provider:** `JamesIves/github-pages-deploy-action@v4` for more robust multi-folder deployment and cleaner workflow configuration.
+
+---
+
 ## [0.9.1] - 2026-04-10
 
 ### Added
