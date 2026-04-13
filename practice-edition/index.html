@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--Tab Titel-->
+    <title>Lab für Sozioinformatik: Gesprächstraining</title>
+
+    <link rel="icon" href="https://fav.farm/💬" />
+
+    <link rel="apple-touch-icon" href="https://fav.farm/💬" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <meta
+      name="description"
+      content="Ein interaktives Dialogue Lab zum Üben von Gesprächsführung."
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="flex flex-col lg:flex-row h-[100dvh] bg-gray-50 overflow-hidden">
+    <header
+      class="lg:hidden flex items-center justify-between bg-white border-b p-4 z-[40] w-full"
+    >
+      <h1 class="text-lg font-bold text-slate-800">Gesprächstraining</h1>
+      <button
+        id="mobile-menu-btn"
+        class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+      >
+        <span class="text-2xl">☰</span>
+      </button>
+    </header>
+    <aside
+      id="sidebar"
+      class="fixed inset-y-0 left-0 z-[60] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
+    >
+      <div class="sidebar-section mb-6">
+        <label
+          id="scenario-label"
+          class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
+          >Wähle eine Übung:</label
+        >
+        <select
+          id="exercises"
+          class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="" selected disabled>Wähle eine Übung...</option>
+        </select>
+      </div>
+
+      <div class="sidebar-status mb-8 pt-6 border-t border-slate-200">
+        <div
+          id="status-box"
+          class="status-box bg-slate-50 text-slate-500 p-3 rounded-xl border border-slate-200 text-xs font-medium flex items-center gap-2"
+        >
+          <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+          System bereit
+        </div>
+      </div>
+    </aside>
+
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 bg-black/50 z-[50] hidden lg:hidden"
+    ></div>
+
+    <!-- Main Content Wrapper: Organisiert den scrollbaren Bereich und den festen Footer -->
+    <div class="flex-1 flex flex-col min-h-0">
+      <main
+        class="chat-main-container flex-1 flex flex-col p-4 md:p-6 lg:p-10 overflow-y-auto"
+      >
+        <h1 class="main-title text-3xl font-bold text-slate-800">
+          Lab für Sozioinformatik: Übungslabor
+        </h1>
+        <p id="main-subtitle" class="main-subtitle text-slate-500 mt-2">
+          Wähle eine Übung aus, um zu starten.
+        </p>
+
+        <section
+          class="briefing-card mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 max-w-3xl"
+        >
+          <div
+            class="briefing-click-area flex items-center justify-between cursor-pointer"
+            id="briefing-header"
+          >
+            <div class="briefing-title-group flex items-center gap-2">
+              <span class="briefing-icon text-2xl">📋</span>
+              <h2
+                class="briefing-headline text-xl font-semibold text-slate-800"
+              >
+                Deine Aufgabenstellung & Übungs-Details
+              </h2>
+            </div>
+            <span
+              id="chevron"
+              class="briefing-arrow text-slate-400 transition-transform"
+              >▼</span
+            >
+          </div>
+          <div
+            id="briefing-content"
+            class="briefing-body mt-4 space-y-4 text-slate-600 leading-relaxed"
+          ></div>
+        </section>
+
+        <div
+          id="chat-window"
+          class="chat-display flex flex-col flex-1 mt-8 space-y-6 bg-gray-50/50 scroll-smooth"
+        >
+          <div
+            id="start-info"
+            class="system-message flex justify-center my-6 w-100 hidden"
+          >
+            <div
+              class="bg-blue-50 border border-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-sm flex items-center gap-3 shadow-sm max-w-2xl"
+            >
+              <span class="text-lg">✨</span>
+              <p>
+                <strong>Bereit für das Gespräch.</strong> Eröffnen Sie den
+                Dialog, indem Sie unten eine Nachricht eingeben.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer
+        class="input-area py-4 border-t border-slate-200 bg-white z-[30] flex-shrink-0"
+      >
+        <div
+          id="exercise-actions"
+          class="max-w-3xl mx-auto flex gap-2 px-4 w-full mb-3 hidden"
+        >
+          <button
+            id="restart-exercise-btn"
+            class="px-4 py-2 rounded-xl font-semibold text-sm border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition"
+          >
+            Übung neu starten
+          </button>
+          <button
+            id="revise-btn"
+            class="px-4 py-2 rounded-xl font-semibold text-sm border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition"
+          >
+            Überarbeiten
+          </button>
+          <button
+            id="next-exercise-btn"
+            class="px-4 py-2 rounded-xl font-semibold text-sm bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
+          >
+            Nächste Aussage
+          </button>
+        </div>
+        <div class="input-container max-w-3xl mx-auto flex gap-2 px-4 w-full">
+          <input
+            type="text"
+            id="user-input"
+            disabled
+            class="user-text-input flex-1 p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-gray-100 cursor-not-allowed text-sm"
+            placeholder="Wähle zuerst eine Übung aus..."
+          />
+          <button
+            id="send-btn"
+            disabled
+            class="send-button opacity-50 cursor-not-allowed bg-blue-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg text-sm transition-all active:scale-95"
+          >
+            Senden
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <script src="src/js/app.js" type="module"></script>
+  </body>
+</html>
