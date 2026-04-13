@@ -1,0 +1,25 @@
+### META ###
+title: Positive Unterstellung
+trainer_prompt: positive_unterstellung_trainer
+short_instruction: Identifiziere die positive Ich- und Du-Botschaft
+
+### GUI INSTRUCTION ###
+**Konzept: Positive Unterstellung**
+In dieser Übung geht es darum, Aussagen nicht vorschnell als Kritik zu verstehen, sondern die positiven, wertschätzenden Botschaften darin zu erkennen.
+Auch hinter schwierigen oder frustrierten Aussagen stecken oft:
+•	ein Wunsch (z. B. nach Anerkennung oder Sinn),
+•	ein Bedürfnis (z. B. nach Klarheit oder Unterstützung),
+•	oder ein Vertrauenssignal.
+
+**Deine Aufgabe:**
+Du wirst im Folgenden mit verschiedenen Aussagen von Mitarbeitenden konfrontiert. Identifiziere die in den Aussagen enthaltenen **positiven** Ich- und Du-Botschaften:
+•	Ich-Botschaften (Was sagt die Person über sich selbst? Gefühle, Bedürfnisse, Motive?)
+•	Du-Botschaften (Was sagt sie über das Gegenüber? Erwartungen, Zuschreibungen?)
+
+Gehe davon aus, dass die Person bei aller Kritik eine positive Absicht verfolgt.
+
+**Ablauf:**
+Die KI gibt dir kurzes Feedback. Danach kannst du überarbeiten oder zur nächsten Aussage gehen.
+
+**Ziel:**
+Du lernst, auch in negativen Aussagen eine konstruktive Bedeutung zu erkennen – als Grundlage für ein gute
