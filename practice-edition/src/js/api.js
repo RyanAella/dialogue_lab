@@ -11,10 +11,14 @@ export const API = {
    * @param {string} promptName - The filename without extension.
    * @returns {Promise<string>} The trimmed content of the prompt file.
    */
+  _getCacheBuster() {
+    return `t=${Date.now()}`;
+  },
+
   async loadPromptContent(type, promptName) {
     if (!promptName) return "";
     const response = await fetch(
-      `prompts/${type}/${promptName}.txt?t=${Date.now()}`,
+      `prompts/${type}/${promptName}.txt?${this._getCacheBuster()}`,
     );
     if (!response.ok) {
       throw new Error(
@@ -31,7 +35,7 @@ export const API = {
    * @returns {Promise<Object>} The parsed exercise configuration and loaded prompts.
    */
   async fetchCompleteExercise(filePath) {
-    const response = await fetch(`${filePath}?t=${Date.now()}`);
+    const response = await fetch(`${filePath}?${this._getCacheBuster()}`);
     if (!response.ok) throw new Error("Datei konnte nicht geladen werden.");
     const text = await response.text();
 
@@ -69,7 +73,7 @@ export const API = {
    * @returns {Promise<string|null>} The title string or null if not found.
    */
   async fetchExerciseTitle(filePath) {
-    const response = await fetch(`${filePath}?t=${Date.now()}`);
+    const response = await fetch(`${filePath}?${this._getCacheBuster()}`);
     if (!response.ok) return null;
     const content = await response.text();
     // Extract title using regex to avoid parsing the full instruction section
