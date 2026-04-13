@@ -1,21 +1,32 @@
 /**
- * Hilfsfunktionen für Text-Parsing und Formatierung
+ * Utility functions for text parsing, formatting, and role detection.
  */
 
-window.Utils = {
+export const Utils = {
+  /**
+   * Safely appends a text node to a container element.
+   * @param {HTMLElement} container - The element to append text to.
+   * @param {string} text - The text to append.
+   */
   appendText(container, text) {
     container.appendChild(document.createTextNode(text));
   },
 
+  /**
+   * Renders a subset of Markdown (bolding) and preserves whitespace/line breaks.
+   * @param {HTMLElement} container - The target element for rendering.
+   * @param {string} text - The raw text containing **bold** markers.
+   */
   renderBoldMarkdownWithLineBreaks(container, text) {
     container.textContent = "";
     container.style.whiteSpace = "pre-wrap";
 
-    // Very small markdown subset: **bold**
+    // Split text by bold markers (**text**)
     const parts = String(text).split(/\*\*(.*?)\*\*/g);
     parts.forEach((part, index) => {
       if (!part) return;
 
+      // Odd indexes are the content captured inside the markers
       if (index % 2 === 1) {
         const strong = document.createElement("strong");
         strong.textContent = part;
@@ -28,6 +39,12 @@ window.Utils = {
     });
   },
 
+  /**
+   * Extracts a specific value from a meta section string based on a key (e.g., "title: Value").
+   * @param {string} metaSection - The text block containing metadata.
+   * @param {string} key - The metadata key to search for.
+   * @returns {string} The trimmed value or an empty string if not found.
+   */
   parseMetaValue(metaSection, key) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const match = metaSection.match(
@@ -36,6 +53,11 @@ window.Utils = {
     return match?.[1].trim() || "";
   },
 
+  /**
+   * Splits a raw scenario/instruction file into Meta and GUI Instruction sections.
+   * @param {string} rawScenario - The raw content of the .txt file.
+   * @returns {Object} An object containing metaSection and instructionSection strings.
+   */
   parseScenarioContent(rawScenario) {
     const parts = rawScenario.split(/###\s*GUI INSTRUCTION\s*###/i);
     if (parts.length < 2) {
@@ -58,40 +80,5 @@ window.Utils = {
       metaSection,
       instructionSection,
     };
-  },
-
-  /**
-   * Versucht den Rollennamen aus dem Text oder dem Label zu extrahieren
-   */
-  extractRoleName(instructionSection, roleLabel) {
-    if (roleLabel) return this.formatRoleName(roleLabel);
-
-    // Heuristik aus "Deine Aufgabe" Sektion
-    const taskSection =
-      instructionSection.split(/Deine Aufgabe/i)[1] || instructionSection;
-    const roleRegex = /mit\s+(?:der|dem|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/i;
-    const autoRoleMatch = taskSection.match(roleRegex);
-
-    let roleName = "Teammitglied";
-    if (autoRoleMatch) {
-      roleName = autoRoleMatch[1].trim();
-    } else {
-      const fallbackRegex =
-        /\b(?:ein|einen|eine|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/;
-      const fallbackMatch = taskSection.match(fallbackRegex);
-      if (fallbackMatch) roleName = fallbackMatch[1].trim();
-    }
-
-    // Normalisierung
-    if (roleName.toLowerCase().startsWith("mitarbeitend")) {
-      roleName = "Mitarbeiter";
-    }
-
-    return this.formatRoleName(roleName);
-  },
-
-  formatRoleName(name) {
-    if (!name) return "";
-    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   },
 };

@@ -1,8 +1,16 @@
+import { Utils } from "./utils.js";
+
 /**
- * API-Kommunikation und Ressourcen-Laden
+ * API communication and resource loading module
  */
 
-window.API = {
+export const API = {
+  /**
+   * Loads the content of a specific prompt file (system, partner, mentor, or trainer).
+   * @param {string} type - The subfolder name (e.g., 'system', 'partner', 'trainers').
+   * @param {string} promptName - The filename without extension.
+   * @returns {Promise<string>} The trimmed content of the prompt file.
+   */
   async loadPromptContent(type, promptName) {
     if (!promptName) return "";
     const response = await fetch(
@@ -10,7 +18,7 @@ window.API = {
     );
     if (!response.ok) {
       throw new Error(
-        `Prompt-Datei konnte nicht geladen werden: prompts/${type}/${promptName}.txt`,
+        `Prompt file could not be loaded: prompts/${type}/${promptName}.txt`,
       );
     }
     const content = (await response.text()).trim();
@@ -18,49 +26,32 @@ window.API = {
   },
 
   /**
-   * Lädt ein komplettes Szenario inkl. aller verknüpften Prompts
+   * Loads a complete exercise configuration and its associated prompt files in parallel.
+   * @param {string} filePath - The path to the exercise .txt file.
+   * @returns {Promise<Object>} The parsed exercise configuration and loaded prompts.
    */
-  async fetchCompleteScenario(filePath) {
+  async fetchCompleteExercise(filePath) {
     const response = await fetch(`${filePath}?t=${Date.now()}`);
     if (!response.ok) throw new Error("Datei konnte nicht geladen werden.");
     const text = await response.text();
 
+    // Parse the raw text into metadata and briefing sections
     const { metaSection, instructionSection } =
       Utils.parseScenarioContent(text);
 
+    // Extract specific metadata values into a typed configuration object
     const config = {
       title: Utils.parseMetaValue(metaSection, "title"),
       roleLabel: Utils.parseMetaValue(metaSection, "role_label"),
       trainerPromptFile: Utils.parseMetaValue(metaSection, "trainer_prompt"),
-      systemFile: Utils.parseMetaValue(metaSection, "system_prompt"),
-      partnerFile: Utils.parseMetaValue(metaSection, "partner_prompt"),
-      mentorFile: Utils.parseMetaValue(metaSection, "mentor_prompt"),
       instructionSection,
       shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
-    // Alle benötigten Prompts parallel laden
+    // Execute multiple fetch requests in parallel for optimized performance
     const promptPromises = [];
     const prompts = {};
 
-    if (config.systemFile)
-      promptPromises.push(
-        this.loadPromptContent("system", config.systemFile).then(
-          (c) => (prompts.system = c),
-        ),
-      );
-    if (config.partnerFile)
-      promptPromises.push(
-        this.loadPromptContent("partner", config.partnerFile).then(
-          (c) => (prompts.partner = c),
-        ),
-      );
-    if (config.mentorFile)
-      promptPromises.push(
-        this.loadPromptContent("mentor", config.mentorFile).then(
-          (c) => (prompts.mentor = c),
-        ),
-      );
     if (config.trainerPromptFile)
       promptPromises.push(
         this.loadPromptContent("trainers", config.trainerPromptFile).then(
@@ -72,14 +63,26 @@ window.API = {
     return { ...config, prompts };
   },
 
-  async fetchScenarioTitle(filePath) {
+  /**
+   * Fetches only the title from an exercise source file for dropdown population.
+   * @param {string} filePath - The path to the exercise .txt file.
+   * @returns {Promise<string|null>} The title string or null if not found.
+   */
+  async fetchExerciseTitle(filePath) {
     const response = await fetch(`${filePath}?t=${Date.now()}`);
     if (!response.ok) return null;
     const content = await response.text();
+    // Extract title using regex to avoid parsing the full instruction section
     const titleMatch = content.match(/title:\s*(.*)/);
     return titleMatch ? titleMatch[1].trim() : null;
   },
 
+  /**
+   * Sends a collection of messages to the chat API via a proxy.
+   * @param {Array} messages - The message history to send.
+   * @param {Object} config - Proxy and model configuration parameters.
+   * @returns {Promise<Object>} The API response data.
+   */
   async callChatApi(messages, config) {
     const { proxyUrl, model, temperature } = config;
 

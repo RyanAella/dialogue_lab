@@ -14,19 +14,5 @@
       "sourceFile": "scenarios/transformations/positive_unterstellung_statements.txt",
       "instructionFile": "scenarios/transformations/positive_unterstellung_instructions.txt"
     }
-  },
-  {
-    "id": "simulation_reporting",
-    "type": "SIMULATION",
-    "config": {
-      "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
-    }
-  },
-  {
-    "id": "simulation_difficulties",
-    "type": "SIMULATION",
-    "config": {
-      "scenarioFile": "scenarios/simulations/difficulties_scenario.txt"
-    }
   }
 ]

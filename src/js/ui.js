@@ -1,36 +1,32 @@
 /**
- * UI Manager - Zuständig für DOM-Elemente und visuelle Updates
+ * UI Manager - Responsible for DOM elements and visual updates
  */
 
-window.UI = {
-  // DOM Elemente
+export const UI = {
+  /** Mapping of relevant DOM elements */
   elements: {
     briefingHeader: document.getElementById("briefing-header"),
     briefingContent: document.getElementById("briefing-content"),
     chevron: document.getElementById("chevron"),
-    scenarioSelect: document.getElementById("scenarios"),
+    exerciseSelect: document.getElementById("exercises"), // Renamed from scenarios
     chatWindow: document.getElementById("chat-window"),
-    startInfo: document.getElementById("start-info"),
     userInput: document.getElementById("user-input"),
     sendBtn: document.getElementById("send-btn"),
     statusBox: document.getElementById("status-box"),
     mobileMenuBtn: document.getElementById("mobile-menu-btn"),
     sidebar: document.getElementById("sidebar"),
     sidebarOverlay: document.getElementById("sidebar-overlay"),
-    modeBadge: document.getElementById("mode-badge"),
-    scenarioLabel: document.getElementById("scenario-label"),
-    modeSelect: document.getElementById("mode-select"),
     exerciseActions: document.getElementById("exercise-actions"),
     restartExerciseBtn: document.getElementById("restart-exercise-btn"),
     reviseBtn: document.getElementById("revise-btn"),
     nextExerciseBtn: document.getElementById("next-exercise-btn"),
-    feedbackBtn: document.getElementById("feedback-btn"),
-    resetBtn: document.getElementById("reset-btn"),
-    loadingOverlay: document.getElementById("loading-overlay"),
-    feedbackModal: document.getElementById("feedback-modal"),
-    resetModal: document.getElementById("reset-modal"),
   },
 
+  /**
+   * Updates the system status box with different visual states.
+   * @param {'loading'|'error'|'idle'} type - The status type.
+   * @param {string} message - The message to display.
+   */
   updateStatus(type, message) {
     const { statusBox } = this.elements;
     if (!statusBox) return;
@@ -55,35 +51,25 @@ window.UI = {
     statusBox.innerHTML = `${dot} <span>${message}</span>`;
   },
 
+  /**
+   * Appends a message bubble to the chat window.
+   * @param {string} text - The message content.
+   * @param {'user'|'partner'} sender - Who sent the message.
+   * @param {Object} options - Additional configuration.
+   * @param {'default'|'task'|'feedback'} [options.messageType='default'] - Visual style for the message.
+   * @param {string} [options.roleName='Partner'] - Name to display for the partner.
+   * @param {boolean} [options.isIchMode=false] - Whether the app is in exercise/transformation mode.
+   * @param {boolean} [options.shouldScroll=true] - Whether to scroll to the bottom after appending.
+   */
   appendMessage(text, sender, options = {}) {
     const { chatWindow } = this.elements;
     const {
       messageType = "default",
-      roleName = "Partner",
       isIchMode = false,
       shouldScroll = true,
     } = options;
+
     const wrapper = document.createElement("div");
-    const avatar = document.createElement("div");
-    const isFemale = sender !== "user" && roleName.toLowerCase().endsWith("in");
-
-    avatar.className = `flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 ${
-      sender === "user"
-        ? "w-8 h-8 rounded-full bg-blue-700 text-white border-2 border-blue-400"
-        : isFemale
-          ? "w-12 h-16 rounded-xl bg-white border-2 border-white overflow-hidden"
-          : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
-    }`;
-
-    if (!isIchMode) {
-      if (sender === "user") avatar.textContent = "DU";
-      else if (isFemale) {
-        const img = document.createElement("img");
-        img.src = "grafik.png";
-        img.className = "w-full h-full object-cover";
-        avatar.appendChild(img);
-      } else avatar.textContent = roleName.substring(0, 2).toUpperCase();
-    }
 
     const contentDiv = document.createElement("div");
     contentDiv.className =
@@ -91,7 +77,7 @@ window.UI = {
         ? "flex flex-col items-end"
         : "flex flex-col items-start";
 
-    let label = sender === "user" ? "Deine Antwort" : roleName;
+    let label = sender === "user" ? "Deine Antwort" : "Partner";
     let bubbleClass =
       sender === "user"
         ? "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md"
@@ -125,7 +111,6 @@ window.UI = {
 
     contentDiv.appendChild(nameLabel);
     contentDiv.appendChild(msgBubble);
-    if (!isIchMode) wrapper.appendChild(avatar);
     wrapper.appendChild(contentDiv);
     chatWindow.appendChild(wrapper);
 
@@ -137,24 +122,19 @@ window.UI = {
     }
   },
 
+  /**
+   * Toggles the visibility of exercise action buttons (Revise, Next, Restart).
+   * @param {boolean} visible
+   */
   setExerciseActionsVisible(visible) {
     this.elements.exerciseActions?.classList.toggle("hidden", !visible);
   },
 
-  setModeBadge(mode) {
-    const { modeBadge } = this.elements;
-    if (!modeBadge) return;
-    if (mode === "ich-botschaft") {
-      modeBadge.textContent = "Modus: Übungen";
-      modeBadge.className =
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
-    } else {
-      modeBadge.textContent = "Modus: Simulationen";
-      modeBadge.className =
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
-    }
-  },
-
+  /**
+   * Updates the user input field and send button state.
+   * @param {boolean} disabled - Whether interaction is blocked.
+   * @param {string} placeholder - The text to show in the empty input field.
+   */
   updateInputUI(disabled, placeholder) {
     const { userInput, sendBtn } = this.elements;
     userInput.disabled = disabled;
@@ -167,6 +147,10 @@ window.UI = {
     if (!disabled) userInput.classList.add("bg-slate-50");
   },
 
+  /**
+   * Shows a loading spinner inside the briefing area.
+   * @param {boolean} isLoading
+   */
   setBriefingLoading(isLoading) {
     if (!isLoading) return;
     this.elements.briefingContent.innerHTML = `
@@ -175,12 +159,16 @@ window.UI = {
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <span>Lade Szenario...</span>
+        <span>Lade Übung...</span>
       </div>
     `;
     this.elements.briefingContent.classList.remove("hidden");
   },
 
+  /**
+   * Handles the opening and closing of the mobile sidebar.
+   * @param {boolean} [forceClose=false] - If true, ensures the sidebar is closed.
+   */
   toggleMobileMenu(forceClose = false) {
     const { sidebar, sidebarOverlay } = this.elements;
     const isOpen = !sidebar.classList.contains("-translate-x-full");
@@ -194,47 +182,17 @@ window.UI = {
       document.body.style.overflow = "hidden";
     }
   },
-
-  showFeedbackModal(feedback) {
-    const { feedbackModal } = this.elements;
-    const feedbackText = document.getElementById("feedback-text");
-    this.toggleMobileMenu(true);
-    if (feedbackText) renderBoldMarkdownWithLineBreaks(feedbackText, feedback);
-    feedbackModal.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
-  },
-
-  openResetModal() {
-    const modal = this.elements.resetModal;
-    this.toggleMobileMenu(true);
-    modal.classList.remove("hidden");
-    const content = modal.querySelector("div");
-    setTimeout(() => {
-      content.classList.remove("scale-95", "opacity-0");
-      content.classList.add("scale-100", "opacity-100");
-    }, 10);
-  },
 };
 
-// Global bindings for HTML onclick attributes
-window.closeFeedbackModal = () => {
-  UI.elements.feedbackModal.classList.add("hidden");
-  document.body.style.overflow = "auto";
-};
-
-window.closeResetModal = () => {
-  const modal = UI.elements.resetModal;
-  const content = modal.querySelector("div");
-  content.classList.replace("scale-100", "scale-95");
-  setTimeout(() => modal.classList.add("hidden"), 200);
-};
-
-window.updateSubtitleText = () => {
+/**
+ * Updates the subtitle text based on screen width for responsive messaging.
+ */
+export const updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
   if (!sub) return;
-  const base = "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
+  const base = "Wähle eine Übung aus, um zu starten.";
   sub.innerHTML =
     window.innerWidth < 1024
-      ? `${base} <br><span class="text-xs text-blue-600">Szenario wechseln? Klicke oben rechts auf ☰</span>`
+      ? `${base} <br><span class="text-xs text-blue-600">Übung wechseln? Klicke oben rechts auf ☰</span>`
       : base;
 };

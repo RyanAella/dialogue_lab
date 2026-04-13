@@ -25,7 +25,8 @@ jobs:
         # Gather all static files and directories needed for the production build
         run: |
           mkdir -p public
-          cp index.html config.js utils.js api.js ui.js app.js public/
+          cp index.html public/
+          cp -r src public/
           cp -r scenarios public/
           cp -r prompts public/
 

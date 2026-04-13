@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.10.0] - 2026-04-15
+
+### Added
+
+- **Transformation Lab Edition:** This is a specialized standalone version of the application. It focuses exclusively on interactive transformation exercises (e.g., I-Messages, Positive Assumption) and intentionally excludes the simulation mode.
+
+### Changed
+
+- **Generic Transformation Framework:** Refactored internal logic (state, functions, and configuration) to be generic, supporting various transformation exercise types instead of specific "Ich-Botschaft" naming.
+- **Code Quality:** Integrated professional English JSDoc documentation across all core modules for better maintainability.
+
+### Removed
+
+- **Simulation Module:** Completely removed all logic, UI components, and prompts related to roleplay simulations and mentor feedback.
+- **Legacy Redundancy:** Deleted deprecated JavaScript files from the root directory, finalizing the migration to the modular `src/js/` structure.
+
 ## [0.9.3] - 2026-04-14
 
 ### Fixed
@@ -14,14 +30,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **UI State Logic:** Improved the flow in Exercise mode; the input field now stays disabled while exercise actions (Revise, Next Statement, Restart) are visible to prevent conflicting inputs.
 - **Error Recovery:** Added logic to re-enable the input field specifically after API errors to allow users to retry their submission.
 
-### Added
-
-- **Action Handlers:** Implemented dedicated event listeners for "Revise" and "Restart" buttons to ensure the UI state (input focus and activation) is correctly restored.
-
-### Changed
-
-- **Documentation:** Updated README.md (EN/DE) to document the multi-branch deployment strategy and the subdirectory routing for partner-specific test branches.
-
 ---
 
 ## [0.9.2] - 2026-04-13
@@ -29,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - **Multi-Branch CI/CD:** Implemented a fully automated GitHub Actions workflow that supports deploying every branch to GitHub Pages.
-- **Dynamic Branch Routing:** Branches other than `main` are now automatically deployed into their own subdirectories (e.g., `.../exercises-only/`), enabling parallel testing of different features.
+- **Dynamic Branch Routing:** Branches other than `main` are now automatically deployed into their own subdirectories (e.g., `.../practice-edition/`), enabling parallel testing of different features.
 - **Deployment Provider:** `JamesIves/github-pages-deploy-action@v4` for more robust multi-folder deployment and cleaner workflow configuration.
 
 ---

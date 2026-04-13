@@ -1,11 +1,12 @@
-# Lab für Sozioinformatik: Gesprächstraining
+# Lab für Sozioinformatik: Transformation Lab
+
+> **Hinweis:** Dies ist eine spezialisierte Version der Anwendung. Im Gegensatz zur Hauptversion (Main) konzentriert sich dieser Stand ausschließlich auf das **Transformation Lab** (interaktive Umformulierungs-Übungen) und enthält keinen Simulations-Modus.
 
 ## 1. Übersicht
 
-Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung und Gesprächstechniken. Die App unterstützt aktuell zwei Modi:
+Das **Lab für Sozioinformatik: Transformation Lab** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung und Kommunikationstechniken.
 
-- **Simulationen**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
-- **Übungen**: Interaktive Umformulierung von Aussagen (z.B. Ich-Botschaften, Positive Unterstellung) mit kurzem KI-Feedback
+Der Fokus liegt auf dem interaktiven Üben von Umformulierungen (z. B. Ich-Botschaften, Positive Unterstellung). Nutzer erhalten direktes, KI-gestütztes Feedback zu ihren Formulierungen.
 
 ## 2. Technische Architektur
 
@@ -34,6 +35,7 @@ Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Tei
 ### 4.1 Übungs- und Szenario-Konfiguration (`exercises.json`)
 
 Die zentrale Konfiguration aller Simulationen und Transformationen erfolgt über `exercises.json`. Diese Datei definiert die `id`, den `type` (`SIMULATION` oder `TRANSFORMATION`) und die `config` für jede Übung.
+Die zentrale Konfiguration aller Übungen erfolgt über `exercises.json`. Diese Datei definiert die `id` und die `config` für jede Transformation.
 
 ```json
 [
@@ -155,7 +157,7 @@ Da das Frontend statisch ist, muss die Kommunikation mit der OpenAI API über ei
 Die Anwendung nutzt ein dynamisches Deployment-Modell. Jeder Push auf einen Branch löst ein Deployment aus:
 
 - **Main-Branch**: Erreichbar unter der Root-URL (z. B. `https://ryanaella.github.io/dialogue_lab/`).
-- **Andere Branches**: Erreichbar in Unterordnern (z. B. `https://ryanaella.github.io/dialogue_lab/exercises-only/`).
+- **Andere Branches**: Erreichbar in Unterordnern (z. B. `https://ryanaella.github.io/dialogue_lab/practice-edition/`).
   Dies erlaubt es, spezialisierte Versionen für Partner oder Tests parallel bereitzustellen, ohne die Hauptversion zu beeinflussen.
 
 ### 7.2 Frontend-Konfiguration
@@ -342,7 +344,7 @@ Because the frontend is static, calls to the OpenAI API must go through a server
 The application uses a dynamic deployment model. Every push to a branch triggers a deployment:
 
 - **Main Branch**: Accessible at the root URL (e.g., `https://ryanaella.github.io/dialogue_lab/`).
-- **Other Branches**: Accessible in subdirectories (e.g., `https://ryanaella.github.io/dialogue_lab/exercises-only/`).
+- **Other Branches**: Accessible in subdirectories (e.g., `https://ryanaella.github.io/dialogue_lab/practice-edition/`).
   This allows providing specialized versions for partners or testing in parallel without affecting the main version.
 
 ### 7.2 Frontend Configuration
