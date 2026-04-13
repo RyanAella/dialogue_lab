@@ -287,6 +287,7 @@ async function handleIchBotschaftSend() {
     UI.updateStatus("idle", getIchBotschaftProgressText());
   } catch (e) {
     UI.updateStatus("error", "API Fehler");
+    UI.updateInputUI(false, "Eingabe..."); // Re-enable only on error to allow retry
   }
 }
 
@@ -398,6 +399,19 @@ UI.elements.nextExerciseBtn?.addEventListener("click", () => {
     { messageType: "task", isIchMode: true },
   );
   UI.updateStatus("idle", getIchBotschaftProgressText());
+  UI.updateInputUI(false, "Eingabe...");
+  UI.elements.userInput.focus();
+});
+
+UI.elements.reviseBtn?.addEventListener("click", () => {
+  UI.setExerciseActionsVisible(false);
+  STATE.exerciseAwaitingRevision = false;
+  UI.updateInputUI(false, "Eingabe korrigieren...");
+  UI.elements.userInput.focus();
+});
+
+UI.elements.restartExerciseBtn?.addEventListener("click", () => {
+  restartIchBotschaftExercise();
 });
 
 UI.elements.resetBtn.addEventListener("click", () => UI.openResetModal());
