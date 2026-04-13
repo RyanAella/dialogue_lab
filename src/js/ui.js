@@ -97,8 +97,8 @@ export const UI = {
 
     wrapper.className =
       sender === "user"
-        ? `flex flex-row-reverse items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} ml-auto max-w-[85%]`
-        : `flex flex-row items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} mr-auto max-w-[85%]`;
+        ? `flex flex-row-reverse items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} ml-auto max-w-[92%] md:max-w-[85%]`
+        : `flex flex-row items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} mr-auto max-w-[92%] md:max-w-[85%]`;
 
     const nameLabel = document.createElement("span");
     nameLabel.className = "text-xs text-gray-500 mb-1 px-1";
@@ -163,6 +163,17 @@ export const UI = {
       </div>
     `;
     this.elements.briefingContent.classList.remove("hidden");
+  },
+
+  /**
+   * Controls the expanded/collapsed state of the briefing section.
+   * @param {boolean} expanded
+   */
+  setBriefingExpanded(expanded) {
+    const { briefingContent, chevron } = this.elements;
+    briefingContent.classList.toggle("hidden", !expanded);
+    if (chevron)
+      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
   },
 
   /**

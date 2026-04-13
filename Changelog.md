@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.11.0] - 2026-04-16
+
+### Added
+
+- **Mobile First UI:** Overhauled the layout for mobile devices. The status box is now "sticky" with a backdrop-blur effect, ensuring visibility during scrolling.
+- **iOS UX Fix:** Set default input font size to 16px on mobile to prevent automatic browser zooming when focusing text fields.
+- **Safe Area Support:** Added bottom padding to the input area to account for mobile home-indicator bars.
+
+### Changed
+
+- **Performance Optimization:** Implemented parallel fetching using `Promise.all` for exercise metadata and statements, significantly reducing initial load times.
+- **UI Encapsulation:** Refactored briefing visibility and chevron rotation logic into the `UI` module for better separation of concerns.
+- **API Robustness:** Centralized the cache-busting mechanism to ensure consistent data fetching across all modules.
+
+### Fixed
+
+- **Responsive Spacing:** Improved chat bubble width and padding for better readability on small screens (max-w-92% on mobile).
+
 ## [0.10.0] - 2026-04-15
 
 ### Added

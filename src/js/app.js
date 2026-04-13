@@ -104,15 +104,21 @@ async function initExerciseDropdown() {
     return;
   }
 
-  for (const ex of STATE.allExercises) {
+  // Parallel loading of all titles for better performance
+  const titlePromises = STATE.allExercises.map(async (ex) => {
     try {
-      const filePath = ex.config.instructionFile;
-      const title = (await API.fetchExerciseTitle(filePath)) || ex.id;
-      UI.elements.exerciseSelect.add(new Option(title, ex.id));
+      const title = await API.fetchExerciseTitle(ex.config.instructionFile);
+      return { id: ex.id, title: title || ex.id };
     } catch (e) {
-      console.error("Error loading exercise metadata:", ex.id, e);
+      return { id: ex.id, title: ex.id };
     }
-  }
+  });
+
+  const results = await Promise.all(titlePromises);
+  results.forEach(({ id, title }) => {
+    UI.elements.exerciseSelect.add(new Option(title, id));
+  });
+
   UI.elements.exerciseSelect.disabled = false;
 }
 
@@ -192,9 +198,16 @@ async function switchToTransformationMode(
   UI.elements.exerciseSelect.value = exerciseId;
   const config = STATE.allExercises.find((ex) => ex.id === exerciseId)?.config;
 
-  // Load raw statements from the source .txt file
-  const response = await fetch(`${config.sourceFile}?t=${Date.now()}`);
-  const content = await response.text();
+  UI.updateStatus("loading", "Lade Übungsdaten...");
+
+  // Load both the statements and the exercise metadata in parallel
+  const [sourceRes, data] = await Promise.all([
+    fetch(`${config.sourceFile}?t=${Date.now()}`),
+    API.fetchCompleteExercise(config.instructionFile),
+  ]);
+
+  const content = await sourceRes.text();
+
   // Split file content into an array of trimmed lines, ignoring empty lines or comments
   STATE.transformationStatements = content
     .split(/\r?\n/)
@@ -203,10 +216,8 @@ async function switchToTransformationMode(
 
   STATE.exerciseIndex = 0;
   prepareModeSwitch();
-  UI.elements.chevron.style.transform = "rotate(0deg)";
+  UI.setBriefingExpanded(true);
 
-  // Load detailed exercise metadata (prompts, instructions) via the API module
-  const data = await API.fetchCompleteExercise(config.instructionFile);
   STATE.transformationFeedbackPrompt = data.prompts.trainer;
 
   STATE.config.shortInstruction =
@@ -298,9 +309,7 @@ UI.elements.sidebarOverlay?.addEventListener("click", () =>
 /** Collapses briefing automatically on mobile when user starts typing. */
 UI.elements.userInput.addEventListener(
   "focus",
-  () =>
-    window.innerWidth < 1024 &&
-    UI.elements.briefingContent.classList.add("hidden"),
+  () => window.innerWidth < 1024 && UI.setBriefingExpanded(false),
 );
 
 // =========================================================
