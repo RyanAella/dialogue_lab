@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--Tab Titel-->
+    <title>Lab für Sozioinformatik: Gesprächstraining</title>
+
+    <link rel="icon" href="https://fav.farm/💬" />
+
+    <link rel="apple-touch-icon" href="https://fav.farm/💬" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <meta
+      name="description"
+      content="Ein interaktives Dialogue Lab zum Üben von Gesprächsführung."
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="flex flex-col lg:flex-row h-[100dvh] bg-gray-50 overflow-hidden">
+    <header
+      class="lg:hidden flex items-center justify-between bg-white border-b p-4 z-[40] w-full"
+    >
+      <h1 class="text-lg font-bold text-slate-800">Gesprächstraining</h1>
+      <button
+        id="mobile-menu-btn"
+        class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+      >
+        <span class="text-2xl">☰</span>
+      </button>
+    </header>
+    <aside
+      id="sidebar"
+      class="fixed inset-y-0 left-0 z-[60] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
+    >
+      <div class="sidebar-section mb-6">
+        <label
+          id="scenario-label"
+          class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
+          >Wähle ein Szenario:</label
+        >
+        <select
+          id="scenarios"
+          class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="" selected disabled>Wähle eine Übung...</option>
+        </select>
+      </div>
+
+      <div
+        class="sidebar-actions mt-auto space-y-3 pt-6 border-t border-slate-100"
+      >
+        <button
+          id="feedback-btn"
+          onclick="handleFeedback()"
+          disabled
+          class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-95"
+        >
+          <span>📊</span> Feedback erhalten
+        </button>
+        <button
+          id="reset-btn"
+          disabled
+          class="w-full border-2 border-red-50 text-red-500 py-3 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-95"
+        >
+          <span>🔄</span> Neustart
+        </button>
+      </div>
+    </aside>
+
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 bg-black/50 z-[50] hidden lg:hidden"
+    ></div>
+
+    <!-- Main Content Wrapper: Organisiert den scrollbaren Bereich und den festen Footer -->
+    <div class="flex-1 flex flex-col min-h-0">
+      <main
+        class="chat-main-container flex-1 flex flex-col p-3 md:p-6 lg:p-10 overflow-y-auto"
+      >
+        <h1 class="main-title text-2xl md:text-3xl font-bold text-slate-800">
+          Lab für Sozioinformatik: Übungslabor
+        </h1>
+        <p
+          id="main-subtitle"
+          class="main-subtitle text-slate-500 mt-2 text-sm md:text-base"
+        >
+          Wähle ein Szenario aus, um zu starten.
+        </p>
+
+        <div
+          class="mt-4 max-w-3xl sticky top-0 z-[20] py-2 bg-gray-50/95 backdrop-blur-sm"
+        >
+          <div
+            id="status-box"
+            class="status-box bg-slate-50 text-slate-500 p-2 md:p-3 rounded-xl border border-slate-200 text-[10px] md:text-xs font-medium flex items-center gap-2 w-fit"
+          >
+            <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+            System bereit
+          </div>
+        </div>
+
+        <section
+          class="briefing-card mt-6 md:mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-6 max-w-3xl"
+        >
+          <div
+            class="briefing-click-area flex items-center justify-between cursor-pointer"
+            id="briefing-header"
+          >
+            <div class="briefing-title-group flex items-center gap-2">
+              <span class="briefing-icon text-xl md:text-2xl">📋</span>
+              <h2
+                class="briefing-headline text-lg md:text-xl font-semibold text-slate-800"
+              >
+                Deine Aufgabenstellung & Übungs-Details
+              </h2>
+            </div>
+            <span
+              id="chevron"
+              class="briefing-arrow text-slate-400 transition-transform"
+              >▼</span
+            >
+          </div>
+          <div
+            id="briefing-content"
+            class="briefing-body mt-4 space-y-4 text-slate-600 leading-relaxed"
+          ></div>
+        </section>
+
+        <div
+          id="chat-window"
+          class="chat-display flex flex-col flex-1 mt-8 space-y-6 bg-gray-50/50 scroll-smooth"
+        >
+          <div
+            id="start-info"
+            class="system-message flex justify-center my-6 w-100 hidden"
+          >
+            <div
+              class="bg-blue-50 border border-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-sm flex items-center gap-3 shadow-sm max-w-2xl"
+            >
+              <span class="text-lg">✨</span>
+              <p>
+                <strong>Bereit für das Gespräch.</strong> Eröffnen Sie den
+                Dialog, indem Sie unten eine Nachricht eingeben.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer
+        class="input-area pt-4 pb-6 md:pb-4 border-t border-slate-200 bg-white z-[30] flex-shrink-0"
+      >
+        <div class="input-container max-w-3xl mx-auto flex gap-2 px-4 w-full">
+          <input
+            type="text"
+            id="user-input"
+            disabled
+            class="user-text-input flex-1 p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-gray-100 cursor-not-allowed text-base md:text-sm transition-all"
+            placeholder="Wähle zuerst eine Übung aus..."
+          />
+          <button
+            id="send-btn"
+            disabled
+            class="send-button opacity-50 cursor-not-allowed bg-blue-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg text-sm transition-all active:scale-95"
+          >
+            Senden
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <div
+      id="loading-overlay"
+      class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm hidden z-[100] flex flex-col items-center justify-center text-white"
+    >
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"
+      ></div>
+      <p class="text-xl font-semibold">Mentor analysiert das Gespräch...</p>
+      <p class="text-sm text-gray-300">Dies kann einen Moment dauern.</p>
+    </div>
+
+    <div
+      id="feedback-modal"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 border border-slate-200 flex flex-col max-h-[90vh] shadow-xl"
+      >
+        <div
+          class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4 flex-shrink-0"
+        >
+          <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <span>📊</span> Mentor Feedback
+          </h2>
+          <button
+            onclick="closeFeedbackModal()"
+            class="text-slate-400 hover:text-slate-600 transition-colors text-2xl"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div
+          id="feedback-text"
+          class="prose max-w-none whitespace-pre-wrap text-slate-600 overflow-y-auto flex-1 pr-2 mb-6 leading-relaxed"
+        ></div>
+
+        <div
+          class="flex flex-col md:flex-row gap-3 mt-auto border-t border-slate-100 pt-6 flex-shrink-0"
+        >
+          <button
+            id="download-btn"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-md shadow-blue-100"
+          >
+            📥 Protokoll & Feedback
+          </button>
+          <button
+            onclick="location.reload()"
+            class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
+          >
+            🔄 Neues Gespräch
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="reset-modal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl transform transition-all scale-95 opacity-0"
+      >
+        <div class="text-center">
+          <div
+            class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4"
+          >
+            <span class="text-red-600 text-xl">🔄</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">
+            Übung neu starten?
+          </h3>
+          <p class="text-sm text-gray-500 mb-6">
+            Bist du sicher? Dein aktueller Chatverlauf und das bisherige
+            Feedback gehen dabei verloren.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            onclick="closeResetModal()"
+            class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition"
+          >
+            Abbrechen
+          </button>
+          <button
+            onclick="location.reload()"
+            class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition shadow-lg shadow-red-200"
+          >
+            Ja, Neustart
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="src/js/app.js" type="module"></script>
+  </body>
+</html>
