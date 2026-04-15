@@ -1,8 +1,10 @@
 /**
- * UI Manager - Zuständig für DOM-Elemente und visuelle Updates
+ * UI Manager - Responsible for DOM elements and visual updates
  */
 
-window.UI = {
+import { Utils } from "./utils.js";
+
+export const UI = {
   // DOM Elemente
   elements: {
     briefingHeader: document.getElementById("briefing-header"),
@@ -17,13 +19,6 @@ window.UI = {
     mobileMenuBtn: document.getElementById("mobile-menu-btn"),
     sidebar: document.getElementById("sidebar"),
     sidebarOverlay: document.getElementById("sidebar-overlay"),
-    modeBadge: document.getElementById("mode-badge"),
-    scenarioLabel: document.getElementById("scenario-label"),
-    modeSelect: document.getElementById("mode-select"),
-    exerciseActions: document.getElementById("exercise-actions"),
-    restartExerciseBtn: document.getElementById("restart-exercise-btn"),
-    reviseBtn: document.getElementById("revise-btn"),
-    nextExerciseBtn: document.getElementById("next-exercise-btn"),
     feedbackBtn: document.getElementById("feedback-btn"),
     resetBtn: document.getElementById("reset-btn"),
     loadingOverlay: document.getElementById("loading-overlay"),
@@ -34,6 +29,8 @@ window.UI = {
   updateStatus(type, message) {
     const { statusBox } = this.elements;
     if (!statusBox) return;
+
+    // Basis-Styling: Weißer Hintergrund, neutraler Rahmen, keine Schatten
     let classes =
       "status-box p-3 rounded-xl border text-xs font-medium transition-all duration-300 flex items-center gap-2 ";
     let dot = `<span class="relative flex h-2 w-2">
@@ -42,14 +39,17 @@ window.UI = {
                </span>`;
 
     if (type === "loading") {
-      classes += "bg-blue-50 text-blue-700 border-blue-200";
-      dot = dot.replace("rounded-full", "rounded-full bg-blue-500");
+      classes += "text-indigo-700";
+      dot = `<span class="relative flex h-2 w-2">
+               <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-40 bg-indigo-500"></span>
+               <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+             </span>`;
     } else if (type === "error") {
-      classes += "bg-red-50 text-red-700 border-red-200";
+      classes += "text-red-700";
       dot = `<span class="h-2 w-2 rounded-full bg-red-500"></span>`;
     } else {
-      classes += "bg-slate-50 text-slate-600 border-slate-200";
-      dot = `<span class="h-2 w-2 rounded-full bg-green-500"></span>`;
+      classes += "text-emerald-700";
+      dot = `<span class="h-2 w-2 rounded-full bg-emerald-500"></span>`;
     }
     statusBox.className = classes;
     statusBox.innerHTML = `${dot} <span>${message}</span>`;
@@ -60,7 +60,6 @@ window.UI = {
     const {
       messageType = "default",
       roleName = "Partner",
-      isIchMode = false,
       shouldScroll = true,
     } = options;
     const wrapper = document.createElement("div");
@@ -75,47 +74,34 @@ window.UI = {
           : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
     }`;
 
-    if (!isIchMode) {
-      if (sender === "user") avatar.textContent = "DU";
-      else if (isFemale) {
-        const img = document.createElement("img");
-        img.src = "grafik.png";
-        img.className = "w-full h-full object-cover";
-        avatar.appendChild(img);
-      } else avatar.textContent = roleName.substring(0, 2).toUpperCase();
-    }
+    if (sender === "user") avatar.textContent = "DU";
+    else if (isFemale) {
+      const img = document.createElement("img");
+      img.src = "src/assets/grafik.png";
+      img.className = "w-full h-full object-cover";
+      avatar.appendChild(img);
+    } else avatar.textContent = roleName.substring(0, 2).toUpperCase();
 
     const contentDiv = document.createElement("div");
     contentDiv.className =
       sender === "user"
-        ? "flex flex-col items-end"
-        : "flex flex-col items-start";
+        ? "flex flex-col items-end message-animate"
+        : "flex flex-col items-start message-animate";
 
     let label = sender === "user" ? "Deine Antwort" : roleName;
     let bubbleClass =
       sender === "user"
-        ? "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md"
-        : "bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-md border border-gray-100";
-
-    if (isIchMode && sender !== "user") {
-      if (messageType === "task") {
-        label = "Aufgabe";
-        bubbleClass =
-          "bg-sky-50 text-sky-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-sky-200";
-      } else if (messageType === "feedback") {
-        label = "Feedback";
-        bubbleClass =
-          "bg-violet-50 text-violet-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-violet-200";
-      }
-    }
+        ? "bg-blue-600 text-white px-5 py-4 rounded-[22px] rounded-tr-none shadow-lg shadow-blue-500/10"
+        : "bg-white text-slate-800 px-5 py-4 rounded-[22px] rounded-tl-none shadow-sm border border-slate-100";
 
     wrapper.className =
       sender === "user"
-        ? `flex flex-row-reverse items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} ml-auto max-w-[85%]`
-        : `flex flex-row items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} mr-auto max-w-[85%]`;
+        ? `flex flex-row-reverse items-start mb-6 gap-3 ml-auto max-w-[92%] md:max-w-[85%]`
+        : `flex flex-row items-start mb-6 gap-3 mr-auto max-w-[92%] md:max-w-[85%]`;
 
     const nameLabel = document.createElement("span");
-    nameLabel.className = "text-xs text-gray-500 mb-1 px-1";
+    nameLabel.className =
+      "text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1";
     nameLabel.textContent = label;
 
     const msgBubble = document.createElement("div");
@@ -125,7 +111,7 @@ window.UI = {
 
     contentDiv.appendChild(nameLabel);
     contentDiv.appendChild(msgBubble);
-    if (!isIchMode) wrapper.appendChild(avatar);
+    wrapper.appendChild(avatar);
     wrapper.appendChild(contentDiv);
     chatWindow.appendChild(wrapper);
 
@@ -137,34 +123,30 @@ window.UI = {
     }
   },
 
-  setExerciseActionsVisible(visible) {
-    this.elements.exerciseActions?.classList.toggle("hidden", !visible);
-  },
-
-  setModeBadge(mode) {
-    const { modeBadge } = this.elements;
-    if (!modeBadge) return;
-    if (mode === "ich-botschaft") {
-      modeBadge.textContent = "Modus: Übungen";
-      modeBadge.className =
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
-    } else {
-      modeBadge.textContent = "Modus: Simulationen";
-      modeBadge.className =
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
-    }
-  },
-
   updateInputUI(disabled, placeholder) {
     const { userInput, sendBtn } = this.elements;
     userInput.disabled = disabled;
     sendBtn.disabled = disabled;
     userInput.placeholder = placeholder;
+
+    // Hintergrund und Cursor-Styles umschalten
     userInput.classList.toggle("bg-gray-100", disabled);
+    userInput.classList.toggle("bg-slate-50", !disabled);
     userInput.classList.toggle("cursor-not-allowed", disabled);
+
     sendBtn.classList.toggle("opacity-50", disabled);
     sendBtn.classList.toggle("cursor-not-allowed", disabled);
-    if (!disabled) userInput.classList.add("bg-slate-50");
+  },
+
+  /**
+   * Steuert das Ein-/Ausklappen des Briefings
+   */
+  setBriefingExpanded(expanded) {
+    const { briefingContent, chevron } = this.elements;
+    if (!briefingContent) return;
+    briefingContent.classList.toggle("hidden", !expanded);
+    if (chevron)
+      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
   },
 
   setBriefingLoading(isLoading) {
@@ -199,7 +181,8 @@ window.UI = {
     const { feedbackModal } = this.elements;
     const feedbackText = document.getElementById("feedback-text");
     this.toggleMobileMenu(true);
-    if (feedbackText) renderBoldMarkdownWithLineBreaks(feedbackText, feedback);
+    if (feedbackText)
+      Utils.renderBoldMarkdownWithLineBreaks(feedbackText, feedback);
     feedbackModal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
   },
@@ -232,9 +215,6 @@ window.closeResetModal = () => {
 window.updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
   if (!sub) return;
-  const base = "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
-  sub.innerHTML =
-    window.innerWidth < 1024
-      ? `${base} <br><span class="text-xs text-blue-600">Szenario wechseln? Klicke oben rechts auf ☰</span>`
-      : base;
+  sub.textContent =
+    "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
 };

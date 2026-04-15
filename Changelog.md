@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.10.0] - 2026-04-15
+
+### Changed
+
+- **Specialization Focus:** Refocused the application logic and documentation on dialogue simulations, preparing the foundation for the "Simulation Lab" scope.
+- **Input UI Refinement:** Mirrored the input area and send button styling from the Practice Edition, applying `rounded-xl` and shadows for a more modern appearance.
+- **Performance Optimization:** Refactored scenario initialization to use parallel fetching (`Promise.all`), significantly reducing load times for exercise metadata.
+- **Documentation Alignment:** Fully synchronized German and English versions of the `README.md` to ensure content parity and technical accuracy.
+- **Deployment Examples:** Standardized branch deployment documentation to use `/simulation-lab/` as a consistent example path.
+- **Sticky UI Refinement:** Enhanced the sticky status bar with a backdrop-blur effect for better readability during scrolling.
+
+### Fixed
+
+- **Startup Stability:** Resolved race conditions during application initialization to ensure a more reliable loading sequence.
+- **Logic Consistency:** Corrected the chevron rotation logic and centralized all visual state transitions within the `UI` module.
+- **Mobile UX:** Implemented 16px font sizes to prevent automatic browser zooming on iOS and added bottom padding for safe-area support on modern mobile devices.
+- **Cache-Busting:** Standardized the cache-busting mechanism across all data-fetching modules to ensure users always see the latest scenario content and configurations.
+
+---
+
 ## [0.9.3] - 2026-04-14
 
 ### Fixed

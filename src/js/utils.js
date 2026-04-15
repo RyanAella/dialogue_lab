@@ -1,8 +1,8 @@
 /**
- * Hilfsfunktionen für Text-Parsing und Formatierung
+ * Utility functions for text parsing, formatting, and role detection.
  */
 
-window.Utils = {
+export const Utils = {
   appendText(container, text) {
     container.appendChild(document.createTextNode(text));
   },

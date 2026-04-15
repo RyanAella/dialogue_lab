@@ -1,17 +1,22 @@
+import { Utils } from "./utils.js";
+
 /**
  * API-Kommunikation und Ressourcen-Laden
  */
 
-window.API = {
+export const API = {
+  /**
+   * Loads the content of a specific prompt file (system, partner, mentor).
+   * @param {string} type - The subfolder name (e.g., 'system', 'partner').
+   * @param {string} promptName - The filename without extension.
+   * @returns {Promise<string>} The trimmed content of the prompt file.
+   */
   async loadPromptContent(type, promptName) {
     if (!promptName) return "";
-    const response = await fetch(
-      `prompts/${type}/${promptName}.txt?t=${Date.now()}`,
-    );
+    const path = `prompts/${type}/${promptName}.txt?t=${Date.now()}`;
+    const response = await fetch(path);
     if (!response.ok) {
-      throw new Error(
-        `Prompt-Datei konnte nicht geladen werden: prompts/${type}/${promptName}.txt`,
-      );
+      throw new Error(`Prompt-Datei konnte nicht geladen werden: ${path}`);
     }
     const content = (await response.text()).trim();
     return content;
@@ -21,8 +26,11 @@ window.API = {
    * Lädt ein komplettes Szenario inkl. aller verknüpften Prompts
    */
   async fetchCompleteScenario(filePath) {
+    if (!filePath) throw new Error("Kein Dateipfad angegeben.");
     const response = await fetch(`${filePath}?t=${Date.now()}`);
-    if (!response.ok) throw new Error("Datei konnte nicht geladen werden.");
+
+    if (!response.ok)
+      throw new Error(`Datei konnte nicht geladen werden: ${filePath}`);
     const text = await response.text();
 
     const { metaSection, instructionSection } =
@@ -31,12 +39,10 @@ window.API = {
     const config = {
       title: Utils.parseMetaValue(metaSection, "title"),
       roleLabel: Utils.parseMetaValue(metaSection, "role_label"),
-      trainerPromptFile: Utils.parseMetaValue(metaSection, "trainer_prompt"),
       systemFile: Utils.parseMetaValue(metaSection, "system_prompt"),
       partnerFile: Utils.parseMetaValue(metaSection, "partner_prompt"),
       mentorFile: Utils.parseMetaValue(metaSection, "mentor_prompt"),
       instructionSection,
-      shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
     // Alle benötigten Prompts parallel laden
@@ -61,19 +67,15 @@ window.API = {
           (c) => (prompts.mentor = c),
         ),
       );
-    if (config.trainerPromptFile)
-      promptPromises.push(
-        this.loadPromptContent("trainers", config.trainerPromptFile).then(
-          (c) => (prompts.trainer = c),
-        ),
-      );
 
     await Promise.all(promptPromises);
     return { ...config, prompts };
   },
 
   async fetchScenarioTitle(filePath) {
+    if (!filePath) return null;
     const response = await fetch(`${filePath}?t=${Date.now()}`);
+
     if (!response.ok) return null;
     const content = await response.text();
     const titleMatch = content.match(/title:\s*(.*)/);
