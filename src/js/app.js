@@ -1,7 +1,11 @@
+import { API } from "./api.js";
+import { APP_CONFIG } from "./config.js";
+import { UI } from "./ui.js";
+import { Utils } from "./utils.js";
+
 // =========================================================
 // 1. Configuration & State
 // =========================================================
-const APP_CONFIG = window.APP_CONFIG || {};
 
 const STATE = {
   config: {
@@ -30,9 +34,8 @@ function prepareModeSwitch() {
 
 async function loadExercises() {
   try {
-    const response = await fetch(
-      `${APP_CONFIG.EXERCISES_FILE}?t=${Date.now()}`,
-    );
+    const url = `${APP_CONFIG.EXERCISES_FILE}?t=${Date.now()}`;
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error("Exercises file could not be loaded");
     }
@@ -318,7 +321,7 @@ async function handleFeedback() {
     UI.showFeedbackModal(data.choices[0].message.content);
     UI.updateStatus("idle", "Fertig");
   } catch (e) {
-    UI.updateStatus("error", "Fehler");
+    UI.updateStatus("error", "Fehler: " + e.message);
   } finally {
     UI.elements.loadingOverlay.classList.add("hidden");
   }

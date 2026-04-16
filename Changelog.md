@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.10.1] - 2026-04-16
+
+### Fixed
+
+- **UI Reference Error:** Behebung eines `ReferenceError` in `ui.js`, bei dem die Funktion `renderBoldMarkdownWithLineBreaks` aufgerufen wurde, ohne dass das `Utils`-Modul korrekt importiert oder referenziert war.
+
+---
+
+## [0.10.0] - 2026-04-15
+
+### Added
+
+- **Modern Chat UI**: Integrated custom CSS for a contemporary chat experience, including asymmetric message bubbles (`rounded-[22px]`), subtle glassmorphism effects (`backdrop-filter`), and a pulsating status indicator.
+- **Enhanced Avatar System**: Implemented dynamic avatar styling, distinguishing between standard circular avatars and rectangular portrait avatars for female roles (based on "-in" suffix).
+- **Mobile Input Optimization**: Added logic to automatically collapse the briefing section when the input field is focused on smaller screens, maximizing screen real estate for typing.
+- **Consistent Input Field Sizing**: Standardized input field font size to `text-base` (16px) to prevent unwanted auto-zooming on iOS devices.
+
+### Changed
+
+- **Main Branch Alignment**: The application's design and logic have been standardized to the "Simulation Lab" version, making it the new default on the `main` branch.
+- **Documentation Update**: `README.md` has been revised to remove references to "specialized versions" and now reflects the current main application's features and structure.
+- **File Structure**: JavaScript files (`config.js`, `utils.js`, `api.js`, `ui.js`, `app.js`) have been moved into a dedicated `src/js/` subdirectory for better organization.
+- **File Path References**: Updated all script references in `index.html` and file paths in `README.md` to reflect the new `src/js/` directory.
+
+---
+
 ## [0.9.3] - 2026-04-14
 
 ### Fixed
