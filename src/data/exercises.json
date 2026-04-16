@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ich_botschaften_basis",
+    "type": "TRANSFORMATION",
+    "config": {
+      "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt",
+      "instructionFile": "scenarios/transformations/ich_botschaft_instructions.txt"
+    }
+  },
+  {
+    "id": "positive_unterstellung",
+    "type": "TRANSFORMATION",
+    "config": {
+      "sourceFile": "scenarios/transformations/positive_unterstellung_statements.txt",
+      "instructionFile": "scenarios/transformations/positive_unterstellung_instructions.txt"
+    }
+  },
+  {
+    "id": "simulation_reporting",
+    "type": "SIMULATION",
+    "config": {
+      "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
+    }
+  },
+  {
+    "id": "simulation_difficulties",
+    "type": "SIMULATION",
+    "config": {
+      "scenarioFile": "scenarios/simulations/difficulties_scenario.txt"
+    }
+  }
+]
