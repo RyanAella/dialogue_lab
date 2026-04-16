@@ -2,7 +2,7 @@
  * Hilfsfunktionen für Text-Parsing und Formatierung
  */
 
-window.Utils = {
+export const Utils = {
   appendText(container, text) {
     container.appendChild(document.createTextNode(text));
   },

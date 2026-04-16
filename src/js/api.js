@@ -1,8 +1,10 @@
+import { Utils } from "./utils.js";
+
 /**
  * API-Kommunikation und Ressourcen-Laden
  */
 
-window.API = {
+export const API = {
   async loadPromptContent(type, promptName) {
     if (!promptName) return "";
     const response = await fetch(

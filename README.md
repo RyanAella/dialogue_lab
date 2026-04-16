@@ -19,11 +19,12 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 ## 3. Repository-Dateistruktur
 
 - `index.html`: UI / Layout.
-- `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-- `utils.js`: Hilfsfunktionen für Text-Parsing, Markdown-Rendering und Rollen-Erkennung.
-- `api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
-- `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
-- `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
+- `src/js/`:
+  - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
+  - `utils.js`: Hilfsfunktionen für Text-Parsing, Markdown-Rendering und Rollen-Erkennung.
+  - `api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
+  - `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
+  - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
 - `scenarios/`: Szenario- und Übungsdateien (`exercises.json` als zentrale Konfiguration, `*.txt` für Szenarioinhalte).
 - `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`, `trainers/`.
 
@@ -206,11 +207,12 @@ The application combines a static frontend with a server-side proxy (to protect 
 ## 3. Repository File Structure
 
 - `index.html`: UI / layout.
-- `config.js`: Central runtime configuration (proxy URL, model, temperatures).
-- `utils.js`: Utility functions for text parsing, Markdown rendering, and role detection.
-- `api.js`: Manages communication with the proxy and loading/parsing of scenario and prompt files.
-- `ui.js`: Responsible for all DOM manipulations and visual rendering of the user interface.
-- `app.js`: Core application logic (state management, event handling, mode control) as a controller.
+- `src/js/`:
+  - `config.js`: Central runtime configuration (proxy URL, model, temperatures).
+  - `utils.js`: Utility functions for text parsing, Markdown rendering, and role detection.
+  - `api.js`: Manages communication with the proxy and loading/parsing of scenario and prompt files.
+  - `ui.js`: Responsible for all DOM manipulations and visual rendering of the user interface.
+  - `app.js`: Core application logic (state management, event handling, mode control) as a controller.
 - `scenarios/`: Scenario and exercise files (`exercises.json` as central configuration, `*.txt` for scenario content).
 - `prompts/`: Prompt files in `system/`, `partner/`, `mentor/`, `trainers/`.
 

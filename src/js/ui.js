@@ -2,7 +2,9 @@
  * UI Manager - Zuständig für DOM-Elemente und visuelle Updates
  */
 
-window.UI = {
+import { Utils } from "./utils.js";
+
+export const UI = {
   // DOM Elemente
   elements: {
     briefingHeader: document.getElementById("briefing-header"),
@@ -199,7 +201,8 @@ window.UI = {
     const { feedbackModal } = this.elements;
     const feedbackText = document.getElementById("feedback-text");
     this.toggleMobileMenu(true);
-    if (feedbackText) renderBoldMarkdownWithLineBreaks(feedbackText, feedback);
+    if (feedbackText)
+      Utils.renderBoldMarkdownWithLineBreaks(feedbackText, feedback);
     feedbackModal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
   },
