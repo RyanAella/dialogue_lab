@@ -81,7 +81,7 @@ export const UI = {
       if (sender === "user") avatar.textContent = "DU";
       else if (isFemale) {
         const img = document.createElement("img");
-        img.src = "grafik.png";
+        img.src = "src/assets/grafik.png";
         img.className = "w-full h-full object-cover";
         avatar.appendChild(img);
       } else avatar.textContent = roleName.substring(0, 2).toUpperCase();
