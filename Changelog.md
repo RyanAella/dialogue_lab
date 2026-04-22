@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.11.1] - 2026-04-12
+
+### Changed
+
+- **Documentation Alignment:** Fully synchronized the German and English versions of the `README.md` to ensure 100% content parity.
+- **Terminology Standardization:** Unified naming conventions (e.g., "Transformation Lab") and section titles across both language versions for better consistency.
+
+### Fixed
+
+- **README Parity:** Added missing technical notes regarding trainer prompt referencing and corrected file path examples in the English documentation.
+
+---
+
 ## [0.11.0] - 2026-04-16
 
 ### Added
