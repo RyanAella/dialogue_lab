@@ -13,16 +13,16 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
 - **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
 - **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
-- **KI-Modell**: OpenAI (Konfigurationswerte aus `config.js` werden von der `app.js` als Parameter an die Methoden der `api.js` übergeben).
+- **KI-Modell**: OpenAI (Konfigurationswerte aus `src/js/config.js` werden von der `app.js` als Parameter an die Methoden der `api.js` übergeben).
 
 ## 3. Repository-Dateistruktur
 
 - `index.html`: UI / Layout.
-- `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-- `utils.js`: Hilfsfunktionen für Text-Parsing, Markdown-Rendering und Rollen-Erkennung.
-- `api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
-- `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
-- `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
+- `src/js/config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
+- `src/js/utils.js`: Hilfsfunktionen für Text-Parsing, Markdown-Rendering und Rollen-Erkennung.
+- `src/js/api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
+- `src/js/ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
+- `src/js/app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
 - `scenarios/`: Szenario-Dateien (`exercises.json` als zentrale Konfiguration, `*.txt` für Szenarioinhalte).
 - `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`.
 
@@ -47,13 +47,17 @@ Die zentrale Konfiguration aller Simulationen erfolgt über `exercises.json`. Di
 ```
 
 - `scenarioFile`: Für `SIMULATION`-Übungen, enthält das Briefing und alle Prompt-Referenzen im META-Block.
+- **Hinweis**: Die eigentlichen Prompts (`..._prompt.txt`) werden innerhalb der `scenarioFile` im `META`-Block referenziert.
 
 ### 4.2 Szenarioformat (`*.txt`)
 
 ### Format des META-Blocks
 
-**Simulationen (Gesprächstraining)**
+**Variante A: Simulationen (Gesprächstraining)**
 Wird genutzt, wenn in der `exercises.json` der Typ `SIMULATION` gesetzt ist.
+
+**Variante B: Transformationen (Übung-Modus)**  
+_(In dieser Edition nicht enthalten)_
 
 ```text
 ### META ###
@@ -100,6 +104,82 @@ Da das Frontend statisch ist, muss die Kommunikation mit der OpenAI API über ei
 - Der Proxy sollte nur Requests vom **Origin** der Webanwendung akzeptieren (z.B. `https://ryanaella.github.io`).
 - Vermeide nach Möglichkeit `Access-Control-Allow-Origin: *`, damit nicht beliebige Webseiten den Proxy missbrauchen können.
 
+### 6.3 Referenz-Implementierung (`chat.php`)
+
+Das Skript sollte auf dem Server (z. B. unter `/var/www/dialogue_lab/chat.php`) abgelegt werden. Hier ist eine Vorlage:
+
+```php
+<?php
+// --- OPEN THE DOOR (CORS) ---
+
+// Allow requests from GitHub and localhost
+$allowed_origins = [
+    "https://ryanaella.github.io",
+    "http://localhost",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+];
+
+if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
+    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+}
+
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle preflight requests (OPTIONS)
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit;
+}
+
+// --- THE POSTMAN ---
+$api_key = 'YOUR_API_KEY';
+$url = 'https://api.openai.com/v1/chat/completions';
+
+// Receive request payload from browser
+$jsonInput = file_get_contents('php://input');
+
+$decoded = json_decode($jsonInput);
+if ($decoded === null) {
+    header('Content-Type: application/json');
+    http_response_code(400);
+    echo json_encode([
+        'error' => [
+            'message' => 'PHP received invalid JSON from Frontend',
+            'php_error' => json_last_error_msg(),
+            'received_length' => strlen($jsonInput),
+            'received_start' => substr($jsonInput, 0, 100)
+        ]
+    ]);
+    exit;
+}
+
+// Forward the payload (unopened, but with API key) to OpenAI
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonInput);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Content-Type: application/json",
+    "Authorization: Bearer " . $api_key
+]);
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+header('Content-Type: application/json');
+
+if (curl_errno($ch)) {
+    http_response_code(500);
+    echo json_encode(['error' => ['message' => curl_error($ch)]]);
+} else {
+    http_response_code($httpCode);
+    echo $response;
+}
+
+curl_close($ch);
+```
+
 ## 7. Deployment (Beispiel: GitHub Pages + eigener Proxy)
 
 1. **Frontend**: Repository pushen. Der GitHub Actions Workflow (`deploy.yml`) übernimmt das Deployment automatisch.
@@ -116,7 +196,7 @@ Die Anwendung nutzt ein dynamisches Deployment-Modell. Jeder Push auf einen Bran
 
 ### 7.2 Frontend-Konfiguration
 
-Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `config.js` gepflegt. Die `app.js` orchestriert den Datenfluss, indem sie diese Werte ausliest und bei Bedarf an die zustandslosen Funktionen in der `api.js` weiterreicht.
+Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `src/js/config.js` gepflegt. Die `app.js` orchestriert den Datenfluss, indem sie diese Werte ausliest und bei Bedarf an die zustandslosen Funktionen in der `api.js` weiterreicht.
 
 ## 8. Neues Gesprächsszenario hinzufügen
 
@@ -127,6 +207,12 @@ Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `config.js` gepflegt. 
 2. Neue Datei in `scenarios/simulations/` erstellen (mit `### META ###` und `### GUI INSTRUCTION ###`).
 3. Eintrag in `exercises.json` ergänzen.
 4. Deployen – die App listet das Szenario im Dropdown.
+
+## 9. Inhalte pflegen
+
+1. Szenario-Dateien unter `scenarios/simulations/` bearbeiten (Inhalt und GUI Instruction).
+2. Prompt-Dateien in `prompts/` (system, partner, mentor) anpassen.
+3. Falls neue Szenarien hinzugefügt werden, `exercises.json` aktualisieren.
 
 ---
 
@@ -149,17 +235,17 @@ The application combines a static frontend with a server-side proxy (to protect 
 - **Frontend**: Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g., hosted on **GitHub Pages**.
 - **Backend Proxy**: A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is required because API keys must never be exposed in client-side code (JavaScript).
 - **Security (CORS)**: The proxy should only accept requests from the **Origin** on which the web app is running (e.g., `https://ryanaella.github.io`). Important: **Origin = Schema + Domain**, not the path (i.e., not `.../dialogue_lab/`).
-- **AI Model**: OpenAI (configuration values from `config.js` are passed as parameters by `app.js` to the methods in `api.js`).
+- **AI Model**: OpenAI (configuration values from `src/js/config.js` are passed as parameters by `app.js` to the methods in `api.js`).
 
 ## 3. Repository File Structure
 
 - `index.html`: UI / Layout.
-- `config.js`: Central runtime configuration (proxy URL, model, temperatures).
-- `utils.js`: Utility functions for text parsing, Markdown rendering, and role detection.
-- `api.js`: Manages communication with the proxy and loading/parsing of scenario and prompt files.
-- `ui.js`: Responsible for all DOM manipulations and visual rendering of the user interface.
-- `app.js`: Core application logic (state management, event handling, mode control) as a controller.
-- `scenarios/`: Scenario files.
+- `src/js/config.js`: Central runtime configuration (proxy URL, model, temperatures).
+- `src/js/utils.js`: Utility functions for text parsing, Markdown rendering, and role detection.
+- `src/js/api.js`: Manages communication with the proxy and loading/parsing of scenario and prompt files.
+- `src/js/ui.js`: Responsible for all DOM manipulations and visual rendering of the user interface.
+- `src/js/app.js`: Core application logic (state management, event handling, mode control) as a controller.
+- `scenarios/`: Scenario files (`exercises.json` as central configuration, `*.txt` for scenario content).
 - `prompts/`: Prompt files in subfolders `system/`, `partner/`, `mentor/`.
 
 Note: A server-side proxy script like `chat.php` is **not necessarily part of this repository**. It can be hosted separately to ensure no secrets are stored in the repo.
@@ -183,13 +269,17 @@ The central configuration for all simulations is handled via `exercises.json`. T
 ```
 
 - `scenarioFile`: For `SIMULATION` exercises, contains the briefing and all prompt references in the META block.
+- **Note**: The actual prompts (`..._prompt.txt`) are referenced within the `scenarioFile` in the `META` block.
 
 ### 4.2 Scenario Format (`*.txt`)
 
 ### META Block Format
 
-**Simulations (Dialogue Training)**
+**Option A: Simulations (Dialogue Training)**
 Used when the type is set to `SIMULATION` in `exercises.json`.
+
+**Option B: Transformations (Exercise Mode)**  
+_(Not available in this edition)_
 
 ```text
 ### META ###
@@ -234,6 +324,82 @@ Since the frontend is static, communication with the OpenAI API must go through 
 - The proxy should only allow requests from the **Origin** of the web application (e.g., `https://ryanaella.github.io`).
 - Avoid `Access-Control-Allow-Origin: *` where possible to prevent unauthorized websites from abusing the proxy.
 
+### 6.3 Reference Implementation (`chat.php`)
+
+The script should be placed on the server (e.g., at `/var/www/dialogue_lab/chat.php`). Here is the current template:
+
+```php
+<?php
+// --- OPEN THE DOOR (CORS) ---
+
+// Allow requests from GitHub and localhost
+$allowed_origins = [
+    "https://ryanaella.github.io",
+    "http://localhost",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+];
+
+if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
+    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+}
+
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle preflight requests (OPTIONS)
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit;
+}
+
+// --- THE POSTMAN ---
+$api_key = 'YOUR_API_KEY';
+$url = 'https://api.openai.com/v1/chat/completions';
+
+// Receive request payload from browser
+$jsonInput = file_get_contents('php://input');
+
+$decoded = json_decode($jsonInput);
+if ($decoded === null) {
+    header('Content-Type: application/json');
+    http_response_code(400);
+    echo json_encode([
+        'error' => [
+            'message' => 'PHP received invalid JSON from Frontend',
+            'php_error' => json_last_error_msg(),
+            'received_length' => strlen($jsonInput),
+            'received_start' => substr($jsonInput, 0, 100)
+        ]
+    ]);
+    exit;
+}
+
+// Forward the payload (unopened, but with API key) to OpenAI
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonInput);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Content-Type: application/json",
+    "Authorization: Bearer " . $api_key
+]);
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+header('Content-Type: application/json');
+
+if (curl_errno($ch)) {
+    http_response_code(500);
+    echo json_encode(['error' => ['message' => curl_error($ch)]]);
+} else {
+    http_response_code($httpCode);
+    echo $response;
+}
+
+curl_close($ch);
+```
+
 ## 7. Deployment (Example: GitHub Pages + Own Proxy)
 
 1. **Frontend**: Push the repository. The GitHub Actions workflow (`deploy.yml`) handles the deployment automatically.
@@ -250,7 +416,7 @@ The application uses a dynamic deployment model. Every push to a branch triggers
 
 ### 7.2 Frontend Configuration
 
-Runtime values (model, temperatures, proxy URL) are maintained in `config.js`. The `app.js` orchestrates the data flow by reading these values and passing them to the stateless functions in `api.js` as needed.
+Runtime values (model, temperatures, proxy URL) are maintained in `src/js/config.js`. The `app.js` orchestrates the data flow by reading these values and passing them to the stateless functions in `api.js` as needed.
 
 ## 8. How to Add a New Dialogue Scenario
 
@@ -261,5 +427,11 @@ Runtime values (model, temperatures, proxy URL) are maintained in `config.js`. T
 2. Create a new file in `scenarios/simulations/` (with `### META ###` and `### GUI INSTRUCTION ###`).
 3. Add an entry to `exercises.json`.
 4. Deploy – the app lists the scenario in the dropdown.
+
+## 9. Maintaining Content
+
+1. Edit scenario files in `scenarios/simulations/` (content and GUI instructions).
+2. Adjust prompt files in `prompts/` (system, partner, mentor).
+3. Update `exercises.json` if new scenarios are added.
 
 _Note: Clicking "Restart" resets the application and clears the current chat history from the browser's memory._

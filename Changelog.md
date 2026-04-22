@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.11.1] - 2026-04-22
+
+### Changed
+
+- **Documentation Alignment:** Fully synchronized the German and English versions of the `README.md` across both Lab editions (Simulation & Transformation) to ensure content parity and structural symmetry.
+- **Path Accuracy:** Updated file paths (e.g., `src/js/config.js`) in documentation to reflect the actual project structure.
+
+### Fixed
+
+- **README Clarity:** Added missing technical notes regarding the referencing of prompt files within the scenario configuration.
+- **Proxy Documentation:** Re-integrated the PHP proxy reference implementation and the content maintenance section into the Simulation Lab documentation.
+
+---
+
 ## [0.10.0] - 2026-04-15
 
 ### Changed
