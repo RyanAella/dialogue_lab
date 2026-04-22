@@ -144,12 +144,89 @@ Da das Frontend statisch ist, muss die Kommunikation mit der OpenAI API über ei
 
 - Der Proxy sollte nur Requests vom **Origin** der Webanwendung akzeptieren (z.B. `https://ryanaella.github.io`).
 - Vermeide nach Möglichkeit `Access-Control-Allow-Origin: *`, damit nicht beliebige Webseiten den Proxy missbrauchen können.
+  - **Hinweis für lokale Entwicklung**: Für Tests von `localhost` aus muss `http://localhost` (ggf. mit Port, z.B. `http://localhost:5500`) ebenfalls in den `Access-Control-Allow-Origin`-Headern des Proxy-Skripts auf dem Server erlaubt werden. Im Produktivbetrieb sollte dies wieder entfernt werden.
+
+### 6.3 Referenz-Implementierung (`chat.php`)
+
+Das Skript sollte auf dem Server (z. B. unter `/var/www/html/dialogue_lab/chat.php`) abgelegt werden. Hier ist eine Vorlage:
+
+```php
+<?php
+// --- OPEN THE DOOR (CORS) ---
+
+// Allow requests from GitHub and localhost
+$allowed_origins = [
+    "https://ryanaella.github.io",
+    "http://localhost",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+];
+
+if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
+    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+}
+
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle preflight requests (OPTIONS)
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit;
+}
+
+// --- THE POSTMAN ---
+$api_key = 'YOUR_API_KEY';
+$url = 'https://api.openai.com/v1/chat/completions';
+
+// Receive request payload from browser
+$jsonInput = file_get_contents('php://input');
+
+$decoded = json_decode($jsonInput);
+if ($decoded === null) {
+    header('Content-Type: application/json');
+    http_response_code(400);
+    echo json_encode([
+        'error' => [
+            'message' => 'PHP received invalid JSON from Frontend',
+            'php_error' => json_last_error_msg(),
+            'received_length' => strlen($jsonInput),
+            'received_start' => substr($jsonInput, 0, 100)
+        ]
+    ]);
+    exit;
+}
+
+// Forward the payload (unopened, but with API key) to OpenAI
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonInput);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Content-Type: application/json",
+    "Authorization: Bearer " . $api_key
+]);
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+header('Content-Type: application/json');
+
+if (curl_errno($ch)) {
+    http_response_code(500);
+    echo json_encode(['error' => ['message' => curl_error($ch)]]);
+} else {
+    http_response_code($httpCode);
+    echo $response;
+}
+
+curl_close($ch);
+```
 
 ## 7. Deployment (Beispiel: GitHub Pages + eigener Proxy)
 
 1. **Frontend**: Repository pushen. Der GitHub Actions Workflow (`deploy.yml`) übernimmt das Deployment automatisch.
 2. **Proxy**: Proxy-Skript auf deinem Webserver deployen (HTTPS empfohlen).
-3. **Frontend-Konfiguration**: In `app.js` die Proxy-URL konsistent verwenden (z.B. eine Konstante `PROXY_URL`) und alle API-Calls darüber laufen lassen.
+3. **Frontend-Konfiguration**: Die `PROXY_URL` in `src/js/config.js` so anpassen, dass sie auf den tatsächlichen Pfad des Proxy-Skripts auf dem Server zeigt (z. B. `https://kite2.site/dialogue_lab/chat.php`).
 
 ### 7.1 Multi-Branch Deployment
 
@@ -161,7 +238,7 @@ Die Anwendung nutzt ein dynamisches Deployment-Modell. Jeder Push auf einen Bran
 
 ### 7.2 Frontend-Konfiguration
 
-Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `config.js` gepflegt. Die `app.js` orchestriert den Datenfluss, indem sie diese Werte ausliest und bei Bedarf an die zustandslosen Funktionen in der `api.js` weiterreicht.
+Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `src/js/config.js` gepflegt. Die `app.js` orchestriert den Datenfluss, indem sie diese Werte ausliest und bei Bedarf an die zustandslosen Funktionen in der `api.js` weiterreicht.
 
 ## 8. Neues Gesprächsszenario hinzufügen
 
@@ -332,12 +409,17 @@ Because the frontend is static, calls to the OpenAI API must go through a server
 
 - The proxy should only allow requests from the web app’s **origin** (e.g. `https://ryanaella.github.io`).
 - Avoid `Access-Control-Allow-Origin: *` where possible to prevent other sites from abusing your proxy.
+  - **Note for local development**: For testing from `localhost`, `http://localhost` (and potentially a specific port, e.g., `http://localhost:5500`) must also be allowed in the `Access-Control-Allow-Origin` headers of the proxy script on the server. This should be removed for production.
+
+### 6.3 Reference Implementation (`chat.php`)
+
+The script should be placed on the server (e.g., at `/var/www/html/dialogue_lab/chat.php`). See the German section for the code template.
 
 ## 7. Deployment (Example: GitHub Pages + your proxy)
 
 1. **Frontend**: Push the repository. The GitHub Actions workflow (`deploy.yml`) handles deployment automatically.
 2. **Proxy**: Deploy the proxy script to your web server (HTTPS recommended).
-3. **Frontend configuration**: Adjust the `PROXY_URL` in `config.js`.
+3. **Frontend configuration**: Adjust the `PROXY_URL` in `src/js/config.js` to match the actual deployment path on your server (e.g., `https://kite2.site/dialogue_lab/chat.php`).
 
 ### 7.1 Multi-Branch Deployment
 
@@ -349,7 +431,7 @@ The application uses a dynamic deployment model. Every push to a branch triggers
 
 ### 7.2 Frontend Configuration
 
-Runtime values (model, temperatures, proxy URL) are maintained in `config.js`. The `app.js` orchestrates the data flow by reading these values and passing them to the stateless functions in `api.js` as needed.
+Runtime values (model, temperatures, proxy URL) are maintained in `src/js/config.js`. The `app.js` orchestrates the data flow by reading these values and passing them to the stateless functions in `api.js` as needed.
 
 ## 8. How to Add a New Dialogue Scenario
 
