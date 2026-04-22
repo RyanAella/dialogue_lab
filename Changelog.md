@@ -6,11 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.11.0] - 2026-04-17
+
+### Added
+
+- **Proxy Reference Implementation**: Added a complete `chat.php` template to the README as a reference to simplify server setup.
+- **Enhanced Error Diagnosis**: The PHP proxy now returns detailed error messages (including `php_error` and `received_length`) to quickly identify JSON transmission issues.
+
+### Changed
+
+- **Server Path Structure**: Simplified the server path from `/browser/dialogue_lab/` to `/dialogue_lab/` and updated it in `config.js` and documentation.
+- **Documentation Sync**: Fully synchronized the German and English sections of the README and updated them to reflect the current modular architecture.
+
+### Fixed
+
+- **CORS for Local Development**: Proxy headers now explicitly allow requests from `localhost` (including common ports like 5500), enabling testing without deployment.
+- **JSON Payload Handling**: Fixed an issue where the proxy could not read the frontend's request body (switched to `php://input`).
+- **Nginx Stability**: Corrected Nginx configuration for proper PHP file processing to prevent 404 errors during API calls.
+
+---
+
 ## [0.10.1] - 2026-04-16
 
 ### Fixed
 
-- **UI Reference Error:** Behebung eines `ReferenceError` in `ui.js`, bei dem die Funktion `renderBoldMarkdownWithLineBreaks` aufgerufen wurde, ohne dass das `Utils`-Modul korrekt importiert oder referenziert war.
+- **UI Reference Error**: Fixed a `ReferenceError` in `ui.js` where the function `renderBoldMarkdownWithLineBreaks` was called without the `Utils` module being correctly imported or referenced.
 
 ---
 
