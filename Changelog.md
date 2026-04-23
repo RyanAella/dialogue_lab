@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.13.0] - 2026-04-24
+
+### Added
+
+- **Enhanced Transcript Export**: The exported text file now automatically includes the original briefing/task description at the beginning for better context.
+- **Smart File Naming**: Implemented a structured naming convention for exports (`[Mode]_[Scenario-Title]_[Date].txt`) including automatic filename sanitization.
+
+---
+
 ## [0.12.0] - 2026-04-23
 
 ### Added

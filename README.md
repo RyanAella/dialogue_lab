@@ -7,6 +7,7 @@ Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwend
 - **Simulationen**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
 - **Übungen**: Interaktive Umformulierung von Aussagen (z.B. Ich-Botschaften, Positive Unterstellung) mit kurzem KI-Feedback
 - **Sprachausgabe (TTS)**: Optionale, automatische Vorlesefunktion mit optimierter natürlicher Betonung.
+- **Protokoll-Export**: Export des Gesprächsverlaufs als Textdatei, inklusive des ursprünglichen Briefings und automatischer, strukturierter Dateibenennung.
 
 ## 2. Technische Architektur
 
@@ -284,6 +285,8 @@ The **Socio-Informatics Lab: Dialogue Training** is a web-based application for 
 
 - **Dialogue Training**: Scenario-based roleplay with optional mentor feedback
 - **I-Message Training**: Interactive rewriting of accusatory statements into constructive I-messages with short AI feedback
+- **Text-to-Speech (TTS)**: Optional, automatic read-aloud function with optimized natural emphasis.
+- **Transcript Export**: Export of the conversation history as a text file, including the original briefing and automatic, structured file naming.
 
 ## 2. Technical Architecture
 

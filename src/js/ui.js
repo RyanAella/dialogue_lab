@@ -32,6 +32,7 @@ export const UI = {
     feedbackModal: document.getElementById("feedback-modal"),
     resetModal: document.getElementById("reset-modal"),
     autoSpeakToggle: document.getElementById("auto-speak-toggle"),
+    downloadBtn: document.getElementById("download-btn"),
     speakBriefingBtn: document.getElementById("speak-briefing-btn"),
     stopSpeechBtn: document.getElementById("stop-speech-btn"),
   },
