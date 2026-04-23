@@ -101,15 +101,18 @@
         <label class="block font-semibold mb-2 text-slate-700 text-sm"
           >Ausgabe (Hören)</label
         >
-        <div class="flex items-center justify-between mb-3">
+        <label
+          class="flex items-center justify-between mb-3 cursor-pointer group"
+        >
           <span class="text-xs text-slate-500">Auto-Vorlesen</span>
           <input
             id="auto-speak-toggle"
             type="checkbox"
             class="w-9 h-5 rounded-full bg-gray-200 appearance-none checked:bg-blue-600 transition cursor-pointer relative after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:w-3 after:h-3 after:rounded-full checked:after:translate-x-4 after:transition"
           />
-        </div>
+        </label>
         <button
+          id="stop-speech-btn"
           class="w-full text-[10px] text-red-400 bg-red-50 border border-red-100 py-1.5 rounded hover:bg-red-100 transition"
         >
           Alle Sprachausgaben stoppen 🔇

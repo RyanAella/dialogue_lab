@@ -6,6 +6,7 @@ Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwend
 
 - **Simulationen**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
 - **Übungen**: Interaktive Umformulierung von Aussagen (z.B. Ich-Botschaften, Positive Unterstellung) mit kurzem KI-Feedback
+- **Sprachausgabe (TTS)**: Optionale, automatische Vorlesefunktion mit optimierter natürlicher Betonung.
 
 ## 2. Technische Architektur
 
@@ -257,6 +258,18 @@ Laufzeitwerte (Modell, Temperaturen, Proxy-URL) werden in `src/js/config.js` gep
 2. Trainer-Prompt in `prompts/trainers/` anpassen.
 3. Falls Pfade oder Übungen dazukommen, `exercises.json` aktualisieren.
 
+## 10. Sprachausgabe (TTS) & Browser-Empfehlung
+
+Die Anwendung nutzt die Web Speech API zur Vertonung der Dialoge.
+
+- **Auto-Vorlesen**: Ein globaler Toggle in der Sidebar aktiviert die automatische Ausgabe neuer Nachrichten.
+- **Natürliche Pausen**: Der Text wird vor der Ausgabe transformiert. Zeilenumbrüche und Doppelpunkte werden in Pausen umgewandelt, damit Überschriften und Listen natürlich klingen.
+- **Rollen-Profile**: Der Mentor spricht etwas langsamer und gesetzter als die Dialogpartner.
+- **Fix**: Eine 100ms Verzögerung verhindert das Verschlucken von Satzanfängen.
+
+> [!IMPORTANT]
+> **Browser-Empfehlung**: Für die beste Qualität wird **Microsoft Edge** empfohlen. Edge bietet Zugriff auf neuronale "Online (Natural)" Stimmen, die deutlich menschlicher klingen als die Standardstimmen anderer Browser.
+
 ---
 
 _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht den aktuellen Chatverlauf aus dem Arbeitsspeicher des Browsers._
@@ -450,4 +463,18 @@ Runtime values (model, temperatures, proxy URL) are maintained in `src/js/config
 2. Adjust the trainer prompt in `prompts/trainers/`.
 3. If paths or exercises are added, update `exercises.json`.
 
+## 10. Text-to-Speech (TTS) & Browser Recommendation
+
+The application uses the Web Speech API for voice output.
+
+- **Auto-Speak**: A global toggle in the sidebar enables automatic reading of new messages.
+- **Natural Pauses**: Text is transformed before output. Line breaks and colons are converted into pauses for natural-sounding headings and lists.
+- **Role Profiles**: The mentor speaks slightly slower and more deliberately than dialogue partners.
+- **Fix**: A 100ms delay prevents the clipping of the start of sentences.
+
+> [!IMPORTANT]
+> **Browser Recommendation**: For the best quality, **Microsoft Edge** is recommended. Edge provides access to neural "Online (Natural)" voices that sound significantly more human than the standard voices of other browsers.
+
 ---
+
+## _Note: Clicking "Restart" resets the application and clears the current chat history from the browser's memory._
