@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.12.0] - 2026-04-23
+
+### Added
+
+- **Text-to-Speech (TTS)**: Optional automatic read-aloud function for chat messages and briefings.
+- **Natural Pauses**: Implementation of text transformation converting punctuation (colons, line breaks) into synthetic pauses to improve readability of headings and lists.
+- **Role Profiles**: Differentiated speech parameters (rate/pitch) for mentor and dialogue partners to increase immersion.
+- **Global Stop Button**: Sidebar button to immediately cancel all active speech output.
+
+### Fixed
+
+- **Start-Clipping Fix**: Introduced a 100ms start delay to fix clipped initial syllables in Chromium-based browsers.
+- **ID Synchronization**: Fixed mismatch between HTML ID and state manager for the TTS toggle.
+- **Gender-Detection Fix**: Corrected role name normalization in `utils.js` which was incorrectly removing female suffixes.
+
+### Changed
+
+- **UI Feedback**: The Auto-Speak toggle now immediately triggers the briefing to confirm functionality to the user.
+- **Browser Recommendation**: Added documentation regarding the benefits of Microsoft Edge (Natural Voices) in the README.
+
+---
+
 ## [0.11.0] - 2026-04-22
 
 ### Added

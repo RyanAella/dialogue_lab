@@ -22,6 +22,7 @@ const STATE = {
   ichBotschaftStatements: [],
   ichBotschaftFeedbackPrompt: "",
   allExercises: [],
+  ttsEnabled: false,
 };
 
 function prepareModeSwitch() {
@@ -66,11 +67,13 @@ function restartIchBotschaftExercise() {
   UI.elements.chatWindow.innerHTML = "";
   UI.setExerciseActionsVisible(false);
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
-  UI.appendMessage(
-    `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`,
-    "partner",
-    { messageType: "task", isIchMode: true, shouldScroll: false },
-  );
+  const taskText = `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`;
+  UI.appendMessage(taskText, "partner", {
+    messageType: "task",
+    isIchMode: true,
+    shouldScroll: false,
+  });
+  if (STATE.ttsEnabled) UI.speak(taskText, "Aufgabe");
   UI.updateInputUI(false, "Eingabe...");
   UI.updateStatus("idle", `${getIchBotschaftProgressText()} (neu gestartet)`);
 }
@@ -184,6 +187,7 @@ UI.elements.scenarioSelect.addEventListener("change", async (event) => {
       UI.elements.briefingContent,
       data.instructionSection,
     );
+    if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
     UI.elements.chevron.style.transform = "rotate(0deg)";
     UI.elements.startInfo.classList.remove("hidden");
     UI.updateInputUI(false, `Deine Nachricht an ${STATE.config.roleName}...`);
@@ -212,6 +216,7 @@ async function handleSend() {
   UI.updateInputUI(true, "Sende...");
   UI.elements.startInfo.classList.add("hidden");
   UI.appendMessage(message, "user", { roleName: STATE.config.roleName });
+  if (STATE.ttsEnabled) UI.speak(message, "Ich");
   UI.updateStatus("loading", "Antwortet...");
   UI.elements.userInput.value = "";
 
@@ -240,6 +245,8 @@ async function handleSend() {
     const botResp = data.choices[0].message.content;
     STATE.chatHistory.push({ role: "assistant", content: botResp });
     UI.appendMessage(botResp, "partner", { roleName: STATE.config.roleName });
+    if (STATE.ttsEnabled) UI.speak(botResp, STATE.config.roleName);
+
     UI.elements.feedbackBtn.disabled = false;
     UI.elements.feedbackBtn.classList.remove(
       "opacity-50",
@@ -262,6 +269,7 @@ async function handleIchBotschaftSend() {
   const userVal = UI.elements.userInput.value.trim();
   if (!userVal) return;
   UI.appendMessage(userVal, "user", { isIchMode: true });
+  if (STATE.ttsEnabled) UI.speak(userVal, "Ich");
   UI.elements.userInput.value = "";
   UI.updateInputUI(true, "Feedback...");
   UI.updateStatus("loading", "Trainer...");
@@ -281,10 +289,13 @@ async function handleIchBotschaftSend() {
         temperature: APP_CONFIG.ICH_BOTSCHAFT_TEMPERATURE,
       },
     );
-    UI.appendMessage(data.choices[0].message.content, "partner", {
+    const botResp = data.choices[0].message.content;
+    UI.appendMessage(botResp, "partner", {
       messageType: "feedback",
       isIchMode: true,
     });
+    if (STATE.ttsEnabled) UI.speak(botResp, "Feedback");
+
     UI.setExerciseActionsVisible(true);
     STATE.exerciseAwaitingRevision = true;
     UI.updateStatus("idle", getIchBotschaftProgressText());
@@ -319,6 +330,7 @@ async function handleFeedback() {
       },
     );
     UI.showFeedbackModal(data.choices[0].message.content);
+    if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Mentor");
     UI.updateStatus("idle", "Fertig");
   } catch (e) {
     UI.updateStatus("error", "Fehler: " + e.message);
@@ -360,11 +372,13 @@ async function switchToTransformationMode(
   UI.setExerciseActionsVisible(false);
   UI.updateInputUI(false, "Eingabe...");
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
-  UI.appendMessage(
-    `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`,
-    "partner",
-    { messageType: "task", isIchMode: true, shouldScroll: false },
-  );
+  const taskText = `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`;
+  UI.appendMessage(taskText, "partner", {
+    messageType: "task",
+    isIchMode: true,
+    shouldScroll: false,
+  });
+  if (STATE.ttsEnabled) UI.speak(taskText, "Aufgabe");
   UI.updateStatus("idle", getIchBotschaftProgressText());
 }
 
@@ -396,11 +410,12 @@ UI.elements.nextExerciseBtn?.addEventListener("click", () => {
   STATE.exerciseAwaitingRevision = false;
   UI.setExerciseActionsVisible(false);
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
-  UI.appendMessage(
-    `Aussage ${STATE.exerciseIndex + 1}:\n"${statement}"\n\n${STATE.config.shortInstruction}`,
-    "partner",
-    { messageType: "task", isIchMode: true },
-  );
+  const taskText = `Aussage ${STATE.exerciseIndex + 1}:\n"${statement}"\n\n${STATE.config.shortInstruction}`;
+  UI.appendMessage(taskText, "partner", {
+    messageType: "task",
+    isIchMode: true,
+  });
+  if (STATE.ttsEnabled) UI.speak(taskText, "Aufgabe");
   UI.updateStatus("idle", getIchBotschaftProgressText());
   UI.updateInputUI(false, "Eingabe...");
   UI.elements.userInput.focus();
@@ -440,6 +455,30 @@ UI.elements.userInput.addEventListener(
 // =========================================================
 async function startApp() {
   await loadExercises();
+  UI.init();
+
+  // Setup TTS toggle mit korrekter ID und Initialisierung
+  const ttsToggle = document.getElementById("auto-speak-toggle");
+  if (ttsToggle) {
+    STATE.ttsEnabled = ttsToggle.checked;
+    ttsToggle.addEventListener("change", (e) => {
+      STATE.ttsEnabled = e.target.checked;
+
+      if (STATE.ttsEnabled) {
+        // Sofortiges Feedback: Wenn ein Briefing offen ist, lies es vor
+        const briefing = UI.elements.briefingContent.innerText;
+        if (
+          briefing &&
+          !UI.elements.briefingContent.classList.contains("hidden")
+        ) {
+          UI.speak(briefing, "Briefing");
+        }
+      } else {
+        window.speechSynthesis.cancel();
+      }
+    });
+  }
+
   STATE.currentMode = UI.elements.modeSelect?.value || "roleplay";
   await initScenarioDropdown();
   if (STATE.currentMode === "ich-botschaft")
