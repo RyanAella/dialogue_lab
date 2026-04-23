@@ -64,10 +64,16 @@ function restartIchBotschaftExercise() {
 
   STATE.exerciseIndex = 0;
   STATE.exerciseAwaitingRevision = false;
+  STATE.chatHistory = [];
   UI.elements.chatWindow.innerHTML = "";
   UI.setExerciseActionsVisible(false);
+
+  UI.elements.feedbackBtn.disabled = true;
+  UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
+
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
   const taskText = `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`;
+  STATE.chatHistory.push({ role: "assistant", content: taskText });
   UI.appendMessage(taskText, "partner", {
     messageType: "task",
     isIchMode: true,
@@ -105,6 +111,16 @@ async function switchToRoleplayMode() {
     UI.updateStatus("idle", "Keine Rollenspiel-Szenarien verfügbar.");
     UI.updateInputUI(true, "Keine Szenarien verfügbar.");
   }
+
+  // Feedback-Button für Simulationen zurücksetzen
+  UI.elements.feedbackBtn.textContent = "📊 Feedback erhalten";
+  UI.elements.feedbackBtn.classList.add("bg-slate-800");
+  UI.elements.feedbackBtn.classList.remove("bg-blue-600", "hover:bg-blue-700");
+  UI.elements.feedbackBtn.disabled = true;
+  UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
+  UI.elements.resetBtn.disabled = true;
+  UI.elements.resetBtn.classList.add("opacity-50", "cursor-not-allowed");
+
   document.getElementById("main-subtitle").textContent =
     "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
   UI.setModeBadge("roleplay");
@@ -200,6 +216,55 @@ UI.elements.scenarioSelect.addEventListener("change", async (event) => {
   }
 });
 
+// Function to download the current chat transcript
+function downloadCurrentTranscript() {
+  const briefing = UI.elements.briefingContent?.innerText.trim() || "";
+  const header = `### BRIEFING / AUFGABENSTELLUNG ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n### PROTOKOLL ###\n\n`;
+
+  const chatContent = STATE.chatHistory
+    .filter((m) => m.role !== "system")
+    .map(
+      (m) =>
+        `${m.role === "user" ? "Führungskraft" : STATE.config.roleName}: ${m.content}`,
+    )
+    .join("\n\n");
+
+  const blob = new Blob([header + chatContent], {
+    type: "text/plain;charset=utf-8",
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  let filenameParts = [];
+
+  // Modus hinzufügen
+  const modePrefix = STATE.currentMode === "roleplay" ? "Simulation" : "Uebung";
+  filenameParts.push(modePrefix);
+
+  // Szenario-Titel hinzufügen
+  let scenarioTitle = "";
+  if (
+    UI.elements.scenarioSelect &&
+    UI.elements.scenarioSelect.selectedIndex > 0
+  ) {
+    scenarioTitle =
+      UI.elements.scenarioSelect.options[
+        UI.elements.scenarioSelect.selectedIndex
+      ].text;
+    scenarioTitle = scenarioTitle.replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "").trim(); // Sonderzeichen entfernen, Umlaute und Bindestriche behalten
+    scenarioTitle = scenarioTitle.replace(/\s+/g, "_"); // Leerzeichen durch Unterstriche ersetzen
+  }
+  if (scenarioTitle) filenameParts.push(scenarioTitle);
+
+  filenameParts.push(date);
+  a.download = `${filenameParts.join("_")}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
 async function handleSend() {
   if (STATE.currentMode === "ich-botschaft") {
     await handleIchBotschaftSend();
@@ -269,6 +334,7 @@ async function handleIchBotschaftSend() {
   const userVal = UI.elements.userInput.value.trim();
   if (!userVal) return;
   UI.appendMessage(userVal, "user", { isIchMode: true });
+  STATE.chatHistory.push({ role: "user", content: userVal });
   if (STATE.ttsEnabled) UI.speak(userVal, "Ich");
   UI.elements.userInput.value = "";
   UI.updateInputUI(true, "Feedback...");
@@ -294,10 +360,17 @@ async function handleIchBotschaftSend() {
       messageType: "feedback",
       isIchMode: true,
     });
+    STATE.chatHistory.push({ role: "assistant", content: botResp });
     if (STATE.ttsEnabled) UI.speak(botResp, "Feedback");
 
     UI.setExerciseActionsVisible(true);
     STATE.exerciseAwaitingRevision = true;
+
+    UI.elements.feedbackBtn.disabled = false;
+    UI.elements.feedbackBtn.classList.remove(
+      "opacity-50",
+      "cursor-not-allowed",
+    );
     UI.updateStatus("idle", getIchBotschaftProgressText());
   } catch (e) {
     UI.updateStatus("error", "API Fehler");
@@ -307,7 +380,12 @@ async function handleIchBotschaftSend() {
 
 async function handleFeedback() {
   if (STATE.chatHistory.length === 0) return;
-  UI.elements.loadingOverlay.classList.remove("hidden");
+  if (STATE.currentMode === "ich-botschaft") {
+    downloadCurrentTranscript();
+    return; // Im Übungsmodus direkt herunterladen, kein Modal öffnen
+  }
+
+  UI.elements.loadingOverlay.classList.remove("hidden"); // Nur für Mentor-Feedback anzeigen
   UI.updateStatus("loading", "Mentor...");
   const transcript = STATE.chatHistory
     .filter((m) => m.role !== "system")
@@ -329,7 +407,7 @@ async function handleFeedback() {
         temperature: APP_CONFIG.MENTOR_TEMPERATURE,
       },
     );
-    UI.showFeedbackModal(data.choices[0].message.content);
+    UI.showFeedbackModal(data.choices[0].message.content); // Modal nur für Mentor-Feedback
     if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Mentor");
     UI.updateStatus("idle", "Fertig");
   } catch (e) {
@@ -368,11 +446,22 @@ async function switchToTransformationMode(
     UI.elements.briefingContent,
     data.instructionSection,
   );
+
+  // Feedback-Button Text und Styling für den Übungsmodus anpassen
+  UI.elements.feedbackBtn.textContent = "📥 Protokoll herunterladen";
+  UI.elements.feedbackBtn.classList.remove("bg-slate-800");
+  UI.elements.feedbackBtn.classList.add("bg-blue-600", "hover:bg-blue-700");
+  UI.elements.feedbackBtn.disabled = true;
+  UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
+  UI.elements.resetBtn.disabled = false;
+  UI.elements.resetBtn.classList.remove("opacity-50", "cursor-not-allowed");
+
   UI.setModeBadge("ich-botschaft");
   UI.setExerciseActionsVisible(false);
   UI.updateInputUI(false, "Eingabe...");
   const statement = STATE.ichBotschaftStatements[STATE.exerciseIndex];
   const taskText = `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`;
+  STATE.chatHistory.push({ role: "assistant", content: taskText });
   UI.appendMessage(taskText, "partner", {
     messageType: "task",
     isIchMode: true,
@@ -400,6 +489,12 @@ UI.elements.modeSelect?.addEventListener("change", async (e) => {
     if (firstEx) await switchToTransformationMode(firstEx.id);
   } else await switchToRoleplayMode();
 });
+
+// Event listener für den Feedback-Button (handhabt jetzt beide Modi)
+UI.elements.feedbackBtn.addEventListener("click", handleFeedback);
+
+// Event listener für den Download-Button im Feedback-Modal (immer Download)
+UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
 
 UI.elements.nextExerciseBtn?.addEventListener("click", () => {
   if (STATE.exerciseIndex >= STATE.ichBotschaftStatements.length - 1) {
@@ -432,7 +527,7 @@ UI.elements.restartExerciseBtn?.addEventListener("click", () => {
   restartIchBotschaftExercise();
 });
 
-UI.elements.resetBtn.addEventListener("click", () => UI.openResetModal());
+// Reset-Button Handler (öffnet Modal)
 UI.elements.briefingHeader.addEventListener("click", () => {
   const h = UI.elements.briefingContent.classList.toggle("hidden");
   UI.elements.chevron.style.transform = h ? "rotate(90deg)" : "rotate(0deg)";
@@ -493,4 +588,3 @@ document.addEventListener("DOMContentLoaded", () => {
   startApp();
 });
 window.addEventListener("resize", window.updateSubtitleText);
-window.handleFeedback = handleFeedback;
