@@ -1,3 +1,5 @@
+# Lab für Sozioinformatik: Simulation Lab
+
 > [!IMPORTANT]
 > **Edition-Hinweis:** Dies ist eine spezialisierte Version der Anwendung. Im Gegensatz zur Hauptversion konzentriert sich dieser Stand ausschließlich auf **Dialogsimulationen** (Rollenspiele) und enthält keinen Übungs-Modus für isolierte Transformationen.
 
