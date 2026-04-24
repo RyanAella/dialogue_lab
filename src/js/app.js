@@ -16,6 +16,7 @@ const STATE = {
   chatHistory: [],
   currentMode: "roleplay",
   allExercises: [],
+  ttsEnabled: false,
 };
 
 function prepareModeSwitch() {
@@ -140,6 +141,8 @@ UI.elements.scenarioSelect.addEventListener("change", async (event) => {
       UI.elements.briefingContent,
       data.instructionSection,
     );
+    if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
+
     UI.setBriefingExpanded(true);
     UI.elements.startInfo.classList.remove("hidden");
     UI.updateInputUI(false, `Deine Nachricht an ${STATE.config.roleName}...`);
@@ -190,6 +193,8 @@ async function handleSend() {
     const botResp = data.choices[0].message.content;
     STATE.chatHistory.push({ role: "assistant", content: botResp });
     UI.appendMessage(botResp, "partner", { roleName: STATE.config.roleName });
+    if (STATE.ttsEnabled) UI.speak(botResp, STATE.config.roleName);
+
     UI.elements.feedbackBtn.disabled = false;
     UI.elements.feedbackBtn.classList.remove(
       "opacity-50",
@@ -233,6 +238,8 @@ async function handleFeedback() {
       },
     );
     UI.showFeedbackModal(data.choices[0].message.content);
+    if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Mentor");
+
     UI.updateStatus("idle", "Fertig");
   } catch (e) {
     console.error("Feedback Fehler:", e);
@@ -242,11 +249,72 @@ async function handleFeedback() {
   }
 }
 
+/**
+ * Downloads the current chat transcript including the briefing and a smart filename.
+ */
+function downloadCurrentTranscript() {
+  const briefing = UI.elements.briefingContent?.innerText.trim() || "";
+  const feedbackText =
+    document.getElementById("feedback-text")?.innerText.trim() || "";
+
+  let content = `### BRIEFING / AUFGABENSTELLUNG ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n`;
+
+  if (feedbackText) {
+    content += `### KI-FEEDBACK & ANALYSE ###\n\n${feedbackText}\n\n${"=".repeat(50)}\n\n`;
+  }
+
+  content += `### GESPRÄCHSPROTOKOLL ###\n\n`;
+
+  const chatContent = STATE.chatHistory
+    .filter((m) => m.role !== "system")
+    .map(
+      (m) =>
+        `${m.role === "user" ? "Führungskraft" : STATE.config.roleName}: ${m.content}`,
+    )
+    .join("\n\n");
+
+  const blob = new Blob([content + chatContent], {
+    type: "text/plain;charset=utf-8",
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  let filenameParts = ["Simulation"];
+
+  if (
+    UI.elements.scenarioSelect &&
+    UI.elements.scenarioSelect.selectedIndex > 0
+  ) {
+    let title =
+      UI.elements.scenarioSelect.options[
+        UI.elements.scenarioSelect.selectedIndex
+      ].text;
+    title = title
+      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "_");
+    if (title) filenameParts.push(title);
+  }
+
+  filenameParts.push(date);
+  a.download = `${filenameParts.join("_")}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
 UI.elements.sendBtn.addEventListener("click", handleSend);
 UI.elements.userInput.addEventListener(
   "keypress",
   (e) => e.key === "Enter" && handleSend(),
 );
+
+// Event-Listener für Feedback und Download werden nun über onclick im HTML gesteuert,
+// um Konsistenz zu wahren und die globale Verfügbarkeit (window) zu nutzen.
+// UI.elements.feedbackBtn.addEventListener("click", handleFeedback);
+// UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
 
 UI.elements.resetBtn.addEventListener("click", () => UI.openResetModal());
 UI.elements.briefingHeader.addEventListener("click", () => {
@@ -272,6 +340,33 @@ UI.elements.userInput.addEventListener(
 async function startApp() {
   try {
     await loadExercises();
+
+    // Bindet UI Event-Listener (z.B. Stop-Button und Briefing-Sprachausgabe)
+    UI.init();
+
+    // --- TTS Initialisierung START ---
+    const ttsToggle = document.getElementById("auto-speak-toggle");
+    if (ttsToggle) {
+      STATE.ttsEnabled = ttsToggle.checked;
+      ttsToggle.addEventListener("change", (e) => {
+        STATE.ttsEnabled = e.target.checked;
+        if (!STATE.ttsEnabled) {
+          window.speechSynthesis.cancel(); // Stoppt sofort, wenn ausgeschaltet wird
+        } else {
+          // Optional: Falls das Briefing gerade offen ist, beim Einschalten vorlesen
+          const briefing = UI.elements.briefingContent.innerText;
+          if (
+            briefing &&
+            !UI.elements.briefingContent.classList.contains("hidden")
+          ) {
+            UI.speak(briefing, "Briefing");
+          }
+        }
+      });
+    }
+    // --- TTS Initialisierung ENDE ---
+
+    // Startet den Simulations-Modus automatisch
     await switchToRoleplayMode();
   } catch (e) {
     console.error("App konnte nicht gestartet werden:", e);
@@ -284,3 +379,4 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 window.addEventListener("resize", window.updateSubtitleText);
 window.handleFeedback = handleFeedback;
+window.downloadCurrentTranscript = downloadCurrentTranscript;

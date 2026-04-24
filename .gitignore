@@ -15,7 +15,6 @@ build/
 .env.production.local
 
 # Server-side scripts & sensitive files
-chat.php
 config.php
 auth.json
 

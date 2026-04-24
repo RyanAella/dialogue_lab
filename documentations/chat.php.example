@@ -1,0 +1,71 @@
+**Warning:** Never commit your real API key to a public repository. Copy this file to your server as `chat.php` and insert your key there.
+
+<?php
+// --- OPEN THE DOOR (CORS) ---
+
+// Allow requests from GitHub and localhost
+$allowed_origins = [
+    "https://ryanaella.github.io",
+    "http://localhost",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+];
+
+if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
+    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+}
+
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle preflight requests (OPTIONS)
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit;
+}
+
+// --- THE POSTMAN ---
+$api_key = 'YOUR_API_KEY';
+$url = 'https://api.openai.com/v1/chat/completions';
+
+// Receive request payload from browser
+$jsonInput = file_get_contents('php://input');
+
+$decoded = json_decode($jsonInput);
+if ($decoded === null) {
+    header('Content-Type: application/json');
+    http_response_code(400);
+    echo json_encode([
+        'error' => [
+            'message' => 'PHP received invalid JSON from Frontend',
+            'php_error' => json_last_error_msg(),
+            'received_length' => strlen($jsonInput),
+            'received_start' => substr($jsonInput, 0, 100)
+        ]
+    ]);
+    exit;
+}
+
+// Forward the payload (unopened, but with API key) to OpenAI
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonInput);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Content-Type: application/json",
+    "Authorization: Bearer " . $api_key
+]);
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+header('Content-Type: application/json');
+
+if (curl_errno($ch)) {
+    http_response_code(500);
+    echo json_encode(['error' => ['message' => curl_error($ch)]]);
+} else {
+    http_response_code($httpCode);
+    echo $response;
+}
+
+curl_close($ch);
