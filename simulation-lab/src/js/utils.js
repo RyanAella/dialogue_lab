@@ -83,7 +83,10 @@ export const Utils = {
     }
 
     // Normalisierung
-    if (roleName.toLowerCase().startsWith("mitarbeitend")) {
+    if (
+      roleName.toLowerCase().startsWith("mitarbeitend") &&
+      !roleName.toLowerCase().endsWith("in")
+    ) {
       roleName = "Mitarbeiter";
     }
 
