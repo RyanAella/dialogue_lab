@@ -1,13 +1,22 @@
 # Lab für Sozioinformatik: Gesprächstraining
 
-## 1. Übersicht
+## 1. Das Projekt auf einen Blick
 
-Das **Lab für Sozioinformatik: Gesprächstraining** ist eine webbasierte Anwendung zum Trainieren von Gesprächsführung und Gesprächstechniken. Die App unterstützt aktuell zwei Modi:
+Das **Lab für Sozioinformatik: Gesprächstraining** ist eine interaktive Web-Anwendung, die die Brücke zwischen psychologischer Gesprächsführung und moderner KI schlägt. Nutzer können hier in einem geschützten Raum schwierige Gesprächssituationen trainieren oder gezielt an ihrer Ausdrucksweise arbeiten.
 
-- **Simulationen**: Rollenbasierte Dialogsimulation mit Szenarien und optionalem Mentor-Feedback
-- **Übungen**: Interaktive Umformulierung von Aussagen (z.B. Ich-Botschaften, Positive Unterstellung) mit kurzem KI-Feedback
-- **Sprachausgabe (TTS)**: Optionale, automatische Vorlesefunktion mit optimierter natürlicher Betonung.
-- **Protokoll-Export**: Export des Gesprächsverlaufs als Textdatei, inklusive des ursprünglichen Briefings und automatischer, strukturierter Dateibenennung.
+### Kernfunktionen & Modi
+
+Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
+
+- **Interaktive Simulationen (Rollenspiel)**
+  Tauche in realistische Gesprächsszenarien ein. Ein KI-Gegenüber reagiert dynamisch auf deine Eingaben, während ein optionaler **KI-Mentor** im Hintergrund wertvolles Feedback zu deiner Strategie gibt.
+- **Gezielte Übungen (Transformation)**
+  Hier liegt der Fokus auf der Technik. Trainiere das Umformulieren von Vorwürfen in konstruktive Botschaften (z. B. Ich-Botschaften oder Positive Unterstellungen). Die KI bewertet deine Versuche sofort und gibt Tipps zur Verbesserung.
+
+### Highlights für die User Experience
+
+- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
 
 ## 2. Technische Architektur
 
@@ -279,14 +288,23 @@ _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht d
 
 # Socio-Informatics Lab: Dialogue Training
 
-## 1. Overview
+## 1. Project at a Glance
 
-The **Socio-Informatics Lab: Dialogue Training** is a web-based application for communication practice and I-message training. The app currently supports two modes:
+The **Socio-Informatics Lab: Dialogue Training** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. It provides users with a safe environment to practice challenging conversation scenarios or specifically refine their verbal expression.
 
-- **Dialogue Training**: Scenario-based roleplay with optional mentor feedback
-- **I-Message Training**: Interactive rewriting of accusatory statements into constructive I-messages with short AI feedback
-- **Text-to-Speech (TTS)**: Optional, automatic read-aloud function with optimized natural emphasis.
-- **Transcript Export**: Export of the conversation history as a text file, including the original briefing and automatic, structured file naming.
+### Core Features & Modes
+
+The application offers two specialized training environments:
+
+- **Interactive Simulations (Roleplay)**
+  Immerse yourself in realistic dialogue scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable behind-the-scenes feedback on your communication strategy.
+- **Targeted Exercises (Transformation)**
+  Focus on the technique. Practice transforming accusatory statements into constructive messages (e.g., I-messages or "Positive Assumptions"). The AI evaluates your attempts instantly and offers specific tips for improvement.
+
+### User Experience Highlights
+
+- **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with optimized emphasis brings dialogues to life. (Pro tip: Microsoft Edge offers particularly human-like voices!)
+- **Track Your Progress:** With the **Transcript Export** feature, you can save the entire conversation history—including the initial briefing—as a structured text file with a single click. Perfect for self-reflection or documenting learning milestones.
 
 ## 2. Technical Architecture
 
