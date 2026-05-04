@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.13.0] - 2026-05-04
+
+### Added
+
+- **Speech-to-Text (STT)**: Integration of the native Web Speech API for voice input. Users can now speak their responses directly using a microphone icon.
+- **Browser Compatibility Check**: Added logic to detect supported browsers. In unsupported browsers (such as Firefox), the feature is informatively disabled.
+
+### Changed
+
+- **UI Feedback**: The microphone button now provides visual feedback (pulsing red) during recording and uses tooltips/help cursors to clarify the lack of browser support.
+- **Input Logic**: Extended the `updateInputUI` function to synchronize the microphone status consistently with the general input state and technical availability.
+
+---
+
 ## [0.12.0] - 2026-04-24
 
 ### Added

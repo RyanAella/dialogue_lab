@@ -10,6 +10,7 @@ Das **Lab für Sozioinformatik: Simulation Lab** ist eine interaktive Web-Anwend
 ### Kernfunktionen dieser Edition
 
 - **Interaktive Simulationen (Rollenspiel):** Tauche in realistische Szenarien ein. Ein KI-Gegenüber reagiert dynamisch auf deine Eingaben, während ein optionaler **KI-Mentor** im Hintergrund wertvolles Feedback zu deiner Strategie gibt.
+- **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung.
 
@@ -123,6 +124,7 @@ The **Socio-Informatics Lab: Simulation Lab** is an interactive web application 
 ### Core Features of this Edition
 
 - **Interactive Simulations (Roleplay):** Immerse yourself in realistic scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable background feedback on your strategy.
+- **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with optimized prosody brings dialogues to life. (Tip: Microsoft Edge offers particularly human-like voices!)
 - **Track Your Progress:** Use the **Transcript Export** feature to save the entire conversation history, including the briefing, as a structured text file with a single click—perfect for self-reflection.
 
