@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.14.0] - 2026-05-01
+
+### Added
+
+- **Speech-to-Text (STT)**: Integration of the native Web Speech API for voice input via a dedicated microphone button.
+- **Intelligent Browser Handling**: Implementation of an "informative deactivation" pattern for Firefox, providing user guidance (tooltips) when native support is missing.
+
+### Changed
+
+- **UI Feedback**: Added pulsing animation and color changes for the microphone icon to indicate active listening states.
+- **Input Control Synchronization**: Updated UI logic to ensure the microphone button's state is correctly managed across different app modes and loading states.
+
+---
+
 ## [0.13.0] - 2026-04-24
 
 ### Added
