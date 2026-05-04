@@ -15,6 +15,7 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
 
 ### Highlights für die User Experience
 
+- **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
 
@@ -25,6 +26,7 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
 - **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
 - **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
+- **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
 - **KI-Modell**: OpenAI (Konfigurationswerte aus `config.js` werden von der `app.js` als Parameter an die Methoden der `api.js` übergeben).
 
 ## 3. Repository-Dateistruktur
@@ -148,6 +150,7 @@ The application offers two specialized training environments:
 
 ### User Experience Highlights
 
+- **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Natural Speech Feel:** Thanks to integrated **Text-to-Speech (TTS)** with optimized emphasis, dialogues come to life. (Pro tip: Voices sound particularly human in Microsoft Edge!)
 - **Save Your Progress:** The **Protocol Export** allows you to save the entire conversation history, including the briefing, as a structured text file with one click—ideal for review or documenting learning progress.
 
@@ -158,6 +161,7 @@ The application combines a static frontend with a server-side proxy (for API key
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g., hosted on **GitHub Pages**.
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is necessary because API keys must never be exposed in client-side code (JavaScript).
 - **Security (CORS):** The proxy should only accept requests from the **Origin** where the web app is running (e.g., `https://ryanaella.github.io`). Important: **Origin = Scheme + Domain**, not the path (i.e., not `.../dialogue_lab/`).
+- **Interfaces:** Uses the native **Web Speech API** for audio input and output (local/browser-side processing).
 - **AI Model:** OpenAI (configuration values from `config.js` are passed as parameters by `app.js` to the methods in `api.js`).
 
 ## 3. Repository File Structure

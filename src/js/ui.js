@@ -35,6 +35,7 @@ export const UI = {
     downloadBtn: document.getElementById("download-btn"),
     speakBriefingBtn: document.getElementById("speak-briefing-btn"),
     stopSpeechBtn: document.getElementById("stop-speech-btn"),
+    micBtn: document.getElementById("mic-btn"),
   },
 
   updateStatus(type, message) {
@@ -174,14 +175,22 @@ export const UI = {
   },
 
   updateInputUI(disabled, placeholder) {
-    const { userInput, sendBtn } = this.elements;
+    const { userInput, sendBtn, micBtn } = this.elements;
+    const micDisabled = disabled || !this._voiceSupported;
+
     userInput.disabled = disabled;
     sendBtn.disabled = disabled;
+    if (micBtn) micBtn.disabled = micDisabled;
     userInput.placeholder = placeholder;
     userInput.classList.toggle("bg-gray-100", disabled);
     userInput.classList.toggle("cursor-not-allowed", disabled);
     sendBtn.classList.toggle("opacity-50", disabled);
     sendBtn.classList.toggle("cursor-not-allowed", disabled);
+
+    if (micBtn) {
+      micBtn.classList.toggle("opacity-50", micDisabled);
+      micBtn.classList.toggle("cursor-not-allowed", micDisabled);
+    }
     if (!disabled) userInput.classList.add("bg-slate-50");
   },
 
@@ -208,6 +217,59 @@ export const UI = {
         }
       };
     }
+
+    this.initVoiceInput();
+  },
+
+  initVoiceInput() {
+    const { micBtn, userInput } = this.elements;
+    if (!micBtn) return;
+
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    this._voiceSupported = !!SpeechRecognition;
+
+    if (!SpeechRecognition) {
+      micBtn.title =
+        "Spracherkennung wird von Firefox leider nicht unterstützt. Bitte nutze Chrome oder Edge.";
+      micBtn.classList.add("cursor-help");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "de-DE";
+    recognition.continuous = false;
+
+    recognition.onstart = () => {
+      this._isListening = true;
+      micBtn.classList.add("text-red-600", "animate-pulse");
+      this.updateStatus("loading", "Ich höre zu...");
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      if (userInput) {
+        const currentVal = userInput.value.trim();
+        const space = currentVal.length > 0 ? " " : "";
+        userInput.value = currentVal + space + transcript;
+        userInput.focus();
+      }
+    };
+
+    recognition.onend = () => {
+      this._isListening = false;
+      micBtn.classList.remove("text-red-600", "animate-pulse");
+      this.updateStatus("default", "Bereit");
+    };
+
+    recognition.onerror = () => {
+      this.updateStatus("error", "Spracherkennung abgebrochen");
+    };
+
+    micBtn.onclick = () => {
+      if (this._isListening) recognition.stop();
+      else recognition.start();
+    };
   },
 
   speak(text, roleName, btnElement = null) {
