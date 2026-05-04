@@ -12,6 +12,7 @@ Das **Lab für Sozioinformatik: Transformation Lab** ist eine interaktive Web-An
 - **Gezielte Übungen (Transformation)**
   Hier liegt der Fokus auf der Technik. Trainiere das Umformulieren von Vorwürfen in konstruktive Botschaften (z. B. Ich-Botschaften oder Positive Unterstellungen). Die KI bewertet deine Versuche sofort und gibt Tipps zur Verbesserung.
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung.
 
 ## 2. Technische Architektur
@@ -21,6 +22,7 @@ Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum S
 - **Frontend:** Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript).
 - **Backend-Proxy:** Ein serverseitiges Skript (z.B. PHP `chat.php`), das die API-Keys kapselt.
 - **Sicherheit (CORS):** Der Proxy akzeptiert nur Anfragen vom definierten **Origin** der Web-App (z.B. `https://ryanaella.github.io`).
+- **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
 - **KI-Modell:** OpenAI (Konfigurationswerte werden zentral in der `config.js` verwaltet).
 
 ## 3. Repository-Dateistruktur
@@ -123,6 +125,7 @@ The **Socio-Informatics Lab: Transformation Lab** is an interactive web applicat
 
 - **Targeted Exercises (Transformation):** The focus here is on technique. Practice rephrasing accusations into constructive messages (e.g., I-statements or positive assumptions). The AI evaluates your attempts immediately and provides tips for improvement.
 - **Natural Speech Feel:** Integrated **Text-to-Speech (TTS)** with optimized emphasis brings dialogues to life. (Tip: Voices sound particularly human when using Microsoft Edge!)
+- **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Save Your Progress:** Use the **Protocol Export** to save the entire conversation history, including the briefing, as a structured text file with a single click—ideal for review and follow-up.
 
 ## 2. Technical Architecture
@@ -132,6 +135,7 @@ The application uses a static frontend with a server-side proxy to protect API k
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript).
 - **Backend Proxy:** A server-side script (e.g., PHP `chat.php`) that encapsulates the API keys.
 - **Security (CORS):** The proxy only accepts requests from the defined **Origin** of the web app (e.g., `https://ryanaella.github.io`).
+- **Interfaces:** Uses the native **Web Speech API** for audio input and output (local/browser-side processing).
 - **AI Model:** OpenAI (configuration values are managed centrally in `config.js`).
 
 ## 3. Repository File Structure
