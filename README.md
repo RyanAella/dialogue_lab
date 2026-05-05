@@ -18,6 +18,7 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
+- **Abwechslungsreiches Training:** Die Übungen im Transformations-Modus werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
 
 ## 2. Technische Architektur
 
@@ -153,6 +154,7 @@ The application offers two specialized training environments:
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Natural Speech Feel:** Thanks to integrated **Text-to-Speech (TTS)** with optimized emphasis, dialogues come to life. (Pro tip: Voices sound particularly human in Microsoft Edge!)
 - **Save Your Progress:** The **Protocol Export** allows you to save the entire conversation history, including the briefing, as a structured text file with one click—ideal for review or documenting learning progress.
+- **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
 
 ## 2. Technical Architecture
 
