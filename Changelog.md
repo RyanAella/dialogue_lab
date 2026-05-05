@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.15.0] - 2026-05-05
+
+### Added
+
+- **Exercise Randomization**: Implemented a Fisher-Yates shuffle algorithm to randomize the order of statements in Transformation Mode upon start and restart, ensuring a more dynamic and effective learning experience by preventing repetitive patterns.
+
+---
+
 ## [0.14.0] - 2026-05-01
 
 ### Added
