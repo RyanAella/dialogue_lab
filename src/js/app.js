@@ -63,6 +63,9 @@ function restartIchBotschaftExercise() {
   if (STATE.currentMode !== "ich-botschaft") return;
 
   STATE.exerciseIndex = 0;
+  STATE.ichBotschaftStatements = Utils.shuffleArray(
+    STATE.ichBotschaftStatements,
+  );
   STATE.exerciseAwaitingRevision = false;
   STATE.chatHistory = [];
   UI.elements.chatWindow.innerHTML = "";
@@ -424,10 +427,12 @@ async function switchToTransformationMode(
   const config = STATE.allExercises.find((ex) => ex.id === exerciseId)?.config;
   const response = await fetch(`${config.sourceFile}?t=${Date.now()}`);
   const content = await response.text();
-  STATE.ichBotschaftStatements = content
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"));
+  STATE.ichBotschaftStatements = Utils.shuffleArray(
+    content
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#")),
+  );
 
   STATE.currentMode = "ich-botschaft";
   STATE.exerciseIndex = 0;
