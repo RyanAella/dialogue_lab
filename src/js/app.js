@@ -11,6 +11,7 @@ import { Utils } from "./utils.js";
 const STATE = {
   config: {
     shortInstruction: "",
+    roleName: "Trainer",
   },
   exerciseIndex: 0,
   exerciseAwaitingRevision: false,
@@ -76,6 +77,9 @@ function getTransformationProgressText() {
  */
 function restartTransformationExercise() {
   STATE.exerciseIndex = 0;
+  STATE.transformationStatements = Utils.shuffleArray(
+    STATE.transformationStatements,
+  );
   STATE.exerciseAwaitingRevision = false;
   STATE.chatHistory = [];
   UI.elements.chatWindow.innerHTML = "";
@@ -85,14 +89,15 @@ function restartTransformationExercise() {
   UI.elements.downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
 
   const statement = STATE.transformationStatements[STATE.exerciseIndex];
-  const taskText = `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`;
+  const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
   STATE.chatHistory.push({ role: "assistant", content: taskText });
   UI.appendMessage(taskText, "partner", {
-    messageType: "task",
+    roleName: STATE.config.roleName,
     isIchMode: true,
+    messageType: "task",
     shouldScroll: false,
   });
-  if (STATE.ttsEnabled) UI.speak(taskText, "Aufgabe");
+  if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
   UI.updateInputUI(false, "Eingabe...");
   UI.updateStatus("idle", `${getTransformationProgressText()} (neu gestartet)`);
 }
@@ -167,8 +172,7 @@ function downloadCurrentTranscript() {
   const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   let filenameParts = [];
 
-  // Modus hinzufügen
-  const modePrefix = STATE.currentMode === "roleplay" ? "Simulation" : "Uebung";
+  const modePrefix = "Transformation";
   filenameParts.push(modePrefix);
 
   // Szenario-Titel hinzufügen
@@ -236,8 +240,9 @@ async function handleTransformationSend() {
     // Display feedback message
     const feedback = data.choices[0].message.content;
     UI.appendMessage(feedback, "partner", {
-      messageType: "feedback",
+      roleName: STATE.config.roleName,
       isIchMode: true,
+      messageType: "feedback",
     });
     STATE.chatHistory.push({ role: "assistant", content: feedback });
 
@@ -280,10 +285,12 @@ async function switchToTransformationMode(
   const content = await sourceRes.text();
 
   // Split file content into an array of trimmed lines, ignoring empty lines or comments
-  STATE.transformationStatements = content
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"));
+  STATE.transformationStatements = Utils.shuffleArray(
+    content
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#")),
+  );
 
   STATE.exerciseIndex = 0;
   prepareModeSwitch();
@@ -291,11 +298,14 @@ async function switchToTransformationMode(
 
   STATE.transformationFeedbackPrompt = data.prompts.trainer;
 
+  STATE.config.roleName = data.roleLabel || "Trainer";
   STATE.config.shortInstruction =
     data.shortInstruction || "Bearbeite die Aussage.";
 
-  document.getElementById("main-subtitle").textContent =
-    `${data.title}: ${STATE.config.shortInstruction}`;
+  const mainSubtitle = document.getElementById("main-subtitle");
+  if (mainSubtitle) {
+    mainSubtitle.textContent = `${data.title}: ${STATE.config.shortInstruction}`;
+  }
 
   // Render the briefing section with bold text support
   Utils.renderBoldMarkdownWithLineBreaks(
@@ -309,9 +319,14 @@ async function switchToTransformationMode(
 
   const statement = STATE.transformationStatements[STATE.exerciseIndex];
   UI.appendMessage(
-    `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`,
+    `"${statement}"\n\n${STATE.config.shortInstruction}`,
     "partner",
-    { messageType: "task", isIchMode: true, shouldScroll: false },
+    {
+      roleName: STATE.config.roleName,
+      isIchMode: true,
+      messageType: "task",
+      shouldScroll: false,
+    },
   );
   UI.updateStatus("idle", getTransformationProgressText());
 }
@@ -334,7 +349,9 @@ UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
  */
 UI.elements.nextExerciseBtn?.addEventListener("click", () => {
   if (STATE.exerciseIndex >= STATE.transformationStatements.length - 1) {
-    UI.appendMessage("Alle erledigt!", "partner", { isIchMode: true });
+    UI.appendMessage("Alle erledigt!", "partner", {
+      roleName: STATE.config.roleName,
+    });
     UI.setExerciseActionsVisible(false);
     return;
   }
@@ -342,13 +359,14 @@ UI.elements.nextExerciseBtn?.addEventListener("click", () => {
   STATE.exerciseAwaitingRevision = false;
   UI.setExerciseActionsVisible(false);
   const statement = STATE.transformationStatements[STATE.exerciseIndex];
-  const taskText = `Aussage 1:\n"${statement}"\n\n${STATE.config.shortInstruction}`;
+  const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
   UI.appendMessage(taskText, "partner", {
-    messageType: "task",
+    roleName: STATE.config.roleName,
     isIchMode: true,
+    messageType: "task",
     shouldScroll: false,
   });
-  if (STATE.ttsEnabled) UI.speak(taskText, "Aufgabe");
+  if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
   UI.updateStatus("idle", getTransformationProgressText());
   UI.updateInputUI(false, "Eingabe...");
   UI.elements.userInput.focus();
@@ -400,7 +418,7 @@ async function startApp() {
   UI.init();
 
   // Setup TTS toggle mit korrekter ID und Initialisierung
-  const ttsToggle = document.getElementById("auto-speak-toggle");
+  const ttsToggle = UI.elements.autoSpeakToggle;
   if (ttsToggle) {
     STATE.ttsEnabled = ttsToggle.checked;
     ttsToggle.addEventListener("change", (e) => {

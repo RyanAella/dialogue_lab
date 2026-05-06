@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.14.0] - 2026-05-06
+
+### Added
+
+- **Exercise Randomization**: Implemented a Fisher-Yates shuffle algorithm to randomize the order of statements in Transformation Mode upon start and restart, ensuring a more dynamic and effective learning experience by preventing repetitive patterns.
+- **Role-Based UI Labels**: Chat bubbles now display the actual role name (e.g., "Trainer") instead of generic task labels, making the interaction feel more like a natural dialogue.
+- **Refined TTS Handling**: Speech output now correctly identifies the speaker's role for improved prosody.
+
+---
+
 ## [0.13.0] - 2026-05-04
 
 ### Added

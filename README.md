@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> **Edition-Hinweis:** Dies ist eine spezialisierte Version der Anwendung. Im Gegensatz zur Hauptversion konzentriert sich dieser Stand ausschließlich auf **Tranformations-Übungen** (interaktive Umformulierungen) und enthält keinen Simulations-Modus.
+> **Edition-Hinweis:** Dies ist eine spezialisierte Version der Anwendung. Im Gegensatz zur Hauptversion konzentriert sich dieser Stand ausschließlich auf **Transformations-Übungen** (interaktive Umformulierungen) und enthält keinen Simulations-Modus.
 
 # Lab für Sozioinformatik: Transformation Lab
 
@@ -12,6 +12,7 @@ Das **Lab für Sozioinformatik: Transformation Lab** ist eine interaktive Web-An
 - **Gezielte Übungen (Transformation)**
   Hier liegt der Fokus auf der Technik. Trainiere das Umformulieren von Vorwürfen in konstruktive Botschaften (z. B. Ich-Botschaften oder Positive Unterstellungen). Die KI bewertet deine Versuche sofort und gibt Tipps zur Verbesserung.
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Abwechslungsreiches Training:** Die Übungssituationen werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung.
 
@@ -48,10 +49,11 @@ Diese Datei steuert, welche Transformation in der App zur Verfügung stehen.
 ```json
 [
   {
-    "id": "simulation_reporting",
-    "type": "SIMULATION",
+    "id": "ich_botschaften_basis",
+    "type": "TRANSFORMATION",
     "config": {
-      "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
+      "instructionFile": "scenarios/transformations/ich_botschaft_instructions.txt",
+      "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt"
     }
   }
 ]
@@ -126,6 +128,7 @@ The **Socio-Informatics Lab: Transformation Lab** is an interactive web applicat
 - **Targeted Exercises (Transformation):** The focus here is on technique. Practice rephrasing accusations into constructive messages (e.g., I-statements or positive assumptions). The AI evaluates your attempts immediately and provides tips for improvement.
 - **Natural Speech Feel:** Integrated **Text-to-Speech (TTS)** with optimized emphasis brings dialogues to life. (Tip: Voices sound particularly human when using Microsoft Edge!)
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
+- **Varied Training:** Exercise situations are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
 - **Save Your Progress:** Use the **Protocol Export** to save the entire conversation history, including the briefing, as a structured text file with a single click—ideal for review and follow-up.
 
 ## 2. Technical Architecture
@@ -161,10 +164,11 @@ This file controls which transformations are available within the app.
 ```json
 [
   {
-    "id": "simulation_reporting",
-    "type": "SIMULATION",
+    "id": "ich_botschaften_basis",
+    "type": "TRANSFORMATION",
     "config": {
-      "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
+      "instructionFile": "scenarios/transformations/ich_botschaft_instructions.txt",
+      "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt"
     }
   }
 ]
@@ -177,7 +181,7 @@ Each scenario consists of a **META block** (referencing the prompts) and the **G
 ```text
 ### META ###
 title: I-Statements Basics
-trainer_prompt: i_statement_trainer
+trainer_prompt: ich_botschaft_trainer
 short_instruction: Rephrase the accusation into an I-statement.
 ```
 
