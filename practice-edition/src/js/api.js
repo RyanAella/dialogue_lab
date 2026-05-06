@@ -4,6 +4,10 @@ import { Utils } from "./utils.js";
  * API communication and resource loading module
  */
 
+// Simple cache for frequently accessed resources
+const CACHE = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export const API = {
   /**
    * Loads the content of a specific prompt file (system, partner, mentor, or trainer).
@@ -15,8 +19,22 @@ export const API = {
     return `t=${Date.now()}`;
   },
 
+  /**
+   * Clears the cache - useful for development or when content updates
+   */
+  clearCache() {
+    CACHE.clear();
+  },
+
   async loadPromptContent(type, promptName) {
     if (!promptName) return "";
+    
+    const cacheKey = `prompt_${type}_${promptName}`;
+    const cached = CACHE.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.content;
+    }
+
     const response = await fetch(
       `prompts/${type}/${promptName}.txt?${this._getCacheBuster()}`,
     );
@@ -26,6 +44,13 @@ export const API = {
       );
     }
     const content = (await response.text()).trim();
+    
+    // Cache the result
+    CACHE.set(cacheKey, {
+      content,
+      timestamp: Date.now()
+    });
+    
     return content;
   },
 
