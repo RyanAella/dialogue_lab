@@ -16,8 +16,8 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
 ### Highlights für die User Experience
 
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
-- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
-- **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
+- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung und automatischen Pausen bei Satzzeichen werden die Dialoge lebendig. Ein globaler **Stop-Button** in der Sidebar erlaubt es, die Ausgabe jederzeit sofort abzubrechen. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive des ursprünglichen Briefings mit einem Klick als strukturierte Textdatei (`[Modus]_[Titel]_[Datum].txt`) speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
 - **Abwechslungsreiches Training:** Die Übungen im Transformations-Modus werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
 
 ## 2. Technische Architektur
@@ -39,7 +39,8 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
   - `api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
   - `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
   - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
-- `scenarios/`: Szenario- und Übungsdateien (`exercises.json` als zentrale Konfiguration, `*.txt` für Szenarioinhalte).
+- `src/data/`: `exercises.json` als zentrale Konfiguration.
+- `scenarios/`: Szenariodateien.
 - `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`, `trainers/`.
 
 Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
@@ -152,8 +153,8 @@ The application offers two specialized training environments:
 ### User Experience Highlights
 
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
-- **Natural Speech Feel:** Thanks to integrated **Text-to-Speech (TTS)** with optimized emphasis, dialogues come to life. (Pro tip: Voices sound particularly human in Microsoft Edge!)
-- **Save Your Progress:** The **Protocol Export** allows you to save the entire conversation history, including the briefing, as a structured text file with one click—ideal for review or documenting learning progress.
+- **Natural Speech Feel:** Thanks to integrated **Text-to-Speech (TTS)** with optimized emphasis and automatic pauses at punctuation marks, dialogues come to life. A global **Stop Button** in the sidebar allows you to cancel the output immediately at any time. (Pro tip: Voices sound particularly human in Microsoft Edge!)
+- **Save Your Progress:** The **Protocol Export** allows you to save the entire conversation history, including the original briefing, as a structured text file (`[Mode]_[Title]_[Date].txt`) with one click—ideal for review or documenting learning progress.
 - **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
 
 ## 2. Technical Architecture
@@ -175,7 +176,8 @@ The application combines a static frontend with a server-side proxy (for API key
   - `api.js`: Manages communication with the proxy and handles loading/parsing of scenario and prompt files.
   - `ui.js`: Responsible for all DOM manipulations and the visual representation of the user interface.
   - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
-- `scenarios/`: Scenario and exercise files (`exercises.json` as central config, `*.txt` for scenario content).
+- `src/data/`: `exercises.json` as central configuration.
+- `scenarios/`: Scenario files.
 - `prompts/`: Prompt files in subfolders `system/`, `partner/`, `mentor/`, `trainers/`.
 
 > **Note:** A server-side proxy script like `chat.php` is **not necessarily part of this repository**. It can be stored separately on the server to ensure no secrets are committed to the repo.
@@ -189,11 +191,11 @@ This file controls all available content and distinguishes between the types `SI
 ```json
 [
   {
-    "id": "i_statements_basics",
+    "id": "ich_botschaften_basis",
     "type": "TRANSFORMATION",
     "config": {
-      "sourceFile": "scenarios/transformations/i_statement_statements.txt",
-      "instructionFile": "scenarios/transformations/i_statement_instructions.txt"
+      "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt",
+      "instructionFile": "scenarios/transformations/ich_botschaft_instructions.txt"
     }
   },
   {

@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.16.0] - 2026-05-06
+
+### Changed
+
+- **README Documentation**: Comprehensive documentation update to reflect current application state and improve accuracy for developers and users.
+
+### Fixed
+
+- **File Path Corrections**: Fixed incorrect file paths in README documentation:
+  - `scenarios/exercises.json` → `src/data/exercises.json`
+  - Updated repository structure to accurately reflect current organization
+- **Example Consistency**: Corrected inconsistent example IDs and file paths in both German and English documentation
+
+---
+
 ## [0.15.0] - 2026-05-05
 
 ### Added
@@ -19,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - **Speech-to-Text (STT)**: Integration of the native Web Speech API for voice input via a dedicated microphone button.
-- **Intelligent Browser Handling**: Implementation of an "informative deactivation" pattern for Firefox, providing user guidance (tooltips) when native support is missing.
+  Intelligent Browser Handling: Implementation of an "informative deactivation" pattern for Firefox, providing user guidance (tooltips) when native support is missing.
 
 ### Changed
 

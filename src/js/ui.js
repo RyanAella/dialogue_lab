@@ -11,6 +11,9 @@ export const UI = {
     briefingContent: document.getElementById("briefing-content"),
     chevron: document.getElementById("chevron"),
     scenarioSelect: document.getElementById("scenarios"),
+    exerciseSelect: document.getElementById("exercises"),
+    scenarioSection: document.getElementById("scenario-section"), // Container für Szenario-Dropdown
+    exerciseSection: document.getElementById("exercise-section"), // Container für Übungs-Dropdown
     chatWindow: document.getElementById("chat-window"),
     startInfo: document.getElementById("start-info"),
     userInput: document.getElementById("user-input"),
@@ -36,6 +39,15 @@ export const UI = {
     speakBriefingBtn: document.getElementById("speak-briefing-btn"),
     stopSpeechBtn: document.getElementById("stop-speech-btn"),
     micBtn: document.getElementById("mic-btn"),
+  },
+
+  updateSidebarVisibility(mode) {
+    const isTransformation = mode === "transformation";
+    this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
+    this.elements.exerciseSection?.classList.toggle(
+      "hidden",
+      !isTransformation,
+    );
   },
 
   updateStatus(type, message) {
@@ -101,25 +113,24 @@ export const UI = {
     let label = sender === "user" ? "Deine Antwort" : roleName;
     let bubbleClass =
       sender === "user"
-        ? "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md"
-        : "bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-md border border-gray-100";
+        ? "bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm ring-1 ring-blue-700/10"
+        : "bg-white text-slate-800 p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100";
 
     if (isIchMode && sender !== "user") {
+      label = roleName;
       if (messageType === "task") {
-        label = "Aufgabe";
         bubbleClass =
-          "bg-sky-50 text-sky-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-sky-200";
+          "bg-sky-50 text-sky-900 p-4 rounded-2xl rounded-tl-none shadow-sm border border-sky-100";
       } else if (messageType === "feedback") {
-        label = "Feedback";
         bubbleClass =
-          "bg-violet-50 text-violet-900 p-3 rounded-2xl rounded-tl-none shadow-md border border-violet-200";
+          "bg-indigo-50 text-indigo-900 p-4 rounded-2xl rounded-tl-none shadow-sm border border-indigo-100";
       }
     }
 
     wrapper.className =
       sender === "user"
-        ? `flex flex-row-reverse items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} ml-auto max-w-[85%]`
-        : `flex flex-row items-start mb-6 ${isIchMode ? "gap-0" : "gap-3"} mr-auto max-w-[85%]`;
+        ? "flex flex-row-reverse items-start mb-6 gap-3 ml-auto max-w-[92%] md:max-w-[85%]"
+        : "flex flex-row items-start mb-6 gap-3 mr-auto max-w-[92%] md:max-w-[85%]";
 
     const nameLabel = document.createElement("div");
     nameLabel.className =
@@ -163,7 +174,7 @@ export const UI = {
   setModeBadge(mode) {
     const { modeBadge } = this.elements;
     if (!modeBadge) return;
-    if (mode === "ich-botschaft") {
+    if (mode === "transformation") {
       modeBadge.textContent = "Modus: Übungen";
       modeBadge.className =
         "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
@@ -315,15 +326,38 @@ export const UI = {
 
     const germanVoices = voices.filter((v) => v.lang.startsWith("de"));
 
-    // 1. Suche nach High-Quality (Neural/Natural)
+    // 1. Suche nach High-Quality (Neural/Natural/Online)
     let voice = germanVoices.find((v) => {
       const name = v.name.toLowerCase();
       const isHighQuality =
         name.includes("neural") ||
         name.includes("natural") ||
-        name.includes("online");
-      const femaleKeywords = ["katja", "maren", "anna", "zira", "hedda"];
-      const maleKeywords = ["stefan", "conrad", "kasper", "killian"];
+        name.includes("online") ||
+        name.includes("premium") ||
+        name.includes("enhanced");
+
+      // Erweiterte Liste mit mehr Stimmen
+      const femaleKeywords = [
+        "katja",
+        "maren",
+        "anna",
+        "zira",
+        "hedda",
+        "clara",
+        "julia",
+        "sabrina",
+        "monika",
+      ];
+      const maleKeywords = [
+        "stefan",
+        "conrad",
+        "kasper",
+        "killian",
+        "hans",
+        "gustav",
+        "florian",
+        "michael",
+      ];
 
       const match = isFemale
         ? femaleKeywords.some((k) => name.includes(k))
@@ -331,17 +365,47 @@ export const UI = {
 
       return isHighQuality && match;
     });
-    // 2. FIREFOX CHECK: Wenn keine High-Quality Stimme gefunden wurde
+    // 2. BROWSER-CHECK: Optimale Stimmen finden
     if (!voice) {
-      // Dezenten Hinweis in der Statusbox anzeigen (da Firefox meist nur Standard-Stimmen hat)
-      this.updateStatus(
-        "info",
-        "Hinweis: In Edge klingen die Stimmen noch natürlicher.",
-      );
+      // Browser-spezifische Hinweise für beste Qualität
+      const userAgent = navigator.userAgent.toLowerCase();
+      let recommendation = "";
 
-      // Fallback auf normale Systemstimmen (dein alter Code)
-      const femaleKeywords = ["hedda", "katja", "anna", "elke"];
-      const maleKeywords = ["stefan", "conrad", "markus"];
+      if (userAgent.includes("firefox")) {
+        recommendation = "Tipp: Für bessere Stimmen nutze Chrome oder Edge.";
+      } else if (userAgent.includes("chrome") && !userAgent.includes("edge")) {
+        recommendation =
+          "Tipp: In Edge gibt es noch natürlichere Neural-Stimmen.";
+      } else if (userAgent.includes("edge")) {
+        recommendation = "Perfekt! Edge hat die besten kostenlosen Stimmen.";
+      }
+
+      if (recommendation) {
+        this.updateStatus("info", recommendation);
+      }
+
+      // Fallback auf normale Systemstimmen mit erweiterter Suche
+      const femaleKeywords = [
+        "hedda",
+        "katja",
+        "anna",
+        "elke",
+        "clara",
+        "julia",
+        "sabrina",
+        "monika",
+        "verena",
+      ];
+      const maleKeywords = [
+        "stefan",
+        "conrad",
+        "markus",
+        "hans",
+        "gustav",
+        "florian",
+        "michael",
+        "peter",
+      ];
 
       voice = germanVoices.find((v) => {
         const name = v.name.toLowerCase();
@@ -360,7 +424,7 @@ export const UI = {
 
     const isNeural = voice?.name.toLowerCase().includes("neural");
 
-    // Dynamisches Voice-Tweaking
+    // Dynamisches Voice-Tweaking für natürlichere Sprache
     if (isMentor) {
       // Der Mentor spricht ruhiger, autoritärer und etwas gesetzter
       utterance.rate = isNeural ? 0.88 : 0.85;
@@ -371,7 +435,9 @@ export const UI = {
       utterance.pitch = isFemale ? 1.05 : 0.98;
     }
 
-    utterance.volume = 1.0;
+    // Verbesserte Parameter für natürlichere Aussprache
+    utterance.volume = 0.9; // Etwas leiser für natürlicheren Klang
+    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimale Variation für natürlicherkeit
 
     if (btnElement) {
       utterance.onstart = () =>
