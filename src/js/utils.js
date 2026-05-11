@@ -106,4 +106,41 @@ export const Utils = {
     }
     return newArray;
   },
+
+  /**
+   * Generates a clean text transcript from chat history
+   */
+  generateTranscript(history, partnerRoleName) {
+    return history
+      .filter((m) => m.role !== "system")
+      .map((m) => {
+        const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
+        return `${role}: ${m.content}`;
+      })
+      .join("\n\n");
+  },
+
+  /**
+   * Formats a date for filenames (YYYY-MM-DD)
+   */
+  getFormattedDate() {
+    return new Date().toISOString().slice(0, 10);
+  },
+
+  /**
+   * Bereitet Text für die Sprachausgabe vor (entfernt Markdown und Regieanweisungen)
+   */
+  cleanTextForSpeech(text) {
+    return text
+      .replace(/\*\*|\*/g, "") // Entfernt fett/kursiv Markdown
+      .replace(/\(.*?\)/g, "") // Entfernt (Regieanweisungen)
+      .replace(/\[.*?\]/g, "") // Entfernt [Regieanweisungen]
+      .replace(/\n\n+/g, ". ... . ") // Ersetzt Absätze durch lange Pausen
+      .replace(/:\s*\n/g, ". ... . ") // Doppelpunkt am Ende durch Pause ersetzen
+      .replace(/:\s*/g, ", ... ") // Doppelpunkt im Satz durch kurze Pause ersetzen
+      .replace(/\n/g, ". ") // Einfache Umbrüche durch Punkt ersetzen
+      .replace(/([.!?])\s+/g, "$1 ... ") // Kleine Extra-Pause nach Satzzeichen
+      .replace(/\s+/g, " ") // Bereinigt überschüssige Leerzeichen
+      .trim();
+  },
 };

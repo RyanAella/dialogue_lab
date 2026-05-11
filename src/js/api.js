@@ -8,9 +8,38 @@ import { Utils } from "./utils.js";
 const CACHE = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+let activeChatController = null;
+
 export const API = {
   _getCacheBuster() {
     return `t=${Date.now()}`;
+  },
+
+  /**
+   * Helper for fetch with cache busting and error handling
+   */
+  async _request(url, options = {}) {
+    const separator = url.includes("?") ? "&" : "?";
+    const finalUrl = `${url}${separator}${this._getCacheBuster()}`;
+
+    try {
+      const response = await fetch(finalUrl, options);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP Error: ${response.status}`);
+      }
+      return response;
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+
+      let userMessage = error.message;
+      if (error instanceof TypeError || error.message.includes("fetch")) {
+        userMessage =
+          "Network error or CORS block. Check backend configuration.";
+      }
+      console.error(`Request failed [${url}]:`, error);
+      throw new Error(userMessage);
+    }
   },
 
   /**
@@ -29,14 +58,7 @@ export const API = {
       return cached.content;
     }
 
-    const response = await fetch(
-      `prompts/${type}/${promptName}.txt?t=${Date.now()}`,
-    );
-    if (!response.ok) {
-      throw new Error(
-        `Prompt-Datei konnte nicht geladen werden: prompts/${type}/${promptName}.txt`,
-      );
-    }
+    const response = await this._request(`prompts/${type}/${promptName}.txt`);
     const content = (await response.text()).trim();
 
     // Cache the result
@@ -52,8 +74,7 @@ export const API = {
    * Lädt ein komplettes Szenario inkl. aller verknüpften Prompts
    */
   async fetchCompleteScenario(filePath) {
-    const response = await fetch(`${filePath}?t=${Date.now()}`);
-    if (!response.ok) throw new Error("Datei konnte nicht geladen werden.");
+    const response = await this._request(filePath);
     const text = await response.text();
 
     const { metaSection, instructionSection } =
@@ -70,42 +91,30 @@ export const API = {
       shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
-    // Alle benötigten Prompts parallel laden
-    const promptPromises = [];
+    // Map file keys to their respective prompt directories
+    const promptMap = {
+      system: { file: config.systemFile, dir: "system" },
+      partner: { file: config.partnerFile, dir: "partner" },
+      mentor: { file: config.mentorFile, dir: "mentor" },
+      trainer: { file: config.trainerPromptFile, dir: "trainers" },
+    };
+
     const prompts = {};
+    // Load all defined prompts in parallel
+    await Promise.all(
+      Object.entries(promptMap).map(async ([key, cfg]) => {
+        if (cfg.file) {
+          prompts[key] = await this.loadPromptContent(cfg.dir, cfg.file);
+        }
+      }),
+    );
 
-    if (config.systemFile)
-      promptPromises.push(
-        this.loadPromptContent("system", config.systemFile).then(
-          (c) => (prompts.system = c),
-        ),
-      );
-    if (config.partnerFile)
-      promptPromises.push(
-        this.loadPromptContent("partner", config.partnerFile).then(
-          (c) => (prompts.partner = c),
-        ),
-      );
-    if (config.mentorFile)
-      promptPromises.push(
-        this.loadPromptContent("mentor", config.mentorFile).then(
-          (c) => (prompts.mentor = c),
-        ),
-      );
-    if (config.trainerPromptFile)
-      promptPromises.push(
-        this.loadPromptContent("trainers", config.trainerPromptFile).then(
-          (c) => (prompts.trainer = c),
-        ),
-      );
-
-    await Promise.all(promptPromises);
     return { ...config, prompts };
   },
 
   async fetchScenarioTitle(filePath) {
-    const response = await fetch(`${filePath}?t=${Date.now()}`);
-    if (!response.ok) return null;
+    const response = await this._request(filePath).catch(() => null);
+    if (!response) return null;
     const content = await response.text();
     const titleMatch = content.match(/title:\s*(.*)/);
     return titleMatch ? titleMatch[1].trim() : null;
@@ -114,8 +123,14 @@ export const API = {
   async callChatApi(messages, config) {
     const { proxyUrl, model, temperature } = config;
 
-    const response = await fetch(proxyUrl, {
+    // Abort any ongoing request before starting a new one
+    if (activeChatController) activeChatController.abort();
+    activeChatController = new AbortController();
+
+    // Use the unified request handler for the Chat API call
+    const response = await this._request(proxyUrl, {
       method: "POST",
+      signal: activeChatController.signal,
       headers: {
         "Content-Type": "application/json",
       },
@@ -126,11 +141,7 @@ export const API = {
       }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "API Anfrage fehlgeschlagen");
-    }
-
+    if (!response) return null;
     return response.json();
   },
 };
