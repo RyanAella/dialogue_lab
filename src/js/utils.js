@@ -83,6 +83,50 @@ export const Utils = {
   },
 
   /**
+   * Attempts to extract the role name from the text or the label.
+   * @param {string} instructionSection - The briefing text.
+   * @param {string} roleLabel - Explicit role label from meta.
+   * @returns {string} The formatted role name.
+   */
+  extractRoleName(instructionSection, roleLabel) {
+    if (roleLabel) return this.formatRoleName(roleLabel);
+
+    // Heuristic: search after "Deine Aufgabe" (Your Task) section
+    const taskSection =
+      instructionSection.split(/Deine Aufgabe/i)[1] || instructionSection;
+    const roleRegex = /mit\s+(?:der|dem|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/i;
+    const autoRoleMatch = taskSection.match(roleRegex);
+
+    let roleName = "Teammitglied";
+    if (autoRoleMatch) {
+      roleName = autoRoleMatch[1].trim();
+    } else {
+      const fallbackRegex =
+        /\b(?:ein|einen|eine|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/;
+      const fallbackMatch = taskSection.match(fallbackRegex);
+      if (fallbackMatch) roleName = fallbackMatch[1].trim();
+    }
+
+    // Normalization for common German terms
+    if (
+      roleName.toLowerCase().startsWith("mitarbeitend") &&
+      !roleName.toLowerCase().endsWith("in")
+    ) {
+      roleName = "Mitarbeiter";
+    }
+
+    return this.formatRoleName(roleName);
+  },
+
+  /**
+   * Capitalizes the first letter and lowers the rest.
+   */
+  formatRoleName(name) {
+    if (!name) return "";
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  },
+
+  /**
    * Randomizes the order of elements in an array using the Fisher-Yates algorithm.
    * @param {Array} array - The array to shuffle.
    * @returns {Array} A new shuffled array.
@@ -94,5 +138,41 @@ export const Utils = {
       [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
     return newArray;
+  },
+  /**
+   * Generates a clean text transcript from chat history
+   */
+  generateTranscript(history, partnerRoleName) {
+    return history
+      .filter((m) => m.role !== "system")
+      .map((m) => {
+        const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
+        return `${role}: ${m.content}`;
+      })
+      .join("\n\n");
+  },
+
+  /**
+   * Formats a date for filenames (YYYY-MM-DD)
+   */
+  getFormattedDate() {
+    return new Date().toISOString().slice(0, 10);
+  },
+
+  /**
+   * Prepares text for speech output (removes Markdown and stage directions).
+   */
+  cleanTextForSpeech(text) {
+    return text
+      .replace(/\*\*|\*/g, "") // Remove bold/italic Markdown
+      .replace(/\(.*?\)/g, "") // Remove (stage directions)
+      .replace(/\[.*?\]/g, "") // Remove [stage directions]
+      .replace(/\n\n+/g, ". ... . ") // Replace paragraphs with long pauses
+      .replace(/:\s*\n/g, ". ... . ") // Replace trailing colon with pause
+      .replace(/:\s*/g, ", ... ") // Replace inline colon with short pause
+      .replace(/\n/g, ". ") // Replace simple line breaks with period
+      .replace(/([.!?])\s+/g, "$1 ... ") // Add tiny extra pause after punctuation
+      .replace(/\s+/g, " ") // Clean up excess whitespace
+      .trim();
   },
 };

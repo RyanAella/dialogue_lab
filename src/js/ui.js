@@ -1,134 +1,133 @@
-/**
- * UI Manager - Responsible for DOM elements and visual updates
- */
+import { Utils } from "./utils.js";
+
+// Constants for Voice Selection
+const VOICE_KEYWORDS = {
+  female: [
+    "katja",
+    "maren",
+    "anna",
+    "zira",
+    "hedda",
+    "clara",
+    "julia",
+    "sabrina",
+    "monika",
+    "verena",
+    "elke",
+  ],
+  male: [
+    "stefan",
+    "conrad",
+    "kasper",
+    "killian",
+    "hans",
+    "gustav",
+    "florian",
+    "michael",
+    "markus",
+    "peter",
+  ],
+  highQuality: ["neural", "natural", "online", "premium", "enhanced"],
+};
 
 export const UI = {
-  /** Mapping of relevant DOM elements */
-  elements: {
-    briefingHeader: document.getElementById("briefing-header"),
-    briefingContent: document.getElementById("briefing-content"),
-    chevron: document.getElementById("chevron"),
-    exerciseSelect: document.getElementById("exercises"), // Renamed from scenarios
-    chatWindow: document.getElementById("chat-window"),
-    userInput: document.getElementById("user-input"),
-    sendBtn: document.getElementById("send-btn"),
-    statusBox: document.getElementById("status-box"),
-    mobileMenuBtn: document.getElementById("mobile-menu-btn"),
-    sidebar: document.getElementById("sidebar"),
-    sidebarOverlay: document.getElementById("sidebar-overlay"),
-    exerciseActions: document.getElementById("exercise-actions"),
-    restartExerciseBtn: document.getElementById("restart-exercise-btn"),
-    reviseBtn: document.getElementById("revise-btn"),
-    nextExerciseBtn: document.getElementById("next-exercise-btn"),
-    downloadBtn: document.getElementById("download-btn"),
-    autoSpeakToggle: document.getElementById("auto-speak-toggle"),
-    speakBriefingBtn: document.getElementById("speak-briefing-btn"),
-    stopSpeechBtn: document.getElementById("stop-speech-btn"),
-    micBtn: document.getElementById("mic-btn"),
-  },
+  /** Centralized storage for DOM elements */
+  elements: {},
 
   /**
-   * Updates the system status box with different visual states.
-   * @param {'loading'|'error'|'idle'} type - The status type.
-   * @param {string} message - The message to display.
+   * Automatically binds DOM elements to the UI.elements object based on ID mapping.
+   * Converts kebab-case IDs to camelCase properties.
    */
+  _bindElements() {
+    const ids = [
+      "briefing-header",
+      "briefing-content",
+      "chevron",
+      "exercises",
+      "chat-window",
+      "start-info",
+      "user-input",
+      "send-btn",
+      "status-box",
+      "mobile-menu-btn",
+      "sidebar",
+      "sidebar-overlay",
+      "exercise-actions",
+      "restart-exercise-btn",
+      "revise-btn",
+      "next-exercise-btn",
+      "download-btn",
+      "auto-speak-toggle",
+      "speak-briefing-btn",
+      "stop-speech-btn",
+      "mic-btn",
+      "loading-overlay",
+      "feedback-modal",
+      "reset-modal",
+    ];
+    ids.forEach((id) => {
+      const camelCaseId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+      this.elements[camelCaseId] = document.getElementById(id);
+    });
+    // Remap specific non-standard IDs
+    this.elements.exerciseSelect = this.elements.exercises;
+  },
+
+  updateSidebarVisibility(mode) {
+    const isTransformation = mode === "transformation";
+    this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
+    this.elements.exerciseSection?.classList.toggle(
+      "hidden",
+      !isTransformation,
+    );
+  },
+
   updateStatus(type, message) {
     const { statusBox } = this.elements;
     if (!statusBox) return;
-    let classes =
-      "status-box p-3 rounded-xl border text-xs font-medium transition-all duration-300 flex items-center gap-2 ";
-    let dot = `<span class="relative flex h-2 w-2">
-                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
-                 <span class="relative inline-flex rounded-full h-2 w-2"></span>
-               </span>`;
 
-    if (type === "loading") {
-      classes += "bg-blue-50 text-blue-700 border-blue-200";
-      dot = dot.replace("rounded-full", "rounded-full bg-blue-500");
-    } else if (type === "error") {
-      classes += "bg-red-50 text-red-700 border-red-200";
-      dot = `<span class="h-2 w-2 rounded-full bg-red-500"></span>`;
-    } else {
-      classes += "bg-slate-50 text-slate-600 border-slate-200";
-      dot = `<span class="h-2 w-2 rounded-full bg-green-500"></span>`;
-    }
-    statusBox.className = classes;
-    statusBox.innerHTML = `${dot} <span>${message}</span>`;
+    const configs = {
+      loading: {
+        cls: "bg-blue-50 text-blue-700 border-blue-200",
+        dot: "bg-blue-500 animate-ping",
+      },
+      error: {
+        cls: "bg-red-50 text-red-700 border-red-200",
+        dot: "bg-red-500",
+      },
+      default: {
+        cls: "bg-slate-50 text-slate-600 border-slate-200",
+        dot: "bg-green-500",
+      },
+    };
+
+    const config = configs[type] || configs.default;
+    const baseCls =
+      "status-box p-3 rounded-xl border text-xs font-medium transition-all duration-300 flex items-center gap-2";
+
+    statusBox.className = `${baseCls} ${config.cls}`;
+    statusBox.innerHTML = `<span class="h-2 w-2 rounded-full ${config.dot}"></span>`;
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = message;
+    statusBox.appendChild(textSpan);
   },
 
   /**
-   * Appends a message bubble to the chat window.
-   * @param {string} text - The message content.
-   * @param {'user'|'partner'} sender - Who sent the message.
-   * @param {Object} options - Additional configuration.
-   * @param {'default'|'task'|'feedback'} [options.messageType='default'] - Visual style for the message.
-   * @param {string} [options.roleName='Partner'] - Name to display for the partner.
-   * @param {boolean} [options.isIchMode=false] - Whether the app is in exercise/transformation mode.
-   * @param {boolean} [options.shouldScroll=true] - Whether to scroll to the bottom after appending.
+   * Orchestrates the creation and addition of a message to the chat
    */
   appendMessage(text, sender, options = {}) {
     const { chatWindow } = this.elements;
-    const {
-      messageType = "default",
-      isIchMode = false,
-      roleName = "Partner",
-      shouldScroll = true,
-    } = options;
+    const { isIchMode = false, shouldScroll = true } = options;
 
     const wrapper = document.createElement("div");
+    wrapper.className = `flex items-start mb-6 gap-3 max-w-[92%] md:max-w-[85%] ${
+      sender === "user" ? "flex-row-reverse ml-auto" : "flex-row mr-auto"
+    }`;
 
-    const contentDiv = document.createElement("div");
-    contentDiv.className =
-      sender === "user"
-        ? "flex flex-col items-end"
-        : "flex flex-col items-start";
+    if (!isIchMode) wrapper.appendChild(this._createAvatar(sender, options));
+    wrapper.appendChild(this._createMessageBody(text, sender, options));
 
-    let label = sender === "user" ? "Deine Antwort" : roleName;
-    let bubbleClass =
-      sender === "user"
-        ? "bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm ring-1 ring-blue-700/10"
-        : "bg-white text-slate-800 p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100";
-
-    if (isIchMode && sender !== "user") {
-      label = roleName;
-      if (messageType === "task") {
-        bubbleClass =
-          "bg-sky-50 text-sky-900 p-4 rounded-2xl rounded-tl-none shadow-sm border border-sky-100";
-      } else if (messageType === "feedback") {
-        bubbleClass =
-          "bg-indigo-50 text-indigo-900 p-4 rounded-2xl rounded-tl-none shadow-sm border border-indigo-100";
-      }
-    }
-
-    wrapper.className =
-      sender === "user"
-        ? "flex flex-row-reverse items-start mb-6 gap-3 ml-auto max-w-[92%] md:max-w-[85%]"
-        : "flex flex-row items-start mb-6 gap-3 mr-auto max-w-[92%] md:max-w-[85%]";
-
-    const nameLabel = document.createElement("div");
-    nameLabel.className =
-      "text-xs text-gray-500 mb-1 px-1 flex items-center gap-1.5";
-    nameLabel.textContent = label;
-
-    const speakBtn = document.createElement("button");
-    speakBtn.className =
-      "hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5";
-    speakBtn.title = "Vorlesen";
-    speakBtn.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z" clip-rule="evenodd" />
-      </svg>`;
-    speakBtn.onclick = (e) => this.speak(text, label, e.currentTarget);
-    nameLabel.appendChild(speakBtn);
-
-    const msgBubble = document.createElement("div");
-    msgBubble.className = bubbleClass;
-    msgBubble.style.whiteSpace = "pre-wrap";
-    msgBubble.textContent = text;
-
-    contentDiv.appendChild(nameLabel);
-    contentDiv.appendChild(msgBubble);
-    wrapper.appendChild(contentDiv);
     chatWindow.appendChild(wrapper);
 
     if (shouldScroll) {
@@ -140,18 +139,154 @@ export const UI = {
   },
 
   /**
-   * Toggles the visibility of exercise action buttons (Revise, Next, Restart).
-   * @param {boolean} visible
+   * Displays a typing indicator bubble in the chat
    */
+  showTypingIndicator(roleName) {
+    this.hideTypingIndicator(); // Ensure no duplicates
+    const wrapper = document.createElement("div");
+    wrapper.id = "typing-indicator";
+    wrapper.className =
+      "flex items-start mb-6 gap-3 flex-row mr-auto max-w-[92%]";
+
+    wrapper.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 mt-1"></div>
+      <div class="flex flex-col">
+        <div class="text-xs text-gray-500 mb-1">${roleName} schreibt...</div>
+        <div class="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex gap-1">
+          <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+          <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+          <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+        </div>
+      </div>
+    `;
+    this.elements.chatWindow.appendChild(wrapper);
+    this.elements.chatWindow
+      .closest("main")
+      ?.scrollTo(0, this.elements.chatWindow.scrollHeight);
+  },
+
+  hideTypingIndicator() {
+    document.getElementById("typing-indicator")?.remove();
+  },
+
+  /**
+   * Internal helper to create the avatar element
+   */
+  _createAvatar(sender, { roleName = "Partner" }) {
+    const avatar = document.createElement("div");
+    const isFemale = sender !== "user" && roleName.toLowerCase().endsWith("in");
+
+    avatar.className = `flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 ${
+      sender === "user"
+        ? "w-8 h-8 rounded-full bg-blue-700 text-white border-2 border-blue-400"
+        : isFemale
+          ? "w-12 h-16 rounded-xl bg-white border-2 border-white overflow-hidden"
+          : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
+    }`;
+
+    if (sender === "user") {
+      avatar.textContent = "DU";
+    } else if (isFemale) {
+      const img = document.createElement("img");
+      img.src = "src/assets/grafik.png";
+      img.className = "w-full h-full object-cover";
+      avatar.appendChild(img);
+    } else {
+      avatar.textContent = roleName.substring(0, 2).toUpperCase();
+    }
+    return avatar;
+  },
+
+  /**
+   * Internal helper to create the message content (label + bubble)
+   */
+  _createMessageBody(
+    text,
+    sender,
+    { messageType = "default", roleName = "Partner", isIchMode = false },
+  ) {
+    const container = document.createElement("div");
+    container.className =
+      sender === "user"
+        ? "flex flex-col items-end w-full"
+        : "flex flex-col items-start w-full";
+
+    const styleMap = {
+      user: {
+        label: "Deine Antwort",
+        cls: "bg-blue-600 text-white rounded-tr-none",
+      },
+      partner: {
+        label: roleName,
+        cls: "bg-white text-slate-800 border-slate-100 rounded-tl-none",
+      },
+      task: {
+        label: roleName,
+        cls: "bg-sky-50 text-sky-900 border-sky-100 rounded-tl-none",
+      },
+      feedback: {
+        label: roleName,
+        cls: "bg-indigo-50 text-indigo-900 border-indigo-100 rounded-tl-none",
+      },
+    };
+
+    const styleKey = isIchMode && sender !== "user" ? messageType : sender;
+    const config = styleMap[styleKey] || styleMap.partner;
+
+    // Create Label with Speech Button
+    const nameLabel = document.createElement("div");
+    nameLabel.className =
+      "text-xs text-gray-500 mb-1 px-1 flex items-center gap-1.5";
+    nameLabel.textContent = config.label;
+
+    const speakBtn = document.createElement("button");
+    speakBtn.className =
+      "hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5";
+    speakBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z" clip-rule="evenodd" /></svg>`;
+    speakBtn.onclick = () => this.speak(text, config.label, speakBtn);
+    nameLabel.appendChild(speakBtn);
+
+    // Create Bubble
+    const msgBubble = document.createElement("div");
+    msgBubble.className = `p-4 rounded-2xl shadow-sm border ${config.cls}`;
+    msgBubble.style.whiteSpace = "pre-wrap";
+    msgBubble.textContent = text;
+
+    container.appendChild(nameLabel);
+    container.appendChild(msgBubble);
+    return container;
+  },
+
   setExerciseActionsVisible(visible) {
     this.elements.exerciseActions?.classList.toggle("hidden", !visible);
   },
 
   /**
-   * Updates the user input field and send button state.
-   * @param {boolean} disabled - Whether interaction is blocked.
-   * @param {string} placeholder - The text to show in the empty input field.
+   * Handles all UI transitions when a user starts an interaction
    */
+  prepareForInteraction() {
+    const { briefingContent, chevron, startInfo } = this.elements;
+
+    // Collapse briefing and hide initial info
+    if (briefingContent) briefingContent.classList.add("hidden");
+    if (chevron) chevron.style.transform = "rotate(90deg)";
+    if (startInfo) startInfo.classList.add("hidden");
+  },
+
+  setModeBadge(mode) {
+    const { modeBadge } = this.elements;
+    if (!modeBadge) return;
+    if (mode === "transformation") {
+      modeBadge.textContent = "Modus: Übungen";
+      modeBadge.className =
+        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
+    } else {
+      modeBadge.textContent = "Modus: Simulationen";
+      modeBadge.className =
+        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
+    }
+  },
+
   updateInputUI(disabled, placeholder) {
     const { userInput, sendBtn, micBtn } = this.elements;
     const micDisabled = disabled || !this._voiceSupported;
@@ -163,13 +298,19 @@ export const UI = {
     userInput.classList.toggle("bg-gray-100", disabled);
     userInput.classList.toggle("cursor-not-allowed", disabled);
     sendBtn.classList.toggle("opacity-50", disabled);
-    if (micBtn) micBtn.classList.toggle("opacity-50", micDisabled);
-    if (micBtn) micBtn.classList.toggle("cursor-not-allowed", micDisabled);
     sendBtn.classList.toggle("cursor-not-allowed", disabled);
+
+    if (micBtn) {
+      micBtn.classList.toggle("opacity-50", micDisabled);
+      micBtn.classList.toggle("cursor-not-allowed", micDisabled);
+    }
     if (!disabled) userInput.classList.add("bg-slate-50");
   },
 
   init() {
+    // Bind all DOM elements to UI.elements before setting up logic
+    this._bindElements();
+
     if (this.elements.speakBriefingBtn) {
       this.elements.speakBriefingBtn.onclick = (e) => {
         e.stopPropagation();
@@ -196,16 +337,12 @@ export const UI = {
     this.initVoiceInput();
   },
 
-  /**
-   * Initializes the free Web Speech API for Speech-to-Text.
-   */
   initVoiceInput() {
     const { micBtn, userInput } = this.elements;
     if (!micBtn) return;
 
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-
     this._voiceSupported = !!SpeechRecognition;
 
     if (!SpeechRecognition) {
@@ -263,19 +400,7 @@ export const UI = {
     window.speechSynthesis.cancel();
     this._lastSpokenText = text;
 
-    // Fortgeschrittene Text-Optimierung für natürliche Pausen:
-    let cleanedText = text
-      .replace(/\*\*|\*/g, "") // Markdown entfernen
-      .replace(/\(.*?\)/g, "") // Regieanweisungen (Klammern) entfernen
-      .replace(/\[.*?\]/g, "") // Regieanweisungen [Klammern] entfernen
-      .replace(/\n\n+/g, ". ... . ") // Doppelte Zeilenumbrüche = Lange Pause
-      .replace(/:\s*\n/g, ". ... . ") // Doppelpunkt am Zeilenende = Lange Pause
-      .replace(/:\s*/g, ", ... ") // Doppelpunkt im Satz = Nachdenkliche Pause
-      .replace(/\n/g, ". ") // Einfacher Umbruch = Normale Pause
-      .replace(/([.!?])\s+/g, "$1 ... ") // Nach jedem Satzende eine winzige Zusatzpause
-      .replace(/\.\s+\.\s+\./g, "...") // Korrektur für entstandene Dreifachpunkte
-      .replace(/\s+/g, " ") // Whitespace aufräumen
-      .trim();
+    let cleanedText = Utils.cleanTextForSpeech(text);
 
     // Ein finales Satzzeichen erzwingen, falls keines da ist
     if (!/[.!?]$/.test(cleanedText)) {
@@ -283,7 +408,11 @@ export const UI = {
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
-    const voices = window.speechSynthesis.getVoices();
+    let voices = window.speechSynthesis.getVoices();
+
+    // Fallback: If voices are not loaded yet, try to wait or use default
+    if (!voices || voices.length === 0) voices = [];
+
     const isFemale =
       roleName?.toLowerCase().endsWith("in") ||
       roleName?.toLowerCase().includes("mitarbeiterin");
@@ -294,42 +423,15 @@ export const UI = {
 
     const germanVoices = voices.filter((v) => v.lang.startsWith("de"));
 
-    // 1. Suche nach High-Quality (Neural/Natural/Online)
+    // Find optimal voice using predefined keywords
     let voice = germanVoices.find((v) => {
       const name = v.name.toLowerCase();
-      const isHighQuality =
-        name.includes("neural") ||
-        name.includes("natural") ||
-        name.includes("online") ||
-        name.includes("premium") ||
-        name.includes("enhanced");
+      const isHighQuality = VOICE_KEYWORDS.highQuality.some((k) =>
+        name.includes(k),
+      );
 
-      // Erweiterte Liste mit mehr Stimmen
-      const femaleKeywords = [
-        "katja",
-        "maren",
-        "anna",
-        "zira",
-        "hedda",
-        "clara",
-        "julia",
-        "sabrina",
-        "monika",
-      ];
-      const maleKeywords = [
-        "stefan",
-        "conrad",
-        "kasper",
-        "killian",
-        "hans",
-        "gustav",
-        "florian",
-        "michael",
-      ];
-
-      const match = isFemale
-        ? femaleKeywords.some((k) => name.includes(k))
-        : maleKeywords.some((k) => name.includes(k));
+      const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
+      const match = keywords.some((k) => name.includes(k));
 
       return isHighQuality && match;
     });
@@ -353,33 +455,10 @@ export const UI = {
       }
 
       // Fallback auf normale Systemstimmen mit erweiterter Suche
-      const femaleKeywords = [
-        "hedda",
-        "katja",
-        "anna",
-        "elke",
-        "clara",
-        "julia",
-        "sabrina",
-        "monika",
-        "verena",
-      ];
-      const maleKeywords = [
-        "stefan",
-        "conrad",
-        "markus",
-        "hans",
-        "gustav",
-        "florian",
-        "michael",
-        "peter",
-      ];
-
       voice = germanVoices.find((v) => {
         const name = v.name.toLowerCase();
-        return isFemale
-          ? femaleKeywords.some((k) => name.includes(k))
-          : maleKeywords.some((k) => name.includes(k));
+        const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
+        return keywords.some((k) => name.includes(k));
       });
     }
 
@@ -433,10 +512,6 @@ export const UI = {
     }, 100);
   },
 
-  /**
-   * Shows a loading spinner inside the briefing area.
-   * @param {boolean} isLoading
-   */
   setBriefingLoading(isLoading) {
     if (!isLoading) return;
     this.elements.briefingContent.innerHTML = `
@@ -452,20 +527,16 @@ export const UI = {
   },
 
   /**
-   * Controls the expanded/collapsed state of the briefing section.
-   * @param {boolean} expanded
+   * Toggles the briefing content visibility.
+   * @param {boolean} expanded - Whether the briefing should be shown.
    */
   setBriefingExpanded(expanded) {
     const { briefingContent, chevron } = this.elements;
-    briefingContent.classList.toggle("hidden", !expanded);
+    briefingContent?.classList.toggle("hidden", !expanded);
     if (chevron)
       chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
   },
 
-  /**
-   * Handles the opening and closing of the mobile sidebar.
-   * @param {boolean} [forceClose=false] - If true, ensures the sidebar is closed.
-   */
   toggleMobileMenu(forceClose = false) {
     const { sidebar, sidebarOverlay } = this.elements;
     const isOpen = !sidebar.classList.contains("-translate-x-full");
@@ -479,10 +550,44 @@ export const UI = {
       document.body.style.overflow = "hidden";
     }
   },
+
+  showFeedbackModal(feedback) {
+    const { feedbackModal } = this.elements;
+    const feedbackText = document.getElementById("feedback-text");
+    this.toggleMobileMenu(true);
+    if (feedbackText)
+      Utils.renderBoldMarkdownWithLineBreaks(feedbackText, feedback);
+    feedbackModal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  },
+
+  openResetModal() {
+    const modal = this.elements.resetModal;
+    this.toggleMobileMenu(true);
+    modal.classList.remove("hidden");
+    const content = modal.querySelector("div");
+    setTimeout(() => {
+      content.classList.remove("scale-95", "opacity-0");
+      content.classList.add("scale-100", "opacity-100");
+    }, 10);
+  },
+};
+
+// Global bindings for HTML onclick attributes
+window.closeFeedbackModal = () => {
+  UI.elements.feedbackModal.classList.add("hidden");
+  document.body.style.overflow = "auto";
+};
+
+window.closeResetModal = () => {
+  const modal = UI.elements.resetModal;
+  const content = modal.querySelector("div");
+  content.classList.replace("scale-100", "scale-95");
+  setTimeout(() => modal.classList.add("hidden"), 200);
 };
 
 /**
- * Updates the subtitle text based on screen width for responsive messaging.
+ * Updates the subtitle responsive text.
  */
 export const updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
@@ -493,3 +598,5 @@ export const updateSubtitleText = () => {
       ? `${base} <br><span class="text-xs text-blue-600">Übung wechseln? Klicke oben rechts auf ☰</span>`
       : base;
 };
+
+window.updateSubtitleText = updateSubtitleText;

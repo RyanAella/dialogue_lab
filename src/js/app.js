@@ -123,7 +123,7 @@ async function initExerciseDropdown() {
   // Parallel loading of all titles for better performance
   const titlePromises = STATE.allExercises.map(async (ex) => {
     try {
-      const title = await API.fetchExerciseTitle(ex.config.instructionFile);
+      const title = await API.fetchScenarioTitle(ex.config.instructionFile);
       return { id: ex.id, title: title || ex.id };
     } catch (e) {
       return { id: ex.id, title: ex.id };
@@ -138,30 +138,14 @@ async function initExerciseDropdown() {
   UI.elements.exerciseSelect.disabled = false;
 }
 
-/**
- * Event Listener for the exercise selection dropdown.
- * Triggers the mode switch and data loading for the selected ID.
- */
-UI.elements.exerciseSelect.addEventListener("change", async (event) => {
-  const exerciseId = event.target.value;
-  const ex = STATE.allExercises.find((e) => e.id === exerciseId);
-  if (!ex) return;
-
-  await switchToTransformationMode(exerciseId);
-});
-
 // Function to download the current chat transcript
 function downloadCurrentTranscript() {
-  const briefing = UI.elements.briefingContent?.innerText.trim() || "";
-  const header = `### BRIEFING / AUFGABENSTELLUNG ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n### PROTOKOLL ###\n\n`;
-
-  const chatContent = STATE.chatHistory
-    .filter((m) => m.role !== "system")
-    .map(
-      (m) =>
-        `${m.role === "user" ? "Führungskraft" : STATE.config.roleName || "KI-Trainer"}: ${m.content}`,
-    )
-    .join("\n\n");
+  const briefing = UI.elements.briefingContent?.textContent.trim() || "";
+  const header = `### BRIEFING ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n### PROTOKOLL ###\n\n`;
+  const chatContent = Utils.generateTranscript(
+    STATE.chatHistory,
+    STATE.config.roleName,
+  );
 
   const blob = new Blob([header + chatContent], {
     type: "text/plain;charset=utf-8",
@@ -169,7 +153,7 @@ function downloadCurrentTranscript() {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
 
-  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const date = Utils.getFormattedDate();
   let filenameParts = [];
 
   const modePrefix = "Transformation";
@@ -199,45 +183,51 @@ function downloadCurrentTranscript() {
 }
 
 /**
+ * Returns the correct message payload and temperature
+ */
+function getApiPayload(userMessage) {
+  return {
+    messages: [
+      { role: "system", content: STATE.transformationFeedbackPrompt },
+      {
+        role: "user",
+        content: `Statement: ${STATE.transformationStatements[STATE.exerciseIndex]}\nUser: ${userMessage}`,
+      },
+    ],
+    temperature: APP_CONFIG.TRANSFORMATION_TEMPERATURE,
+  };
+}
+
+/**
  * Main entry point for sending messages.
  * Routes the input to the appropriate handler based on the current mode.
  */
 async function handleSend() {
-  await handleTransformationSend();
-}
-
-/**
- * Processes user input specifically for transformation (e.g., I-Message) exercises.
- * Calls the AI API via the proxy for qualitative feedback
- * and updates the UI accordingly.
- */
-async function handleTransformationSend() {
   const userVal = UI.elements.userInput.value.trim();
   if (!userVal) return;
+
+  UI.elements.briefingContent.classList.add("hidden");
+  UI.elements.chevron.style.transform = "rotate(90deg)";
+
   UI.appendMessage(userVal, "user", { isIchMode: true });
+  if (STATE.ttsEnabled) UI.speak(userVal, "Ich");
   STATE.chatHistory.push({ role: "user", content: userVal });
   UI.elements.userInput.value = "";
   UI.updateInputUI(true, "Feedback...");
   UI.updateStatus("loading", "Trainer...");
+  UI.showTypingIndicator(STATE.config.roleName);
 
   try {
-    // Prepare messages for the LLM to analyze the transformation
-    const data = await API.callChatApi(
-      [
-        { role: "system", content: STATE.transformationFeedbackPrompt },
-        {
-          role: "user",
-          content: `Statement: ${STATE.transformationStatements[STATE.exerciseIndex]}\nUser: ${userVal}`,
-        },
-      ],
-      {
-        proxyUrl: APP_CONFIG.PROXY_URL,
-        model: APP_CONFIG.MODEL,
-        temperature: APP_CONFIG.TRANSFORMATION_TEMPERATURE,
-      },
-    );
+    const { messages, temperature } = getApiPayload(userVal);
+    const data = await API.callChatApi(messages, {
+      proxyUrl: APP_CONFIG.PROXY_URL,
+      model: APP_CONFIG.MODEL,
+      temperature: temperature,
+    });
 
-    // Display feedback message
+    if (!data) return;
+    UI.hideTypingIndicator();
+
     const feedback = data.choices[0].message.content;
     UI.appendMessage(feedback, "partner", {
       roleName: STATE.config.roleName,
@@ -258,6 +248,7 @@ async function handleTransformationSend() {
 
     UI.updateStatus("idle", getTransformationProgressText());
   } catch (e) {
+    UI.hideTypingIndicator();
     UI.updateStatus("error", "API Fehler");
     UI.updateInputUI(false, "Eingabe..."); // Re-enable only on error to allow retry
   }
@@ -279,7 +270,7 @@ async function switchToTransformationMode(
   // Load both the statements and the exercise metadata in parallel
   const [sourceRes, data] = await Promise.all([
     fetch(`${config.sourceFile}?t=${Date.now()}`),
-    API.fetchCompleteExercise(config.instructionFile),
+    API.fetchCompleteScenario(config.instructionFile),
   ]);
 
   const content = await sourceRes.text();
@@ -335,76 +326,78 @@ async function switchToTransformationMode(
 // 3. UI Event Listeners
 // =========================================================
 
-// Primary interaction handlers
-UI.elements.sendBtn.addEventListener("click", handleSend);
-UI.elements.userInput.addEventListener(
-  "keypress",
-  (e) => e.key === "Enter" && handleSend(),
-);
-UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
+function setupEventListeners() {
+  /**
+   * Event Listener for the exercise selection dropdown.
+   * Triggers the mode switch and data loading for the selected ID.
+   */
+  UI.elements.exerciseSelect.addEventListener("change", async (event) => {
+    const exerciseId = event.target.value;
+    const ex = STATE.allExercises.find((e) => e.id === exerciseId);
+    if (!ex) return;
 
-/**
- * Advances the user to the next statement in the exercise series.
- * Resets input state and shows completion message if no statements are left.
- */
-UI.elements.nextExerciseBtn?.addEventListener("click", () => {
-  if (STATE.exerciseIndex >= STATE.transformationStatements.length - 1) {
-    UI.appendMessage("Alle erledigt!", "partner", {
-      roleName: STATE.config.roleName,
-    });
-    UI.setExerciseActionsVisible(false);
-    return;
-  }
-  STATE.exerciseIndex++;
-  STATE.exerciseAwaitingRevision = false;
-  UI.setExerciseActionsVisible(false);
-  const statement = STATE.transformationStatements[STATE.exerciseIndex];
-  const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
-  UI.appendMessage(taskText, "partner", {
-    roleName: STATE.config.roleName,
-    isIchMode: true,
-    messageType: "task",
-    shouldScroll: false,
+    await switchToTransformationMode(exerciseId);
   });
-  if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
-  UI.updateStatus("idle", getTransformationProgressText());
-  UI.updateInputUI(false, "Eingabe...");
-  UI.elements.userInput.focus();
-});
 
-/** Allows the user to re-edit their last input after receiving feedback. */
-UI.elements.reviseBtn?.addEventListener("click", () => {
-  UI.setExerciseActionsVisible(false);
-  STATE.exerciseAwaitingRevision = false;
-  UI.updateInputUI(false, "Eingabe korrigieren...");
-  UI.elements.userInput.focus();
-});
+  UI.elements.sendBtn.addEventListener("click", handleSend);
+  UI.elements.userInput.addEventListener(
+    "keypress",
+    (e) => e.key === "Enter" && handleSend(),
+  );
+  UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
 
-/** Restarts the entire series of statements for the current exercise */
-UI.elements.restartExerciseBtn?.addEventListener("click", () => {
-  restartTransformationExercise();
-});
+  UI.elements.nextExerciseBtn?.addEventListener("click", () => {
+    if (STATE.exerciseIndex >= STATE.transformationStatements.length - 1) {
+      UI.appendMessage("Alle erledigt!", "partner", {
+        roleName: STATE.config.roleName,
+      });
+      UI.setExerciseActionsVisible(false);
+      return;
+    }
+    STATE.exerciseIndex++;
+    STATE.exerciseAwaitingRevision = false;
+    UI.setExerciseActionsVisible(false);
+    const statement = STATE.transformationStatements[STATE.exerciseIndex];
+    const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
+    UI.appendMessage(taskText, "partner", {
+      roleName: STATE.config.roleName,
+      isIchMode: true,
+      messageType: "task",
+      shouldScroll: false,
+    });
+    if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
+    UI.updateStatus("idle", getTransformationProgressText());
+    UI.updateInputUI(false, "Eingabe...");
+    UI.elements.userInput.focus();
+  });
 
-/** Toggles visibility of the instructional briefing. */
-UI.elements.briefingHeader.addEventListener("click", () => {
-  const h = UI.elements.briefingContent.classList.toggle("hidden");
-  UI.elements.chevron.style.transform = h ? "rotate(90deg)" : "rotate(0deg)";
-});
+  UI.elements.reviseBtn?.addEventListener("click", () => {
+    UI.setExerciseActionsVisible(false);
+    STATE.exerciseAwaitingRevision = false;
+    UI.updateInputUI(false, "Eingabe korrigieren...");
+    UI.elements.userInput.focus();
+  });
 
-// Sidebar mobile controls
-UI.elements.mobileMenuBtn?.addEventListener("click", () =>
-  UI.toggleMobileMenu(),
-);
+  UI.elements.restartExerciseBtn?.addEventListener("click", () =>
+    restartTransformationExercise(),
+  );
 
-UI.elements.sidebarOverlay?.addEventListener("click", () =>
-  UI.toggleMobileMenu(true),
-);
+  UI.elements.briefingHeader.addEventListener("click", () => {
+    const h = UI.elements.briefingContent.classList.toggle("hidden");
+    UI.elements.chevron.style.transform = h ? "rotate(90deg)" : "rotate(0deg)";
+  });
 
-/** Collapses briefing automatically on mobile when user starts typing. */
-UI.elements.userInput.addEventListener(
-  "focus",
-  () => window.innerWidth < 1024 && UI.setBriefingExpanded(false),
-);
+  UI.elements.mobileMenuBtn?.addEventListener("click", () =>
+    UI.toggleMobileMenu(),
+  );
+  UI.elements.sidebarOverlay?.addEventListener("click", () =>
+    UI.toggleMobileMenu(true),
+  );
+  UI.elements.userInput.addEventListener(
+    "focus",
+    () => window.innerWidth < 1024 && UI.setBriefingExpanded(false),
+  );
+}
 
 // =========================================================
 // 4. Execution & Listeners
@@ -412,10 +405,10 @@ UI.elements.userInput.addEventListener(
 
 /** Bootstraps the application, loading initial data and starting the first exercise. */
 async function startApp() {
+  UI.init(); // Bind DOM elements first so they are available for following calls
   await loadExercises();
   await initExerciseDropdown();
-
-  UI.init();
+  setupEventListeners();
 
   // Setup TTS toggle mit korrekter ID und Initialisierung
   const ttsToggle = UI.elements.autoSpeakToggle;

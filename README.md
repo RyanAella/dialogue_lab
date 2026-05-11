@@ -31,11 +31,12 @@ Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum S
 - `index.html`: UI / Layout.
 - `src/js/`:
   - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-  - `utils.js`: Hilfsfunktionen für Text-Parsing, Markdown-Rendering und Rollen-Erkennung.
-  - `api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
-  - `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
+  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe und Protokoll-Generierung.
+  - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
+  - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
   - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
-- `scenarios/`: Szenario- und Übungsdateien (`exercises.json` als zentrale Konfiguration, `*.txt` für Szenarioinhalte).
+- `src/data/`: `exercises.json` als zentrale Konfiguration.
+- `scenarios/`: Szenariodateien.
 - `prompts/`: Prompt-Dateien in Unterordnern `trainers/`.
 
 Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
@@ -180,7 +181,7 @@ Each scenario consists of a **META block** (referencing the prompts) and the **G
 
 ```text
 ### META ###
-title: I-Statements Basics
+title: Ich-Botschaft
 trainer_prompt: ich_botschaft_trainer
 short_instruction: Rephrase the accusation into an I-statement.
 ```

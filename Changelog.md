@@ -6,31 +6,77 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.14.0] - 2026-05-06
+## [0.17.0] - 2026-05-11
+
+### Added
+
+- **Typing Indicator**: Integrated a visual animated bubble to signal AI response generation, improving perceived performance and user engagement.
+- **Request Abstraction**: Implemented a unified `_request` helper in `api.js` to centralize error handling, cache-busting, and network timeout logic.
+
+### Changed
+
+- **Project Specialization**: Transitioned to the "Transformation Lab" edition, streamlining the UI and logic to focus exclusively on interactive rephrasing exercises.
+- **UI Componentization**: Refactored the monolithic `appendMessage` function in `ui.js` into specialized private methods (`_createAvatar`, `_createMessageBody`) for better maintainability.
+- **Race Condition Protection**: Integrated `AbortController` into the API layer to automatically cancel stale requests when new ones are initiated.
+- **Initialization Flow**: Decoupled application startup in `app.js` by separating concerns into `startApp`, `setupEventListeners`, and `initializeCurrentMode`.
+- **Automatic DOM Binding**: Replaced manual element selection with a programmatic `_bindElements` helper in `ui.js` to reduce boilerplate code.
+- **Heuristic Role Detection**: Enhanced `utils.js` with advanced role name extraction and normalization logic to better handle dynamic scenario briefings.
+
+### Fixed
+
+- **Transcript Completeness**: Ensured both user and assistant messages are consistently tracked in `STATE.chatHistory` across all modes for accurate protocol exports.
+- **XSS Prevention**: Updated status messages to use `textContent` instead of `innerHTML` for dynamic content.
+- **Voice Loading Resilience**: Added fallback logic for browser-specific delays in loading the `speechSynthesis` voices list.
+
+---
+
+## [0.16.0] - 2026-05-06
+
+### Changed
+
+- **README Documentation**: Comprehensive documentation update to reflect current application state and improve accuracy for developers and users.
+
+### Fixed
+
+- **File Path Corrections**: Fixed incorrect file paths in README documentation:
+  - `scenarios/exercises.json` → `src/data/exercises.json`
+  - Updated repository structure to accurately reflect current organization
+- **Example Consistency**: Corrected inconsistent example IDs and file paths in both German and English documentation
+
+---
+
+## [0.15.0] - 2026-05-05
 
 ### Added
 
 - **Exercise Randomization**: Implemented a Fisher-Yates shuffle algorithm to randomize the order of statements in Transformation Mode upon start and restart, ensuring a more dynamic and effective learning experience by preventing repetitive patterns.
-- **Role-Based UI Labels**: Chat bubbles now display the actual role name (e.g., "Trainer") instead of generic task labels, making the interaction feel more like a natural dialogue.
-- **Refined TTS Handling**: Speech output now correctly identifies the speaker's role for improved prosody.
 
 ---
 
-## [0.13.0] - 2026-05-04
+## [0.14.0] - 2026-05-01
 
 ### Added
 
-- **Speech-to-Text (STT)**: Integration of the native Web Speech API for voice input. Users can now speak their responses directly using a microphone icon.
-- **Browser Compatibility Check**: Added logic to detect supported browsers. In unsupported browsers (such as Firefox), the feature is informatively disabled.
+- **Speech-to-Text (STT)**: Integration of the native Web Speech API for voice input via a dedicated microphone button.
+  Intelligent Browser Handling: Implementation of an "informative deactivation" pattern for Firefox, providing user guidance (tooltips) when native support is missing.
 
 ### Changed
 
-- **UI Feedback**: The microphone button now provides visual feedback (pulsing) during recording and uses tooltips/help cursors to clarify the lack of browser support.
-- **Input Logic**: Extended the `updateInputUI` function to synchronize the microphone status consistently with the general input state and technical availability.
+- **UI Feedback**: Added pulsing animation and color changes for the microphone icon to indicate active listening states.
+- **Input Control Synchronization**: Updated UI logic to ensure the microphone button's state is correctly managed across different app modes and loading states.
 
 ---
 
-## [0.12.0] - 2026-04-24
+## [0.13.0] - 2026-04-24
+
+### Added
+
+- **Enhanced Transcript Export**: The exported text file now automatically includes the original briefing/task description at the beginning for better context.
+- **Smart File Naming**: Implemented a structured naming convention for exports (`[Mode]_[Scenario-Title]_[Date].txt`) including automatic filename sanitization.
+
+---
+
+## [0.12.0] - 2026-04-23
 
 ### Added
 
@@ -52,52 +98,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.11.1] - 2026-04-12
-
-### Changed
-
-- **Documentation Alignment:** Fully synchronized the German and English versions of the `README.md` to ensure 100% content parity.
-- **Terminology Standardization:** Unified naming conventions (e.g., "Transformation Lab") and section titles across both language versions for better consistency.
-
-### Fixed
-
-- **README Parity:** Added missing technical notes regarding trainer prompt referencing and corrected file path examples in the English documentation.
-
----
-
-## [0.11.0] - 2026-04-16
+## [0.11.0] - 2026-04-22
 
 ### Added
 
-- **Mobile First UI:** Overhauled the layout for mobile devices. The status box is now "sticky" with a backdrop-blur effect, ensuring visibility during scrolling.
-- **iOS UX Fix:** Set default input font size to 16px on mobile to prevent automatic browser zooming when focusing text fields.
-- **Safe Area Support:** Added bottom padding to the input area to account for mobile home-indicator bars.
+- **Proxy Reference Implementation**: Added a complete `chat.php` template to the README as a reference to simplify server setup.
+- **Enhanced Error Diagnosis**: The PHP proxy now returns detailed error messages (including `php_error` and `received_length`) to quickly identify JSON transmission issues.
 
 ### Changed
 
-- **Performance Optimization:** Implemented parallel fetching using `Promise.all` for exercise metadata and statements, significantly reducing initial load times.
-- **UI Encapsulation:** Refactored briefing visibility and chevron rotation logic into the `UI` module for better separation of concerns.
-- **API Robustness:** Centralized the cache-busting mechanism to ensure consistent data fetching across all modules.
+- **Server Path Structure**: Simplified the server path from `/browser/dialogue_lab/` to `/dialogue_lab/` and updated it in `config.js` and documentation.
+- **Documentation Sync**: Fully synchronized the German and English sections of the README and updated them to reflect the current modular architecture.
 
 ### Fixed
 
-- **Responsive Spacing:** Improved chat bubble width and padding for better readability on small screens (max-w-92% on mobile).
+- **CORS for Local Development**: Proxy headers now explicitly allow requests from `localhost` (including common ports like 5500), enabling testing without deployment.
+- **JSON Payload Handling**: Fixed an issue where the proxy could not read the frontend's request body (switched to `php://input`).
+- **Nginx Stability**: Corrected Nginx configuration for proper PHP file processing to prevent 404 errors during API calls.
+
+---
+
+## [0.10.1] - 2026-04-16
+
+### Fixed
+
+- **UI Reference Error**: Fixed a `ReferenceError` in `ui.js` where the function `renderBoldMarkdownWithLineBreaks` was called without the `Utils` module being correctly imported or referenced.
+
+---
 
 ## [0.10.0] - 2026-04-15
 
 ### Added
 
-- **Transformation Lab Edition:** This is a specialized standalone version of the application. It focuses exclusively on interactive transformation exercises (e.g., I-Messages, Positive Assumption) and intentionally excludes the simulation mode.
+- **Modern Chat UI**: Integrated custom CSS for a contemporary chat experience, including asymmetric message bubbles (`rounded-[22px]`), subtle glassmorphism effects (`backdrop-filter`), and a pulsating status indicator.
+- **Enhanced Avatar System**: Implemented dynamic avatar styling, distinguishing between standard circular avatars and rectangular portrait avatars for female roles (based on "-in" suffix).
+- **Mobile Input Optimization**: Added logic to automatically collapse the briefing section when the input field is focused on smaller screens, maximizing screen real estate for typing.
+- **Consistent Input Field Sizing**: Standardized input field font size to `text-base` (16px) to prevent unwanted auto-zooming on iOS devices.
 
 ### Changed
 
-- **Generic Transformation Framework:** Refactored internal logic (state, functions, and configuration) to be generic, supporting various transformation exercise types instead of specific "Ich-Botschaft" naming.
-- **Code Quality:** Integrated professional English JSDoc documentation across all core modules for better maintainability.
+- **Main Branch Alignment**: The application's design and logic have been standardized to the "Simulation Lab" version, making it the new default on the `main` branch.
+- **Documentation Update**: `README.md` has been revised to remove references to "specialized versions" and now reflects the current main application's features and structure.
+- **File Structure**: JavaScript files (`config.js`, `utils.js`, `api.js`, `ui.js`, `app.js`) have been moved into a dedicated `src/js/` subdirectory for better organization.
+- **File Path References**: Updated all script references in `index.html` and file paths in `README.md` to reflect the new `src/js/` directory.
 
-### Removed
-
-- **Simulation Module:** Completely removed all logic, UI components, and prompts related to roleplay simulations and mentor feedback.
-- **Legacy Redundancy:** Deleted deprecated JavaScript files from the root directory, finalizing the migration to the modular `src/js/` structure.
+---
 
 ## [0.9.3] - 2026-04-14
 
@@ -107,6 +152,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **UI State Logic:** Improved the flow in Exercise mode; the input field now stays disabled while exercise actions (Revise, Next Statement, Restart) are visible to prevent conflicting inputs.
 - **Error Recovery:** Added logic to re-enable the input field specifically after API errors to allow users to retry their submission.
 
+### Added
+
+- **Action Handlers:** Implemented dedicated event listeners for "Revise" and "Restart" buttons to ensure the UI state (input focus and activation) is correctly restored.
+
+### Changed
+
+- **Documentation:** Updated README.md (EN/DE) to document the multi-branch deployment strategy and the subdirectory routing for partner-specific test branches.
+
 ---
 
 ## [0.9.2] - 2026-04-13
@@ -114,7 +167,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - **Multi-Branch CI/CD:** Implemented a fully automated GitHub Actions workflow that supports deploying every branch to GitHub Pages.
-- **Dynamic Branch Routing:** Branches other than `main` are now automatically deployed into their own subdirectories (e.g., `.../practice-edition/`), enabling parallel testing of different features.
+- **Dynamic Branch Routing:** Branches other than `main` are now automatically deployed into their own subdirectories (e.g., `.../exercises-only/`), enabling parallel testing of different features.
 - **Deployment Provider:** `JamesIves/github-pages-deploy-action@v4` for more robust multi-folder deployment and cleaner workflow configuration.
 
 ---
