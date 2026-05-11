@@ -82,19 +82,34 @@
           class="w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500 mb-4"
         >
           <option value="roleplay" selected>Simulationen</option>
-          <option value="ich-botschaft">Übungen</option>
+          <option value="transformation">Transformationen</option>
         </select>
-        <label
-          id="scenario-label"
-          class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
-          >Wähle ein Szenario:</label
-        >
-        <select
-          id="scenarios"
-          class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="" selected disabled>Wähle eine Übung...</option>
-        </select>
+        <div id="scenario-section" class="mt-4">
+          <label
+            id="scenario-label"
+            class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
+            >Wähle ein Szenario:</label
+          >
+          <select
+            id="scenarios"
+            class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" selected disabled>Wähle ein Szenario...</option>
+          </select>
+        </div>
+        <div id="exercise-section" class="hidden mt-4">
+          <label
+            id="exercise-label"
+            class="exercise-selection-headline block font-semibold mb-2 text-slate-700 text-sm mt-4"
+            >Wähle eine Übung:</label
+          >
+          <select
+            id="exercises"
+            class="exercise-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" selected disabled>Wähle eine Übung...</option>
+          </select>
+        </div>
       </div>
 
       <div class="sidebar-section mb-6 pt-6 border-t border-slate-100">
@@ -191,11 +206,31 @@
                 Deine Aufgabenstellung & Szenario-Details
               </h2>
             </div>
-            <span
-              id="chevron"
-              class="briefing-arrow text-slate-400 transition-transform"
-              >▼</span
-            >
+            <div class="flex items-center gap-2">
+              <button
+                id="speak-briefing-btn"
+                class="hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5"
+                title="Briefing vorlesen"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+              <span
+                id="chevron"
+                class="briefing-arrow text-slate-400 transition-transform"
+                >▼</span
+              >
+            </div>
           </div>
           <div
             id="briefing-content"
