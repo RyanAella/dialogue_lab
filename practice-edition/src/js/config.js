@@ -10,7 +10,7 @@ export const APP_CONFIG = {
   MODEL: "gpt-4o",
 
   /** Sampling temperature for transformation exercises (e.g., I-Messages, Positive Assumption) */
-  TRANSFORMATION_TEMPERATURE: 0.4,
+  ICH_BOTSCHAFT_TEMPERATURE: 0.4,
 
   /** Path to the master JSON file containing exercise definitions */
   EXERCISES_FILE: "src/data/exercises.json",

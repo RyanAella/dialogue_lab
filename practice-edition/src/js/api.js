@@ -1,12 +1,14 @@
 import { Utils } from "./utils.js";
 
 /**
- * API communication and resource loading module
+ * API communication and resource loading
  */
 
 // Simple cache for frequently accessed resources
 const CACHE = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+let activeChatController = null;
 
 export const API = {
   /**
@@ -20,6 +22,33 @@ export const API = {
   },
 
   /**
+   * Centralized request handler for fetch requests
+   */
+  async _request(url, options = {}) {
+    const separator = url.includes("?") ? "&" : "?";
+    const finalUrl = `${url}${separator}${this._getCacheBuster()}`;
+
+    try {
+      const response = await fetch(finalUrl, options);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP Error: ${response.status}`);
+      }
+      return response;
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+
+      let userMessage = error.message;
+      if (error instanceof TypeError || error.message.includes("fetch")) {
+        userMessage =
+          "Network error or CORS block. Check backend configuration.";
+      }
+      console.error(`Request failed [${url}]:`, error);
+      throw new Error(userMessage);
+    }
+  },
+
+  /**
    * Clears the cache - useful for development or when content updates
    */
   clearCache() {
@@ -28,40 +57,32 @@ export const API = {
 
   async loadPromptContent(type, promptName) {
     if (!promptName) return "";
-    
+
     const cacheKey = `prompt_${type}_${promptName}`;
     const cached = CACHE.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       return cached.content;
     }
 
-    const response = await fetch(
-      `prompts/${type}/${promptName}.txt?${this._getCacheBuster()}`,
-    );
-    if (!response.ok) {
-      throw new Error(
-        `Prompt file could not be loaded: prompts/${type}/${promptName}.txt`,
-      );
-    }
+    const response = await this._request(`prompts/${type}/${promptName}.txt`);
     const content = (await response.text()).trim();
-    
+
     // Cache the result
     CACHE.set(cacheKey, {
       content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return content;
   },
 
   /**
-   * Loads a complete exercise configuration and its associated prompt files in parallel.
-   * @param {string} filePath - The path to the exercise .txt file.
-   * @returns {Promise<Object>} The parsed exercise configuration and loaded prompts.
+   * Loads a complete scenario including all associated prompts in parallel.
+   * @param {string} filePath - The path to the scenario .txt file.
+   * @returns {Promise<Object>} The parsed scenario configuration and loaded prompts.
    */
-  async fetchCompleteExercise(filePath) {
-    const response = await fetch(`${filePath}?${this._getCacheBuster()}`);
-    if (!response.ok) throw new Error("Datei konnte nicht geladen werden.");
+  async fetchCompleteScenario(filePath) {
+    const response = await this._request(filePath);
     const text = await response.text();
 
     // Parse the raw text into metadata and briefing sections
@@ -77,31 +98,34 @@ export const API = {
       shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
+    // Map file keys to their respective prompt directories
+    const promptMap = {
+      trainer: { file: config.trainerPromptFile, dir: "trainers" },
+    };
+
     // Execute multiple fetch requests in parallel for optimized performance
-    const promptPromises = [];
     const prompts = {};
+    // Load all defined prompts in parallel
+    await Promise.all(
+      Object.entries(promptMap).map(async ([key, cfg]) => {
+        if (cfg.file) {
+          prompts[key] = await this.loadPromptContent(cfg.dir, cfg.file);
+        }
+      }),
+    );
 
-    if (config.trainerPromptFile)
-      promptPromises.push(
-        this.loadPromptContent("trainers", config.trainerPromptFile).then(
-          (c) => (prompts.trainer = c),
-        ),
-      );
-
-    await Promise.all(promptPromises);
     return { ...config, prompts };
   },
 
   /**
-   * Fetches only the title from an exercise source file for dropdown population.
-   * @param {string} filePath - The path to the exercise .txt file.
+   * Fetches only the title from a scenario source file for dropdown population.
+   * @param {string} filePath - The path to the scenario .txt file.
    * @returns {Promise<string|null>} The title string or null if not found.
    */
-  async fetchExerciseTitle(filePath) {
-    const response = await fetch(`${filePath}?${this._getCacheBuster()}`);
-    if (!response.ok) return null;
+  async fetchScenarioTitle(filePath) {
+    const response = await this._request(filePath).catch(() => null);
+    if (!response) return null;
     const content = await response.text();
-    // Extract title using regex to avoid parsing the full instruction section
     const titleMatch = content.match(/title:\s*(.*)/);
     return titleMatch ? titleMatch[1].trim() : null;
   },
@@ -115,8 +139,14 @@ export const API = {
   async callChatApi(messages, config) {
     const { proxyUrl, model, temperature } = config;
 
-    const response = await fetch(proxyUrl, {
+    // Abort any ongoing request before starting a new one
+    if (activeChatController) activeChatController.abort();
+    activeChatController = new AbortController();
+
+    // Use the unified request handler for the Chat API call
+    const response = await this._request(proxyUrl, {
       method: "POST",
+      signal: activeChatController.signal,
       headers: {
         "Content-Type": "application/json",
       },
@@ -127,11 +157,7 @@ export const API = {
       }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "API Anfrage fehlgeschlagen");
-    }
-
+    if (!response) return null;
     return response.json();
   },
 };
