@@ -16,6 +16,7 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
 ### Highlights für die User Experience
 
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
+- **Visuelles Feedback:** Ein animierter **Typing Indicator** (Schreib-Indikator) signalisiert dem Nutzer sofort, wenn die KI eine Antwort generiert, was die gefühlte Wartezeit verkürzt.
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung und automatischen Pausen bei Satzzeichen werden die Dialoge lebendig. Ein globaler **Stop-Button** in der Sidebar erlaubt es, die Ausgabe jederzeit sofort abzubrechen. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive des ursprünglichen Briefings mit einem Klick als strukturierte Textdatei (`[Modus]_[Titel]_[Datum].txt`) speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
 - **Abwechslungsreiches Training:** Die Übungen im Transformations-Modus werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
@@ -25,19 +26,20 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
 Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy (für API-Key-Schutz):
 
 - **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
+- **Architektur**: Modulare Struktur nach dem **Separation of Concerns** Prinzip. Klare Trennung zwischen UI-Steuerung, API-Kommunikation und Hilfsfunktionen.
 - **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
 - **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
 - **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
-- **KI-Modell**: OpenAI (Konfigurationswerte aus `config.js` werden von der `app.js` als Parameter an die Methoden der `api.js` übergeben).
+- **Robuste Kommunikation**: Implementierung von `AbortController` zur Vermeidung von Race-Conditions bei API-Anfragen.
 
 ## 3. Repository-Dateistruktur
 
 - `index.html`: UI / Layout.
 - `src/js/`:
   - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-  - `utils.js`: Hilfsfunktionen für Text-Parsing, Markdown-Rendering und Rollen-Erkennung.
-  - `api.js`: Verwaltet die Kommunikation mit dem Proxy und das Laden/Parsen von Szenario- und Prompt-Dateien.
-  - `ui.js`: Zuständig für alle DOM-Manipulationen und die visuelle Darstellung der Benutzeroberfläche.
+  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe und Protokoll-Generierung.
+  - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
+  - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
   - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
 - `src/data/`: `exercises.json` als zentrale Konfiguration.
 - `scenarios/`: Szenariodateien.
@@ -153,6 +155,7 @@ The application offers two specialized training environments:
 ### User Experience Highlights
 
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
+- **Visual Feedback:** An animated **typing indicator** signals when the AI is generating a response, enhancing the interactive feel.
 - **Natural Speech Feel:** Thanks to integrated **Text-to-Speech (TTS)** with optimized emphasis and automatic pauses at punctuation marks, dialogues come to life. A global **Stop Button** in the sidebar allows you to cancel the output immediately at any time. (Pro tip: Voices sound particularly human in Microsoft Edge!)
 - **Save Your Progress:** The **Protocol Export** allows you to save the entire conversation history, including the original briefing, as a structured text file (`[Mode]_[Title]_[Date].txt`) with one click—ideal for review or documenting learning progress.
 - **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
@@ -162,19 +165,20 @@ The application offers two specialized training environments:
 The application combines a static frontend with a server-side proxy (for API key protection):
 
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g., hosted on **GitHub Pages**.
+- **Architecture**: Modular structure based on **Separation of Concerns**. Clear distinction between UI management, API communication, and utility logic.
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is necessary because API keys must never be exposed in client-side code (JavaScript).
 - **Security (CORS):** The proxy should only accept requests from the **Origin** where the web app is running (e.g., `https://ryanaella.github.io`). Important: **Origin = Scheme + Domain**, not the path (i.e., not `.../dialogue_lab/`).
 - **Interfaces:** Uses the native **Web Speech API** for audio input and output (local/browser-side processing).
-- **AI Model:** OpenAI (configuration values from `config.js` are passed as parameters by `app.js` to the methods in `api.js`).
+- **Robust Networking**: Usage of `AbortController` to prevent race conditions during concurrent API requests.
 
 ## 3. Repository File Structure
 
 - `index.html`: UI / Layout.
 - `src/js/`:
   - `config.js`: Central runtime configuration (Proxy URL, model, temperatures).
-  - `utils.js`: Helper functions for text parsing, Markdown rendering, and role detection.
-  - `api.js`: Manages communication with the proxy and handles loading/parsing of scenario and prompt files.
-  - `ui.js`: Responsible for all DOM manipulations and the visual representation of the user interface.
+  - `utils.js`: Central utility functions for text parsing, speech output cleaning, and transcript generation.
+  - `api.js`: Abstraction layer for data exchange, cache management, and parallel resource loading.
+  - `ui.js`: Modular UI manager for dynamic rendering, event binding, and multimedia integration (TTS/STT).
   - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
 - `src/data/`: `exercises.json` as central configuration.
 - `scenarios/`: Scenario files.
@@ -227,7 +231,7 @@ mentor_prompt: reporting_mentor_prompt
 ```text
 ### META ###
 title: I-Statements Basics
-trainer_prompt: i_statement_trainer
+trainer_prompt: ich_botschaft_trainer
 short_instruction: Rephrase the accusation into an I-statement.
 ```
 

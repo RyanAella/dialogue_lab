@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.17.0] - 2026-05-07
+
+### Added
+
+- **Typing Indicator**: Integrated a visual animated bubble to signal AI response generation, improving perceived performance and user engagement.
+- **Request Abstraction**: Implemented a unified `_request` helper in `api.js` to centralize error handling, cache-busting, and network timeout logic.
+
+### Changed
+
+- **UI Componentization**: Refactored the monolithic `appendMessage` function in `ui.js` into specialized private methods (`_createAvatar`, `_createMessageBody`) for better maintainability.
+- **Race Condition Protection**: Integrated `AbortController` into the API layer to automatically cancel stale requests when new ones are initiated.
+- **Initialization Flow**: Decoupled application startup in `app.js` by separating concerns into `startApp`, `setupEventListeners`, and `initializeCurrentMode`.
+- **Automatic DOM Binding**: Replaced manual element selection with a programmatic `_bindElements` helper in `ui.js` to reduce boilerplate code.
+
+### Fixed
+
+- **Transcript Completeness**: Ensured both user and assistant messages are consistently tracked in `STATE.chatHistory` across all modes for accurate protocol exports.
+- **XSS Prevention**: Updated status messages to use `textContent` instead of `innerHTML` for dynamic content.
+- **Voice Loading Resilience**: Added fallback logic for browser-specific delays in loading the `speechSynthesis` voices list.
+
+---
+
 ## [0.16.0] - 2026-05-06
 
 ### Changed

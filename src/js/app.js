@@ -28,12 +28,21 @@ const STATE = {
   ttsEnabled: false,
 };
 
-function prepareModeSwitch() {
+/**
+ * Setzt die UI und den State für einen Moduswechsel zurück
+ */
+function resetAppForMode(mode) {
+  STATE.currentMode = mode;
+  STATE.chatHistory = [];
+  STATE.exerciseIndex = 0;
+  STATE.exerciseAwaitingRevision = false;
+
   UI.elements.chatWindow.innerHTML = "";
-  const main = UI.elements.chatWindow.closest("main");
-  if (main) main.scrollTop = 0;
+  UI.elements.chatWindow.closest("main")?.scrollTo(0, 0);
   UI.elements.briefingContent.classList.remove("hidden");
-  UI.elements.exerciseActions?.classList.add("hidden");
+  UI.setExerciseActionsVisible(false);
+  UI.updateSidebarVisibility(mode);
+  UI.setModeBadge(mode);
 }
 
 async function loadExercises() {
@@ -90,12 +99,30 @@ function restartTransformationExercise() {
   UI.updateInputUI(false, "Eingabe...");
   UI.updateStatus("idle", `${getTransformationProgressText()} (neu gestartet)`);
 }
-async function switchToRoleplayMode() {
-  STATE.currentMode = "roleplay";
-  STATE.exerciseAwaitingRevision = false;
-  UI.updateSidebarVisibility("roleplay");
-  prepareModeSwitch();
 
+/**
+ * Generic helper to reset buttons when switching modes
+ */
+function updateModeButtons(isTransformation) {
+  const { feedbackBtn, resetBtn } = UI.elements;
+
+  feedbackBtn.textContent = isTransformation
+    ? "📥 Protokoll herunterladen"
+    : "📊 Feedback erhalten";
+  feedbackBtn.className = isTransformation
+    ? "flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
+    : "flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2";
+
+  feedbackBtn.disabled = true;
+  feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+  resetBtn.disabled = !isTransformation;
+  resetBtn.classList.toggle("opacity-50", !isTransformation);
+  resetBtn.classList.toggle("cursor-not-allowed", !isTransformation);
+}
+
+async function switchToRoleplayMode() {
+  resetAppForMode("roleplay");
   UI.elements.briefingContent.textContent = "Szenario wird geladen...";
   UI.updateInputUI(true, "Wähle ein Szenario...");
 
@@ -120,30 +147,17 @@ async function switchToRoleplayMode() {
     UI.updateInputUI(true, "Keine Szenarien verfügbar.");
   }
 
-  // Feedback-Button für Simulationen zurücksetzen
-  UI.elements.feedbackBtn.textContent = "📊 Feedback erhalten";
-  UI.elements.feedbackBtn.classList.add("bg-slate-800");
-  UI.elements.feedbackBtn.classList.remove("bg-blue-600", "hover:bg-blue-700");
-  UI.elements.feedbackBtn.disabled = true;
-  UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
-  UI.elements.resetBtn.disabled = true;
-  UI.elements.resetBtn.classList.add("opacity-50", "cursor-not-allowed");
+  updateModeButtons(false);
 
   document.getElementById("main-subtitle").textContent =
     "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
-  UI.setModeBadge("roleplay");
   UI.updateStatus("idle", "Simulationen aktiv");
-  // If scenarioFiles is empty, status will already be set by loadExercises or initScenarioDropdown
 }
 
 async function switchToTransformationMode(
   exerciseId = "ich_botschaften_basis",
 ) {
-  STATE.currentMode = "transformation";
-  STATE.exerciseAwaitingRevision = false;
-  UI.updateSidebarVisibility("transformation");
-  prepareModeSwitch();
-
+  resetAppForMode("transformation");
   UI.elements.briefingContent.textContent = "Übung wird geladen...";
   UI.updateInputUI(true, "Wähle eine Übung...");
 
@@ -170,16 +184,8 @@ async function switchToTransformationMode(
     UI.updateInputUI(true, "Keine Übungen verfügbar.");
   }
 
-  // Feedback-Button für Transformationen zurücksetzen
-  UI.elements.feedbackBtn.textContent = "📥 Protokoll herunterladen";
-  UI.elements.feedbackBtn.classList.remove("bg-slate-800");
-  UI.elements.feedbackBtn.classList.add("bg-blue-600", "hover:bg-blue-700");
-  UI.elements.feedbackBtn.disabled = true;
-  UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
-  UI.elements.resetBtn.disabled = false;
-  UI.elements.resetBtn.classList.remove("opacity-50", "cursor-not-allowed");
+  updateModeButtons(true);
 
-  UI.setModeBadge("transformation");
   UI.updateStatus("idle", "Transformationen aktiv");
 }
 
@@ -188,82 +194,58 @@ async function switchToTransformationMode(
 // =========================================================
 
 /**
- * Fills the dropdown and adds a disabled placeholder option.
+ * Unified helper to initialize dropdowns (DRY principle)
  */
-async function initScenarioDropdown() {
-  UI.elements.scenarioSelect.innerHTML =
-    '<option value="" selected disabled>Wähle ein Szenario...</option>';
+async function initDropdown(type, selectElement, placeholder) {
+  if (!selectElement) return;
 
-  // Filtere Übungen für Simulationsmodus
-  const simulationExercises = STATE.allExercises.filter(
-    (ex) => ex.type === "SIMULATION",
-  );
+  selectElement.innerHTML = `<option value="" selected disabled>${placeholder}</option>`;
+  const filtered = STATE.allExercises.filter((ex) => ex.type === type);
 
-  if (simulationExercises.length === 0) {
-    UI.elements.scenarioSelect.innerHTML =
-      '<option value="" selected disabled>Keine Szenarien verfügbar</option>';
-    UI.elements.scenarioSelect.disabled = true;
+  if (filtered.length === 0) {
+    selectElement.innerHTML =
+      '<option value="" disabled>Keine Einträge verfügbar</option>';
+    selectElement.disabled = true;
     return;
   }
 
-  for (const ex of simulationExercises) {
+  for (const ex of filtered) {
     try {
-      const filePath = ex.config.scenarioFile;
+      // Use scenarioFile for simulations, instructionFile for transformations
+      const filePath = ex.config.scenarioFile || ex.config.instructionFile;
       const title = (await API.fetchScenarioTitle(filePath)) || ex.id;
-      UI.elements.scenarioSelect.add(new Option(title, ex.id));
+      selectElement.add(new Option(title, ex.id));
     } catch (e) {
-      console.error("Error loading scenario metadata:", ex.id, e);
+      console.error(`Metadata load error for ${ex.id}:`, e);
     }
   }
-  UI.elements.scenarioSelect.disabled = false;
+  selectElement.disabled = false;
+}
+
+async function initScenarioDropdown() {
+  await initDropdown(
+    "SIMULATION",
+    UI.elements.scenarioSelect,
+    "Wähle ein Szenario...",
+  );
 }
 
 async function initExerciseDropdown() {
-  if (!UI.elements.exerciseSelect) return;
-
-  UI.elements.exerciseSelect.innerHTML =
-    '<option value="" selected disabled>Wähle eine Übung...</option>';
-
-  // Filtere Übungen für Transformationsmodus
-  const transformationExercises = STATE.allExercises.filter(
-    (ex) => ex.type === "TRANSFORMATION",
+  await initDropdown(
+    "TRANSFORMATION",
+    UI.elements.exerciseSelect,
+    "Wähle eine Übung...",
   );
-
-  if (transformationExercises.length === 0) {
-    UI.elements.exerciseSelect.innerHTML =
-      '<option value="" selected disabled>Keine Übungen verfügbar</option>';
-    UI.elements.exerciseSelect.disabled = true;
-    return;
-  }
-
-  for (const ex of transformationExercises) {
-    try {
-      const filePath = ex.config.instructionFile;
-      const title = (await API.fetchScenarioTitle(filePath)) || ex.id;
-      UI.elements.exerciseSelect.add(new Option(title, ex.id));
-    } catch (e) {
-      console.error("Error loading exercise metadata:", ex.id, e);
-    }
-  }
-  UI.elements.exerciseSelect.disabled = false;
 }
 
 /**
- * Loads scenario details AND the corresponding prompt files
+ * Unified loader for both Roleplay and Transformation content
  */
-UI.elements.scenarioSelect.addEventListener("change", async (event) => {
-  const exerciseId = event.target.value;
-  if (!exerciseId) return;
-
-  if (STATE.currentMode === "transformation") {
-    await switchToTransformationMode(exerciseId);
-    return;
-  }
-
-  const exConfig = STATE.allExercises.find(
-    (ex) => ex.id === exerciseId,
-  )?.config;
-  if (!exConfig) return;
+async function loadContent(exerciseId) {
+  const exercise = STATE.allExercises.find((ex) => ex.id === exerciseId);
+  if (!exercise) return;
+  const isTransform = exercise.type === "TRANSFORMATION";
+  const exConfig = exercise.config;
 
   UI.updateStatus("loading", "Lade...");
   UI.setBriefingLoading(true);
@@ -271,110 +253,83 @@ UI.elements.scenarioSelect.addEventListener("change", async (event) => {
   STATE.chatHistory = [];
 
   try {
-    const data = await API.fetchCompleteScenario(exConfig.scenarioFile);
+    const fileToLoad = isTransform
+      ? exConfig.instructionFile
+      : exConfig.scenarioFile;
+    const data = await API.fetchCompleteScenario(fileToLoad);
 
-    STATE.config.roleName = Utils.extractRoleName(
-      data.instructionSection,
-      data.roleLabel,
-    );
+    // Common metadata
+    STATE.config.roleName = isTransform
+      ? data.roleLabel || "Trainer"
+      : Utils.extractRoleName(data.instructionSection, data.roleLabel);
     STATE.config.systemPrompt = data.prompts.system;
     STATE.config.partnerPrompt = data.prompts.partner;
     STATE.config.mentorPrompt = data.prompts.mentor;
-
-    Utils.renderBoldMarkdownWithLineBreaks(
-      UI.elements.briefingContent,
-      data.instructionSection,
-    );
-    if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
-    UI.elements.chevron.style.transform = "rotate(0deg)";
-    UI.elements.startInfo.classList.remove("hidden");
-    UI.updateInputUI(false, `Deine Nachricht an ${STATE.config.roleName}...`);
-    UI.elements.chatWindow.appendChild(UI.elements.startInfo);
-    UI.updateStatus("idle", "Bereit");
-  } catch (error) {
-    UI.elements.briefingContent.innerHTML =
-      '<p class="text-red-500 p-4">Fehler.</p>';
-    UI.updateStatus("error", "Ladefehler");
-  }
-});
-
-// Exercise Dropdown Event Listener
-UI.elements.exerciseSelect?.addEventListener("change", async (event) => {
-  const exerciseId = event.target.value;
-  if (!exerciseId) return;
-
-  const exConfig = STATE.allExercises.find(
-    (ex) => ex.id === exerciseId,
-  )?.config;
-  if (!exConfig) return;
-
-  UI.updateStatus("loading", "Lade...");
-  UI.setBriefingLoading(true);
-  UI.elements.chatWindow.innerHTML = "";
-  STATE.chatHistory = [];
-
-  try {
-    const data = await API.fetchCompleteScenario(exConfig.instructionFile);
-
-    STATE.config.roleName = data.roleLabel || "Trainer";
     STATE.transformationFeedbackPrompt = data.prompts.trainer;
     STATE.config.shortInstruction =
       data.shortInstruction || "Bearbeite die Aussage.";
 
-    // Load transformation statements
-    const response = await fetch(`${exConfig.sourceFile}?t=${Date.now()}`);
-    const content = await response.text();
-    STATE.transformationStatements = Utils.shuffleArray(
-      content
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter((l) => l && !l.startsWith("#")),
-    );
+    if (isTransform) {
+      // Load transformation statements specifically
+      const resp = await fetch(`${exConfig.sourceFile}?t=${Date.now()}`);
+      const text = await resp.text();
+      STATE.transformationStatements = Utils.shuffleArray(
+        text
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter((l) => l && !l.startsWith("#")),
+      );
+
+      document.getElementById("main-subtitle").textContent =
+        `${data.title}: ${STATE.config.shortInstruction}`;
+
+      // Auto-post first statement
+      const first = STATE.transformationStatements[0];
+      const taskText = `"${first}"\n\n${STATE.config.shortInstruction}`;
+      STATE.chatHistory.push({ role: "assistant", content: taskText });
+      UI.appendMessage(taskText, "partner", {
+        roleName: STATE.config.roleName,
+        messageType: "task",
+        isIchMode: true,
+        shouldScroll: false,
+      });
+    } else {
+      // Roleplay specific UI updates
+      UI.elements.startInfo.classList.remove("hidden");
+      UI.elements.chatWindow.appendChild(UI.elements.startInfo);
+    }
 
     Utils.renderBoldMarkdownWithLineBreaks(
       UI.elements.briefingContent,
       data.instructionSection,
     );
 
-    document.getElementById("main-subtitle").textContent =
-      `${data.title}: ${STATE.config.shortInstruction}`;
-
     if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
     UI.elements.chevron.style.transform = "rotate(0deg)";
-
-    // Erste Aussage direkt anzeigen
-    const firstStatement = STATE.transformationStatements[0];
-    const taskText = `"${firstStatement}"\n\n${STATE.config.shortInstruction}`;
-    STATE.chatHistory.push({ role: "assistant", content: taskText });
-    UI.appendMessage(taskText, "partner", {
-      roleName: STATE.config.roleName,
-      messageType: "task",
-      isIchMode: true,
-      shouldScroll: false,
-    });
-    if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
-
-    UI.updateInputUI(false, `Eingabe...`);
-    UI.updateStatus("idle", getTransformationProgressText());
+    UI.updateInputUI(
+      false,
+      isTransform ? "Eingabe..." : `Nachricht an ${STATE.config.roleName}...`,
+    );
+    UI.updateStatus(
+      "idle",
+      isTransform ? getTransformationProgressText() : "Bereit",
+    );
   } catch (error) {
+    console.error("Content loading failed:", error);
     UI.elements.briefingContent.innerHTML =
-      '<p class="text-red-500 p-4">Fehler.</p>';
+      '<p class="text-red-500 p-4">Ladefehler.</p>';
     UI.updateStatus("error", "Ladefehler");
   }
-});
+}
 
 // Function to download the current chat transcript
 function downloadCurrentTranscript() {
   const briefing = UI.elements.briefingContent?.innerText.trim() || "";
-  const header = `### BRIEFING / AUFGABENSTELLUNG ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n### PROTOKOLL ###\n\n`;
-
-  const chatContent = STATE.chatHistory
-    .filter((m) => m.role !== "system")
-    .map(
-      (m) =>
-        `${m.role === "user" ? "Führungskraft" : STATE.config.roleName}: ${m.content}`,
-    )
-    .join("\n\n");
+  const header = `### BRIEFING ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n### PROTOKOLL ###\n\n`;
+  const chatContent = Utils.generateTranscript(
+    STATE.chatHistory,
+    STATE.config.roleName,
+  );
 
   const blob = new Blob([header + chatContent], {
     type: "text/plain;charset=utf-8",
@@ -382,7 +337,7 @@ function downloadCurrentTranscript() {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
 
-  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const date = Utils.getFormattedDate();
   let filenameParts = [];
 
   // Modus hinzufügen
@@ -413,53 +368,87 @@ function downloadCurrentTranscript() {
   URL.revokeObjectURL(a.href);
 }
 
+/**
+ * Returns the correct message payload and temperature for the current mode
+ */
+function getApiPayload(userMessage, isRoleplay) {
+  if (isRoleplay) {
+    if (STATE.chatHistory.length === 0) {
+      STATE.chatHistory.push({
+        role: "system",
+        content: `${STATE.config.systemPrompt}\n\n${STATE.config.partnerPrompt}`,
+      });
+    }
+    return {
+      messages: STATE.chatHistory,
+      temperature: APP_CONFIG.CHAT_TEMPERATURE,
+    };
+  }
+
+  return {
+    messages: [
+      { role: "system", content: STATE.transformationFeedbackPrompt },
+      {
+        role: "user",
+        content: `Statement: ${STATE.transformationStatements[STATE.exerciseIndex]}\nUser: ${userMessage}`,
+      },
+    ],
+    temperature: APP_CONFIG.ICH_BOTSCHAFT_TEMPERATURE,
+  };
+}
+
 async function handleSend() {
-  if (STATE.currentMode === "transformation") {
-    await handleTransformationSend();
-    return;
-  }
   const message = UI.elements.userInput.value.trim();
-  if (!message || !STATE.config.systemPrompt) return;
+  if (!message) return;
 
-  if (!UI.elements.briefingContent.classList.contains("hidden")) {
-    UI.elements.briefingContent.classList.add("hidden");
-    UI.elements.chevron.style.transform = "rotate(90deg)";
-  }
+  const isRoleplay = STATE.currentMode === "roleplay";
+  if (isRoleplay && !STATE.config.systemPrompt) return;
 
-  UI.updateInputUI(true, "Sende...");
-  UI.elements.startInfo.classList.add("hidden");
-  UI.appendMessage(message, "user", { roleName: STATE.config.roleName });
+  UI.prepareForInteraction();
+
+  // Show user message and set UI to loading
+  UI.updateInputUI(true, isRoleplay ? "Sende..." : "Feedback...");
+  UI.appendMessage(message, "user", { isIchMode: !isRoleplay });
   if (STATE.ttsEnabled) UI.speak(message, "Ich");
-  UI.updateStatus("loading", "Antwortet...");
+
+  UI.updateStatus("loading", isRoleplay ? "Antwortet..." : "Trainer...");
+  UI.showTypingIndicator(isRoleplay ? STATE.config.roleName : "Trainer");
   UI.elements.userInput.value = "";
 
-  const typing = document.createElement("div");
-  typing.className =
-    "self-start text-xs text-gray-400 italic mb-4 animate-pulse";
-  typing.textContent = `${STATE.config.roleName} schreibt...`;
-  UI.elements.chatWindow.appendChild(typing);
-
-  if (STATE.chatHistory.length === 0) {
-    STATE.chatHistory.push({
-      role: "system",
-      content: `${STATE.config.systemPrompt}\n\n${STATE.config.partnerPrompt}`,
-    });
-  }
-  STATE.chatHistory.push({ role: "user", content: message });
+  const { messages, temperature } = getApiPayload(message, isRoleplay);
 
   try {
-    const data = await API.callChatApi(STATE.chatHistory, {
+    // Unified history tracking for both modes
+    STATE.chatHistory.push({ role: "user", content: message });
+
+    const data = await API.callChatApi(messages, {
       proxyUrl: APP_CONFIG.PROXY_URL,
       model: APP_CONFIG.MODEL,
-      temperature: APP_CONFIG.CHAT_TEMPERATURE,
+      temperature: temperature,
     });
-    if (UI.elements.chatWindow.contains(typing))
-      UI.elements.chatWindow.removeChild(typing);
-    const botResp = data.choices[0].message.content;
-    STATE.chatHistory.push({ role: "assistant", content: botResp });
-    UI.appendMessage(botResp, "partner", { roleName: STATE.config.roleName });
-    if (STATE.ttsEnabled) UI.speak(botResp, STATE.config.roleName);
 
+    // If request was aborted, stop processing
+    if (!data) return;
+
+    UI.hideTypingIndicator();
+    const botResp = data.choices[0].message.content;
+
+    // Display response and update state
+    const msgType = isRoleplay ? "default" : "feedback";
+    UI.appendMessage(botResp, "partner", {
+      roleName: STATE.config.roleName,
+      messageType: msgType,
+      isIchMode: !isRoleplay,
+    });
+
+    STATE.chatHistory.push({ role: "assistant", content: botResp });
+
+    if (!isRoleplay) {
+      STATE.exerciseAwaitingRevision = true;
+      UI.setExerciseActionsVisible(true);
+    }
+
+    if (STATE.ttsEnabled) UI.speak(botResp, STATE.config.roleName);
     UI.elements.feedbackBtn.disabled = false;
     UI.elements.feedbackBtn.classList.remove(
       "opacity-50",
@@ -467,63 +456,20 @@ async function handleSend() {
     );
     UI.elements.resetBtn.disabled = false;
     UI.elements.resetBtn.classList.remove("opacity-50", "cursor-not-allowed");
-    UI.updateStatus("idle", "Aktiv");
+    UI.updateStatus(
+      "idle",
+      isRoleplay ? "Aktiv" : getTransformationProgressText(),
+    );
   } catch (e) {
-    UI.updateStatus("error", "Fehler");
-    if (UI.elements.chatWindow.contains(typing))
-      UI.elements.chatWindow.removeChild(typing);
+    UI.hideTypingIndicator();
+    UI.updateStatus("error", e.message);
+    console.error(e);
   } finally {
-    UI.updateInputUI(false, `Nachricht an ${STATE.config.roleName}...`);
+    UI.updateInputUI(
+      false,
+      isRoleplay ? `Nachricht an ${STATE.config.roleName}...` : "Eingabe...",
+    );
     UI.elements.userInput.focus();
-  }
-}
-
-async function handleTransformationSend() {
-  const userVal = UI.elements.userInput.value.trim();
-  if (!userVal) return;
-  UI.appendMessage(userVal, "user", { isIchMode: true });
-  STATE.chatHistory.push({ role: "user", content: userVal });
-  if (STATE.ttsEnabled) UI.speak(userVal, "Ich");
-  UI.elements.userInput.value = "";
-  UI.updateInputUI(true, "Feedback...");
-  UI.updateStatus("loading", "Trainer...");
-
-  try {
-    const data = await API.callChatApi(
-      [
-        { role: "system", content: STATE.transformationFeedbackPrompt },
-        {
-          role: "user",
-          content: `Statement: ${STATE.transformationStatements[STATE.exerciseIndex]}\nUser: ${userVal}`,
-        },
-      ],
-      {
-        proxyUrl: APP_CONFIG.PROXY_URL,
-        model: APP_CONFIG.MODEL,
-        temperature: APP_CONFIG.ICH_BOTSCHAFT_TEMPERATURE,
-      },
-    );
-    const botResp = data.choices[0].message.content;
-    UI.appendMessage(botResp, "partner", {
-      roleName: STATE.config.roleName,
-      messageType: "feedback",
-      isIchMode: true,
-    });
-    STATE.chatHistory.push({ role: "assistant", content: botResp });
-    if (STATE.ttsEnabled) UI.speak(botResp, STATE.config.roleName);
-
-    UI.setExerciseActionsVisible(true);
-    STATE.exerciseAwaitingRevision = true;
-
-    UI.elements.feedbackBtn.disabled = false;
-    UI.elements.feedbackBtn.classList.remove(
-      "opacity-50",
-      "cursor-not-allowed",
-    );
-    UI.updateStatus("idle", getTransformationProgressText());
-  } catch (e) {
-    UI.updateStatus("error", "API Fehler");
-    UI.updateInputUI(false, "Eingabe..."); // Re-enable only on error to allow retry
   }
 }
 
@@ -537,13 +483,10 @@ async function handleFeedback() {
 
   UI.elements.loadingOverlay.classList.remove("hidden"); // Nur für Mentor-Feedback anzeigen
   UI.updateStatus("loading", "Mentor...");
-  const transcript = STATE.chatHistory
-    .filter((m) => m.role !== "system")
-    .map(
-      (m) =>
-        `${m.role === "user" ? "Führungskraft" : STATE.config.roleName}: ${m.content}`,
-    )
-    .join("\n\n");
+  const transcript = Utils.generateTranscript(
+    STATE.chatHistory,
+    STATE.config.roleName,
+  );
 
   try {
     const data = await API.callChatApi(
@@ -567,93 +510,109 @@ async function handleFeedback() {
   }
 }
 
-UI.elements.sendBtn.addEventListener("click", handleSend);
-UI.elements.userInput.addEventListener(
-  "keypress",
-  (e) => e.key === "Enter" && handleSend(),
-);
-
-UI.elements.modeSelect?.addEventListener("change", async (e) => {
-  const selectedMode = e.target.value;
-  STATE.currentMode = selectedMode; // Modus sofort aktualisieren
-
-  if (selectedMode === "transformation") {
-    await initExerciseDropdown();
-    const firstEx = STATE.allExercises.find(
-      (ex) => ex.type === "TRANSFORMATION",
-    );
-    if (firstEx) await switchToTransformationMode(firstEx.id);
-  } else {
-    await switchToRoleplayMode();
-  }
-});
-
-// Event listener für den Feedback-Button (handhabt jetzt beide Modi)
-UI.elements.feedbackBtn.addEventListener("click", handleFeedback);
-
-// Event listener für den Download-Button im Feedback-Modal (immer Download)
-UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
-
-UI.elements.nextExerciseBtn?.addEventListener("click", () => {
-  if (STATE.currentMode === "transformation") {
-    if (STATE.exerciseIndex >= STATE.transformationStatements.length - 1) {
-      UI.appendMessage("Alle erledigt!", "partner", { isIchMode: true });
-      return;
-    }
-    STATE.exerciseIndex++;
-    STATE.exerciseAwaitingRevision = false;
-    UI.setExerciseActionsVisible(false);
-    const statement = STATE.transformationStatements[STATE.exerciseIndex];
-    const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
-    UI.appendMessage(taskText, "partner", {
-      roleName: STATE.config.roleName,
-      messageType: "task",
-      isIchMode: true,
-    });
-    if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
-    UI.updateStatus("idle", getTransformationProgressText());
-    UI.updateInputUI(false, "Eingabe...");
-    UI.elements.userInput.focus();
-  }
-});
-
-UI.elements.reviseBtn?.addEventListener("click", () => {
-  UI.setExerciseActionsVisible(false);
-  STATE.exerciseAwaitingRevision = false;
-  UI.updateInputUI(false, "Eingabe korrigieren...");
-  UI.elements.userInput.focus();
-});
-
-UI.elements.restartExerciseBtn?.addEventListener("click", () => {
-  if (STATE.currentMode === "transformation") {
-    restartTransformationExercise();
-  }
-});
-
-// Reset-Button Handler (öffnet Modal)
-UI.elements.briefingHeader.addEventListener("click", () => {
-  const h = UI.elements.briefingContent.classList.toggle("hidden");
-  UI.elements.chevron.style.transform = h ? "rotate(90deg)" : "rotate(0deg)";
-});
-UI.elements.mobileMenuBtn?.addEventListener("click", () =>
-  UI.toggleMobileMenu(),
-);
-UI.elements.sidebarOverlay?.addEventListener("click", () =>
-  UI.toggleMobileMenu(true),
-);
-UI.elements.userInput.addEventListener(
-  "focus",
-  () =>
-    window.innerWidth < 1024 &&
-    UI.elements.briefingContent.classList.add("hidden"),
-);
-
 // =========================================================
 // 4. Execution & Listeners
 // =========================================================
+
+/**
+ * Orchestrates the application startup sequence
+ */
 async function startApp() {
   await loadExercises();
   UI.init();
+  setupEventListeners();
+  await initializeCurrentMode();
+}
+
+/**
+ * Registers all core interaction listeners
+ */
+function setupEventListeners() {
+  UI.elements.scenarioSelect.addEventListener("change", (e) =>
+    loadContent(e.target.value),
+  );
+  UI.elements.exerciseSelect?.addEventListener("change", (e) =>
+    loadContent(e.target.value),
+  );
+
+  UI.elements.sendBtn.addEventListener("click", handleSend);
+  UI.elements.userInput.addEventListener(
+    "keypress",
+    (e) => e.key === "Enter" && handleSend(),
+  );
+
+  UI.elements.modeSelect?.addEventListener("change", async (e) => {
+    const selectedMode = e.target.value;
+    STATE.currentMode = selectedMode;
+
+    if (selectedMode === "transformation") {
+      await initExerciseDropdown();
+      const firstEx = STATE.allExercises.find(
+        (ex) => ex.type === "TRANSFORMATION",
+      );
+      if (firstEx) await switchToTransformationMode(firstEx.id);
+    } else {
+      await switchToRoleplayMode();
+    }
+  });
+
+  UI.elements.feedbackBtn.addEventListener("click", handleFeedback);
+  UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
+
+  UI.elements.nextExerciseBtn?.addEventListener("click", () => {
+    if (STATE.currentMode === "transformation") {
+      if (STATE.exerciseIndex >= STATE.transformationStatements.length - 1) {
+        UI.appendMessage("Alle erledigt!", "partner", { isIchMode: true });
+        return;
+      }
+      STATE.exerciseIndex++;
+      STATE.exerciseAwaitingRevision = false;
+      UI.setExerciseActionsVisible(false);
+      const statement = STATE.transformationStatements[STATE.exerciseIndex];
+      const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
+      UI.appendMessage(taskText, "partner", {
+        roleName: STATE.config.roleName,
+        messageType: "task",
+        isIchMode: true,
+      });
+      if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
+      UI.updateStatus("idle", getTransformationProgressText());
+      UI.updateInputUI(false, "Eingabe...");
+      UI.elements.userInput.focus();
+    }
+  });
+
+  UI.elements.reviseBtn?.addEventListener("click", () => {
+    UI.setExerciseActionsVisible(false);
+    STATE.exerciseAwaitingRevision = false;
+    UI.updateInputUI(false, "Eingabe korrigieren...");
+    UI.elements.userInput.focus();
+  });
+
+  UI.elements.restartExerciseBtn?.addEventListener("click", () => {
+    if (STATE.currentMode === "transformation") {
+      restartTransformationExercise();
+    }
+  });
+
+  UI.elements.briefingHeader.addEventListener("click", () => {
+    const h = UI.elements.briefingContent.classList.toggle("hidden");
+    UI.elements.chevron.style.transform = h ? "rotate(90deg)" : "rotate(0deg)";
+  });
+
+  UI.elements.mobileMenuBtn?.addEventListener("click", () =>
+    UI.toggleMobileMenu(),
+  );
+  UI.elements.sidebarOverlay?.addEventListener("click", () =>
+    UI.toggleMobileMenu(true),
+  );
+
+  UI.elements.userInput.addEventListener(
+    "focus",
+    () =>
+      window.innerWidth < 1024 &&
+      UI.elements.briefingContent.classList.add("hidden"),
+  );
 
   // Setup TTS toggle mit korrekter ID und Initialisierung
   const ttsToggle = document.getElementById("auto-speak-toggle");
@@ -676,7 +635,12 @@ async function startApp() {
       }
     });
   }
+}
 
+/**
+ * Determines and activates the initial mode based on UI state
+ */
+async function initializeCurrentMode() {
   STATE.currentMode = UI.elements.modeSelect?.value || "roleplay";
 
   await initScenarioDropdown();
@@ -686,12 +650,10 @@ async function startApp() {
     );
     if (firstEx) {
       await switchToTransformationMode(firstEx.id);
-    } else {
-      await switchToRoleplayMode();
     }
-  } else {
-    await switchToRoleplayMode();
+    return;
   }
+  await switchToRoleplayMode();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
