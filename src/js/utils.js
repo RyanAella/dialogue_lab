@@ -61,12 +61,12 @@ export const Utils = {
   },
 
   /**
-   * Versucht den Rollennamen aus dem Text oder dem Label zu extrahieren
+   * Attempts to extract the role name from the text or label.
    */
   extractRoleName(instructionSection, roleLabel) {
     if (roleLabel) return this.formatRoleName(roleLabel);
 
-    // Heuristik aus "Deine Aufgabe" Sektion
+    // Heuristic from "Your Task" section
     const taskSection =
       instructionSection.split(/Deine Aufgabe/i)[1] || instructionSection;
     const roleRegex = /mit\s+(?:der|dem|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/i;
@@ -82,7 +82,7 @@ export const Utils = {
       if (fallbackMatch) roleName = fallbackMatch[1].trim();
     }
 
-    // Normalisierung
+    // Normalization
     if (
       roleName.toLowerCase().startsWith("mitarbeitend") &&
       !roleName.toLowerCase().endsWith("in")
@@ -96,5 +96,54 @@ export const Utils = {
   formatRoleName(name) {
     if (!name) return "";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  },
+
+  /**
+   * Shuffles an array using the Fisher-Yates algorithm.
+   */
+  shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  },
+
+  /**
+   * Generates a clean text transcript from chat history.
+   */
+  generateTranscript(history, partnerRoleName) {
+    return history
+      .filter((m) => m.role !== "system")
+      .map((m) => {
+        const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
+        return `${role}: ${m.content}`;
+      })
+      .join("\n\n");
+  },
+
+  /**
+   * Formats a date for filenames (YYYY-MM-DD).
+   */
+  getFormattedDate() {
+    return new Date().toISOString().slice(0, 10);
+  },
+
+  /**
+   * Prepares text for speech output (removes markdown and stage directions).
+   */
+  cleanTextForSpeech(text) {
+    return text
+      .replace(/\*\*|\*/g, "") // Remove bold/italic markdown
+      .replace(/\(.*?\)/g, "") // Remove (stage directions)
+      .replace(/\[.*?\]/g, "") // Remove [stage directions]
+      .replace(/\n\n+/g, ". ... . ") // Replace paragraphs with long pauses
+      .replace(/:\s*\n/g, ". ... . ") // Replace colon at line end with pause
+      .replace(/:\s*/g, ", ... ") // Replace colon in sentence with short pause
+      .replace(/\n/g, ". ") // Replace simple line breaks with period
+      .replace(/([.!?])\s+/g, "$1 ... ") // Small extra pause after punctuation
+      .replace(/\s+/g, " ") // Clean up excess whitespace
+      .trim();
   },
 };

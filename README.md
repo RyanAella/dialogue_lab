@@ -1,4 +1,4 @@
-# Lab für Sozioinformatik: Simulation Lab
+# Lab für Sozioinformatik: Gesprächstraining (Simulation Lab)
 
 > [!IMPORTANT]
 > **Edition-Hinweis:** Dies ist eine spezialisierte Version der Anwendung. Im Gegensatz zur Hauptversion konzentriert sich dieser Stand ausschließlich auf **Dialogsimulationen** (Rollenspiele) und enthält keinen Übungs-Modus für isolierte Transformationen.
@@ -28,11 +28,12 @@ Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum S
 - `index.html`: UI / Layout.
 - `src/js/`:
   - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-  - `utils.js`: Hilfsfunktionen für Text-Parsing, Markdown und Rollen-Erkennung.
-  - `api.js`: Kommunikation mit dem Proxy und Laden der Szenarien/Prompts.
-  - `ui.js`: DOM-Manipulationen und visuelle Darstellung.
+  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe und Protokoll-Generierung.
+  - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
+  - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
   - `app.js`: Zentrale Anwendungslogik und State-Management.
-- `scenarios/`: Enthält die `exercises.json` (Konfiguration) und die Szenario-Inhalte (`*.txt`).
+- `src/data/`: `exercises.json` als zentrale Konfiguration.
+- `scenarios/`: Szenariodateien.
 - `prompts/`: Unterordner für `system/`, `partner/` und `mentor/`.
 
 ## 4. Szenarien und Konfiguration
@@ -48,6 +49,13 @@ Diese Datei steuert, welche Simulationen in der App zur Verfügung stehen.
     "type": "SIMULATION",
     "config": {
       "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
+    }
+  },
+  {
+    "id": "simulation_difficulties",
+    "type": "SIMULATION",
+    "config": {
+      "scenarioFile": "scenarios/simulations/difficulties_scenario.txt"
     }
   }
 ]
@@ -142,12 +150,13 @@ The application uses a static frontend combined with a server-side proxy to prot
 - `index.html`: UI / Layout.
 - `src/js/`:
   - `config.js`: Central runtime configuration (proxy URL, model, temperatures).
-  - `utils.js`: Utility functions for text parsing, Markdown, and role detection.
-  - `api.js`: Handles communication with the proxy and loading of scenarios/prompts.
-  - `ui.js`: DOM manipulation and visual rendering.
-  - `app.js`: Core application logic and state management.
-- `scenarios/`: Contains `exercises.json` (configuration) and scenario content (`*.txt`).
-- `prompts/`: Subfolders for `system/`, `partner/`, and `mentor/`.
+  - `utils.js`: Central utility functions for text parsing, speech output cleaning, and transcript generation.
+  - `api.js`: Abstraction layer for data exchange, cache management, and parallel resource loading.
+  - `ui.js`: Modular UI manager for dynamic rendering, event binding, and multimedia integration (TTS/STT).
+  - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
+- `src/data/`: `exercises.json` as central configuration.
+- `scenarios/`: Scenario files.
+- `prompts/`: Prompt files in subfolders `system/`, `partner/`, `mentor/`, `trainers/`.
 
 ## 4. Scenarios and Configuration
 

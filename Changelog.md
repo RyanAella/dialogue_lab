@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.17.0] - 2026-05-15
+
+### Added
+
+- **Typing Indicator**: Integrated a visual signal (`showTypingIndicator`) to notify users when the AI is generating a response, improving the interactive feel.
+- **Dynamic Voice Selection**: Added `VOICE_KEYWORDS` and logic to prioritize high-quality "Neural" voices based on gender and role.
+- **Browser-Specific TTS Hints**: Implemented status messages recommending optimal browsers (like Edge) for the best speech synthesis quality.
+
+### Changed
+
+- **Initialization Refactoring**: Moved event listener binding to a dedicated `setupEventListeners` function in `app.js` to ensure DOM elements are fully bound before interaction.
+- **Project Specialization**: Refined the UI, labels, and documentation to focus exclusively on the "Gesprächstraining" (Simulation Lab) edition.
+- **Heuristic Role Detection**: Enhanced `utils.js` with advanced role name extraction and normalization logic to better handle dynamic scenario briefings.
+- **Request Management**: Integrated `AbortController` in `api.js` to automatically cancel stale chat requests and prevent race conditions.
+- **API Caching**: Implemented a Map-based cache in `api.js` for prompts and scenarios to reduce redundant network requests and improve performance.
+- **Documentation Alignment**: Fully synchronized and updated both German and English versions of `README.md`.
+
+### Fixed
+
+- **Initialization Race Conditions**: Resolved `TypeError` issues where DOM elements were accessed before the `UI.init()` binding process was complete.
+- **TTS Clipping**: Improved the `speak` function with a cleaner delay mechanism and better text preprocessing to prevent clipped initial syllables.
+- **ID Synchronization**: Fixed naming mismatches for the primary scenario dropdown between the HTML and the state manager.
+
+---
+
 ## [0.13.0] - 2026-05-04
 
 ### Added
