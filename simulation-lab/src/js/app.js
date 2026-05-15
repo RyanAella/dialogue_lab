@@ -64,7 +64,7 @@ async function switchToRoleplayMode() {
     UI.updateStatus("idle", "Szenarien geladen");
   } else {
     UI.updateStatus("idle", "Keine Rollenspiel-Szenarien verfügbar.");
-    UI.updateInputUI(true, "Keine Szenarien verfügbar.");
+    UI.updateInputUI(true, "Keine Übungen verfügbar.");
   }
   document.getElementById("main-subtitle").textContent =
     "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
@@ -80,7 +80,7 @@ async function switchToRoleplayMode() {
  */
 async function initScenarioDropdown() {
   UI.elements.scenarioSelect.innerHTML =
-    '<option value="" selected disabled>Wähle eine Übung...</option>';
+    '<option value="" selected disabled>Wähle ein Szenario...</option>';
 
   const filtered = STATE.allExercises.filter((ex) => ex.type === "SIMULATION");
 
@@ -108,53 +108,6 @@ async function initScenarioDropdown() {
   scenarioOptions.forEach((opt) => UI.elements.scenarioSelect.add(opt));
   UI.elements.scenarioSelect.disabled = false;
 }
-
-/**
- * Loads scenario details AND the corresponding prompt files
- */
-UI.elements.scenarioSelect.addEventListener("change", async (event) => {
-  const exerciseId = event.target.value;
-  if (!exerciseId) return;
-
-  const exConfig = STATE.allExercises.find(
-    (ex) => ex.id === exerciseId,
-  )?.config;
-  if (!exConfig) return;
-
-  UI.updateStatus("loading", "Lade...");
-  UI.setBriefingLoading(true);
-  UI.elements.chatWindow.innerHTML = "";
-  STATE.chatHistory = [];
-
-  try {
-    const data = await API.fetchCompleteScenario(exConfig.scenarioFile);
-
-    STATE.config.roleName = Utils.extractRoleName(
-      data.instructionSection,
-      data.roleLabel,
-    );
-    STATE.config.systemPrompt = data.prompts.system;
-    STATE.config.partnerPrompt = data.prompts.partner;
-    STATE.config.mentorPrompt = data.prompts.mentor;
-
-    Utils.renderBoldMarkdownWithLineBreaks(
-      UI.elements.briefingContent,
-      data.instructionSection,
-    );
-    if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
-
-    UI.setBriefingExpanded(true);
-    UI.elements.startInfo.classList.remove("hidden");
-    UI.updateInputUI(false, `Deine Nachricht an ${STATE.config.roleName}...`);
-    UI.elements.chatWindow.appendChild(UI.elements.startInfo);
-    UI.updateStatus("idle", "Bereit");
-  } catch (error) {
-    console.error("Fehler beim Laden des Szenarios:", error);
-    UI.elements.briefingContent.innerHTML =
-      '<p class="text-red-500 p-4">Fehler.</p>';
-    UI.updateStatus("error", "Ladefehler");
-  }
-});
 
 async function handleSend() {
   const message = UI.elements.userInput.value.trim();
@@ -305,44 +258,91 @@ function downloadCurrentTranscript() {
   URL.revokeObjectURL(a.href);
 }
 
-UI.elements.sendBtn.addEventListener("click", handleSend);
-UI.elements.userInput.addEventListener(
-  "keypress",
-  (e) => e.key === "Enter" && handleSend(),
-);
+function setupEventListeners() {
+  /**
+   * Loads scenario details AND the corresponding prompt files
+   */
+  UI.elements.scenarioSelect.addEventListener("change", async (event) => {
+    const exerciseId = event.target.value;
+    if (!exerciseId) return;
 
-// Event-Listener für Feedback und Download werden nun über onclick im HTML gesteuert,
-// um Konsistenz zu wahren und die globale Verfügbarkeit (window) zu nutzen.
-// UI.elements.feedbackBtn.addEventListener("click", handleFeedback);
-// UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
+    const exConfig = STATE.allExercises.find(
+      (ex) => ex.id === exerciseId,
+    )?.config;
+    if (!exConfig) return;
 
-UI.elements.resetBtn.addEventListener("click", () => UI.openResetModal());
-UI.elements.briefingHeader.addEventListener("click", () => {
-  const isHidden = UI.elements.briefingContent.classList.contains("hidden");
-  UI.setBriefingExpanded(isHidden);
-});
-UI.elements.mobileMenuBtn?.addEventListener("click", () =>
-  UI.toggleMobileMenu(),
-);
-UI.elements.sidebarOverlay?.addEventListener("click", () =>
-  UI.toggleMobileMenu(true),
-);
-UI.elements.userInput.addEventListener(
-  "focus",
-  () =>
-    window.innerWidth < 1024 &&
-    UI.elements.briefingContent.classList.add("hidden"),
-);
+    UI.updateStatus("loading", "Lade...");
+    UI.setBriefingLoading(true);
+    UI.elements.chatWindow.innerHTML = "";
+    STATE.chatHistory = [];
+
+    try {
+      const data = await API.fetchCompleteScenario(exConfig.scenarioFile);
+
+      STATE.config.roleName = Utils.extractRoleName(
+        data.instructionSection,
+        data.roleLabel,
+      );
+      STATE.config.systemPrompt = data.prompts.system;
+      STATE.config.partnerPrompt = data.prompts.partner;
+      STATE.config.mentorPrompt = data.prompts.mentor;
+
+      Utils.renderBoldMarkdownWithLineBreaks(
+        UI.elements.briefingContent,
+        data.instructionSection,
+      );
+      if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
+
+      UI.setBriefingExpanded(true);
+      UI.elements.startInfo.classList.remove("hidden");
+      UI.updateInputUI(false, `Deine Nachricht an ${STATE.config.roleName}...`);
+      UI.elements.chatWindow.appendChild(UI.elements.startInfo);
+      UI.updateStatus("idle", "Bereit");
+    } catch (error) {
+      console.error("Fehler beim Laden des Szenarios:", error);
+      UI.elements.briefingContent.innerHTML =
+        '<p class="text-red-500 p-4">Fehler.</p>';
+      UI.updateStatus("error", "Ladefehler");
+    }
+  });
+
+  UI.elements.sendBtn.addEventListener("click", handleSend);
+  UI.elements.userInput.addEventListener(
+    "keypress",
+    (e) => e.key === "Enter" && handleSend(),
+  );
+
+  UI.elements.resetBtn.addEventListener("click", () => UI.openResetModal());
+  UI.elements.briefingHeader.addEventListener("click", () => {
+    const isHidden = UI.elements.briefingContent.classList.contains("hidden");
+    UI.setBriefingExpanded(isHidden);
+  });
+  UI.elements.mobileMenuBtn?.addEventListener("click", () =>
+    UI.toggleMobileMenu(),
+  );
+  UI.elements.sidebarOverlay?.addEventListener("click", () =>
+    UI.toggleMobileMenu(true),
+  );
+  UI.elements.userInput.addEventListener(
+    "focus",
+    () =>
+      window.innerWidth < 1024 &&
+      UI.elements.briefingContent.classList.add("hidden"),
+  );
+}
 
 // =========================================================
 // 4. Execution & Listeners
 // =========================================================
 async function startApp() {
   try {
+    // Bind DOM elements first so they are available for status updates and listeners
+    UI.init();
+
     await loadExercises();
 
-    // Bindet UI Event-Listener (z.B. Stop-Button und Briefing-Sprachausgabe)
-    UI.init();
+    // Now that UI.init() has populated UI.elements, setup listeners
+    setupEventListeners();
 
     // --- TTS Initialisierung START ---
     const ttsToggle = document.getElementById("auto-speak-toggle");
