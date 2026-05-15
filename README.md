@@ -10,7 +10,7 @@ Das **Lab für Sozioinformatik: Transformation Lab** ist eine interaktive Web-An
 ### Kernfunktionen dieser Edition
 
 - **Gezielte Übungen (Transformation)**
-  Hier liegt der Fokus auf der Technik. Trainiere das Umformulieren von Vorwürfen in konstruktive Botschaften (z. B. Ich-Botschaften oder Positive Unterstellungen). Die KI bewertet deine Versuche sofort und gibt Tipps zur Verbesserung.
+  Hier liegt der Fokus auf der Technik. Trainiere das Umformulieren von Vorwürfen in konstruktive Botschaften (z. B. Ich-Botschaften oder Positive Unterstellungen). Die KI erstellt nach Abschluss der Übungsreihe oder auf Wunsch eine umfassende Gesamtauswertung deiner Formulierungen.
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Abwechslungsreiches Training:** Die Übungssituationen werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
@@ -126,7 +126,7 @@ The **Socio-Informatics Lab: Transformation Lab** is an interactive web applicat
 
 ### Core Functions of This Edition
 
-- **Targeted Exercises (Transformation):** The focus here is on technique. Practice rephrasing accusations into constructive messages (e.g., I-statements or positive assumptions). The AI evaluates your attempts immediately and provides tips for improvement.
+- **Targeted Exercises (Transformation):** The focus here is on technique. Practice rephrasing accusations into constructive messages (e.g., I-statements or positive assumptions). The AI generates a comprehensive overall evaluation of your phrasing after the exercise series is completed or upon request.
 - **Natural Speech Feel:** Integrated **Text-to-Speech (TTS)** with optimized emphasis brings dialogues to life. (Tip: Voices sound particularly human when using Microsoft Edge!)
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Varied Training:** Exercise situations are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
