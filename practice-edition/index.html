@@ -78,14 +78,20 @@
         <button
           id="download-btn"
           disabled
-          class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-md opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition hover:bg-blue-700"
+          class="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition hover:bg-blue-800"
         >
-          <span>📥</span> Protokoll herunterladen
+          <span>📥</span> <span>Auswertung erstellen</span>
+        </button>
+        <button
+          id="export-transcript-btn"
+          class="hidden w-full bg-emerald-600 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 transition hover:bg-emerald-700"
+        >
+          <span>📄</span> Protokoll herunterladen
         </button>
         <button
           id="reset-btn"
           disabled
-          class="w-full border-2 border-red-50 text-red-500 py-3 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition"
+          class="w-full border-2 border-red-200 text-red-500 py-3 px-4 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition"
         >
           <span>🔄</span> Neustart
         </button>
@@ -195,29 +201,6 @@
       <footer
         class="input-area pt-4 pb-6 md:pb-4 border-t border-slate-200 bg-white z-[30] flex-shrink-0"
       >
-        <div
-          id="exercise-actions"
-          class="max-w-3xl mx-auto flex gap-2 px-4 w-full mb-3 hidden"
-        >
-          <button
-            id="restart-exercise-btn"
-            class="px-4 py-2 rounded-xl font-semibold text-sm border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition"
-          >
-            Übung neu starten
-          </button>
-          <button
-            id="revise-btn"
-            class="px-4 py-2 rounded-xl font-semibold text-sm border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition"
-          >
-            Überarbeiten
-          </button>
-          <button
-            id="next-exercise-btn"
-            class="px-4 py-2 rounded-xl font-semibold text-sm bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
-          >
-            Nächste Aussage
-          </button>
-        </div>
         <div class="input-container max-w-3xl mx-auto flex gap-2 px-4 w-full">
           <input
             type="text"

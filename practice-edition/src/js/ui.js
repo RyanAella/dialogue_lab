@@ -53,10 +53,9 @@ export const UI = {
       "sidebar",
       "sidebar-overlay",
       "exercise-actions",
-      "restart-exercise-btn",
-      "revise-btn",
-      "next-exercise-btn",
       "download-btn",
+      "export-transcript-btn",
+      "reset-btn",
       "auto-speak-toggle",
       "speak-briefing-btn",
       "stop-speech-btn",
@@ -322,13 +321,13 @@ export const UI = {
       };
     }
 
-    // Stopp-Button in der Sidebar
+    // Stop button in the sidebar
     if (this.elements.stopSpeechBtn) {
       this.elements.stopSpeechBtn.onclick = () => {
         window.speechSynthesis.cancel();
         if (this.elements.autoSpeakToggle) {
           this.elements.autoSpeakToggle.checked = false;
-          // Event auslösen, damit app.js den STATE.ttsEnabled auf false setzt
+          // Trigger event so that app.js sets STATE.ttsEnabled to false
           this.elements.autoSpeakToggle.dispatchEvent(new Event("change"));
         }
       };
@@ -435,9 +434,9 @@ export const UI = {
 
       return isHighQuality && match;
     });
-    // 2. BROWSER-CHECK: Optimale Stimmen finden
+    // 2. BROWSER CHECK: Find optimal voices
     if (!voice) {
-      // Browser-spezifische Hinweise für beste Qualität
+      // Browser-specific hints for best quality
       const userAgent = navigator.userAgent.toLowerCase();
       let recommendation = "";
 
@@ -454,7 +453,7 @@ export const UI = {
         this.updateStatus("info", recommendation);
       }
 
-      // Fallback auf normale Systemstimmen mit erweiterter Suche
+      // Fallback to normal system voices with extended search
       voice = germanVoices.find((v) => {
         const name = v.name.toLowerCase();
         const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
@@ -471,21 +470,20 @@ export const UI = {
 
     const isNeural = voice?.name.toLowerCase().includes("neural");
 
-    // Dynamisches Voice-Tweaking für natürlichere Sprache
+    // Dynamic voice tweaking for more natural speech
     if (isMentor) {
-      // Der Mentor spricht ruhiger, autoritärer und etwas gesetzter
+      // The mentor speaks calmer, more authoritative and a bit more composed
       utterance.rate = isNeural ? 0.88 : 0.85;
       utterance.pitch = 0.95;
     } else {
-      // Der Partner spricht natürlicher/etwas schneller
+      // The partner speaks more naturally/a bit faster
       utterance.rate = isNeural ? 0.95 : 0.9;
       utterance.pitch = isFemale ? 1.05 : 0.98;
     }
 
-    // Verbesserte Parameter für natürlichere Aussprache
-    utterance.volume = 0.9; // Etwas leiser für natürlicheren Klang
-    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimale Variation für natürlicherkeit
-
+    // Improved parameters for more natural pronunciation
+    utterance.volume = 0.9; // Slightly quieter for more natural sound
+    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimal variation for naturalness
     if (btnElement) {
       utterance.onstart = () =>
         btnElement.classList.add(
@@ -499,14 +497,14 @@ export const UI = {
           "animate-pulse",
           "opacity-100",
         );
-        // Status nach dem Sprechen wieder auf Standard setzen
+        // Reset status to default after speaking
         setTimeout(() => this.updateStatus("default", "Bereit"), 3000);
       };
       utterance.onerror = utterance.onend;
     }
 
-    // Winzige Verzögerung einbauen, um das "Verschlucken" der ersten Buchstaben zu verhindern,
-    // die oft durch die asynchrone Verarbeitung von cancel() und speak() entstehen.
+    // Introduce a tiny delay to prevent "swallowing" the first letters,
+    // which often occur due to the asynchronous processing of cancel() and speak().
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
     }, 100);

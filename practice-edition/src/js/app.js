@@ -20,6 +20,7 @@ const STATE = {
   allExercises: [],
   ttsEnabled: false,
   chatHistory: [],
+  answers: [],
   currentMode: "transformation",
 };
 
@@ -32,7 +33,6 @@ function prepareModeSwitch() {
   const main = UI.elements.chatWindow.closest("main");
   if (main) main.scrollTop = 0;
   UI.elements.briefingContent.classList.remove("hidden");
-  UI.elements.exerciseActions?.classList.add("hidden");
 }
 
 /**
@@ -82,11 +82,28 @@ function restartTransformationExercise() {
   );
   STATE.exerciseAwaitingRevision = false;
   STATE.chatHistory = [];
+  STATE.answers = [];
   UI.elements.chatWindow.innerHTML = "";
-  UI.setExerciseActionsVisible(false);
+  UI.setBriefingExpanded(true);
 
-  UI.elements.downloadBtn.disabled = true;
-  UI.elements.downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
+  if (UI.elements.downloadBtn) {
+    // Reset evaluation button state
+    UI.elements.downloadBtn.disabled = true;
+    UI.elements.downloadBtn.classList.remove("hidden");
+    UI.elements.downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
+    UI.elements.downloadBtn.querySelector("span + span").textContent =
+      "Auswertung erstellen";
+  }
+
+  if (UI.elements.resetBtn) {
+    // Disable restart button until user interacts
+    UI.elements.resetBtn.disabled = true;
+    UI.elements.resetBtn.classList.add("opacity-50", "cursor-not-allowed");
+  }
+
+  if (UI.elements.exportTranscriptBtn)
+    // Hide transcript export button
+    UI.elements.exportTranscriptBtn.classList.add("hidden");
 
   const statement = STATE.transformationStatements[STATE.exerciseIndex];
   const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
@@ -159,7 +176,6 @@ function downloadCurrentTranscript() {
   const modePrefix = "Transformation";
   filenameParts.push(modePrefix);
 
-  // Szenario-Titel hinzufügen
   let scenarioTitle = "";
   if (
     UI.elements.exerciseSelect &&
@@ -169,8 +185,8 @@ function downloadCurrentTranscript() {
       UI.elements.exerciseSelect.options[
         UI.elements.exerciseSelect.selectedIndex
       ].text;
-    scenarioTitle = scenarioTitle.replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "").trim(); // Sonderzeichen entfernen, Umlaute und Bindestriche behalten
-    scenarioTitle = scenarioTitle.replace(/\s+/g, "_"); // Leerzeichen durch Unterstriche ersetzen
+    scenarioTitle = scenarioTitle.replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "").trim(); // Remove special characters, keep umlauts and hyphens
+    scenarioTitle = scenarioTitle.replace(/\s+/g, "_"); // Replace spaces with underscores
   }
   if (scenarioTitle) filenameParts.push(scenarioTitle);
 
@@ -180,22 +196,6 @@ function downloadCurrentTranscript() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
-}
-
-/**
- * Returns the correct message payload and temperature
- */
-function getApiPayload(userMessage) {
-  return {
-    messages: [
-      { role: "system", content: STATE.transformationFeedbackPrompt },
-      {
-        role: "user",
-        content: `Statement: ${STATE.transformationStatements[STATE.exerciseIndex]}\nUser: ${userMessage}`,
-      },
-    ],
-    temperature: APP_CONFIG.TRANSFORMATION_TEMPERATURE,
-  };
 }
 
 /**
@@ -212,17 +212,81 @@ async function handleSend() {
   UI.appendMessage(userVal, "user", { isIchMode: true });
   if (STATE.ttsEnabled) UI.speak(userVal, "Ich");
   STATE.chatHistory.push({ role: "user", content: userVal });
+
+  // Store the answer for later overall evaluation
+  STATE.answers.push({
+    statement: STATE.transformationStatements[STATE.exerciseIndex], // Current statement
+    answer: userVal, // User's answer
+  });
+
+  // As soon as the first answer is given, allow early termination and restart
+  [UI.elements.downloadBtn, UI.elements.resetBtn].forEach((btn) => {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove("opacity-50", "cursor-not-allowed");
+    }
+  });
+
+  if (UI.elements.feedbackBtn) UI.elements.feedbackBtn.classList.add("hidden"); // Old feedback button is no longer needed
+
   UI.elements.userInput.value = "";
-  UI.updateInputUI(true, "Feedback...");
-  UI.updateStatus("loading", "Trainer...");
+
+  if (STATE.exerciseIndex < STATE.transformationStatements.length - 1) {
+    // There are more statements: Continue directly
+    STATE.exerciseIndex++;
+    const nextStatement = STATE.transformationStatements[STATE.exerciseIndex];
+    const taskText = `"${nextStatement}"\n\n${STATE.config.shortInstruction}`;
+
+    setTimeout(() => {
+      UI.appendMessage(taskText, "partner", {
+        roleName: STATE.config.roleName,
+        isIchMode: true,
+        messageType: "task",
+      });
+      if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
+      UI.updateStatus("idle", getTransformationProgressText());
+      UI.updateInputUI(false, "Nächste Eingabe...");
+    }, 400);
+  } else {
+    // Last statement reached: Evaluate automatically
+    finalizeExercise();
+  }
+}
+
+/**
+ * Ends the exercise and requests the AI overall evaluation.
+ * Can be triggered automatically at the end or manually by the user.
+ */
+async function finalizeExercise() {
+  // Prevent multiple triggers or triggers without answers
+  if (STATE.answers.length === 0) return;
+
+  UI.updateInputUI(true, "Wird ausgewertet...");
+  UI.updateStatus("loading", "Trainer erstellt Gesamtauswertung...");
   UI.showTypingIndicator(STATE.config.roleName);
 
   try {
-    const { messages, temperature } = getApiPayload(userVal);
+    const combinedResults = STATE.answers
+      .map(
+        (item, idx) =>
+          `Übung ${idx + 1}:\nAusgangslage: "${item.statement}"\nDeine Antwort: "${item.answer}"`,
+      )
+      .join("\n\n---\n\n");
+
+    const messages = [
+      {
+        role: "system",
+        content:
+          STATE.transformationFeedbackPrompt +
+          "\n\nDer Nutzer hat die Übungsreihe abgeschlossen. Bitte gib zu jeder Antwort ein kurzes Feedback und schließe mit einem motivierenden Fazit ab.",
+      },
+      { role: "user", content: combinedResults },
+    ];
+
     const data = await API.callChatApi(messages, {
       proxyUrl: APP_CONFIG.PROXY_URL,
       model: APP_CONFIG.MODEL,
-      temperature: temperature,
+      temperature: APP_CONFIG.CHAT_TEMPERATURE,
     });
 
     if (!data) return;
@@ -236,21 +300,24 @@ async function handleSend() {
     });
     STATE.chatHistory.push({ role: "assistant", content: feedback });
 
-    UI.setExerciseActionsVisible(true);
-    STATE.exerciseAwaitingRevision = true;
+    // Adjust buttons after evaluation
+    if (UI.elements.downloadBtn)
+      UI.elements.downloadBtn.classList.add("hidden"); // hide "Create evaluation now"
+    if (UI.elements.exportTranscriptBtn) {
+      // show new "Download transcript" button
+      UI.elements.exportTranscriptBtn.classList.remove("hidden");
+      UI.elements.exportTranscriptBtn.disabled = false;
+      UI.elements.exportTranscriptBtn.classList.remove(
+        "opacity-50",
+        "cursor-not-allowed",
+      );
+    }
 
-    // Download-Button aktivieren
-    UI.elements.downloadBtn.disabled = false;
-    UI.elements.downloadBtn.classList.remove(
-      "opacity-50",
-      "cursor-not-allowed",
-    );
-
-    UI.updateStatus("idle", getTransformationProgressText());
+    UI.updateStatus("idle", "Übung beendet");
   } catch (e) {
     UI.hideTypingIndicator();
-    UI.updateStatus("error", "API Fehler");
-    UI.updateInputUI(false, "Eingabe..."); // Re-enable only on error to allow retry
+    UI.updateStatus("error", "Fehler bei der Auswertung");
+    UI.updateInputUI(false, "Eingabe...");
   }
 }
 
@@ -284,12 +351,13 @@ async function switchToTransformationMode(
   );
 
   STATE.exerciseIndex = 0;
+  STATE.answers = [];
   prepareModeSwitch();
   UI.setBriefingExpanded(true);
 
   STATE.transformationFeedbackPrompt = data.prompts.trainer;
 
-  STATE.config.roleName = data.roleLabel || "Trainer";
+  STATE.config.roleName = data.roleLabel || "Trainer"; // Set role name for the AI
   STATE.config.shortInstruction =
     data.shortInstruction || "Bearbeite die Aussage.";
 
@@ -305,7 +373,25 @@ async function switchToTransformationMode(
   );
   if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
 
-  UI.setExerciseActionsVisible(false);
+  if (UI.elements.exportTranscriptBtn) {
+    // Hide transcript export button
+    UI.elements.exportTranscriptBtn.classList.add("hidden");
+  }
+
+  if (UI.elements.downloadBtn) {
+    UI.elements.downloadBtn.disabled = true;
+    UI.elements.downloadBtn.classList.remove("hidden");
+    UI.elements.downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
+    UI.elements.downloadBtn.querySelector("span + span").textContent =
+      "Auswertung erstellen";
+  }
+
+  // Disable sidebar restart button initially
+  if (UI.elements.resetBtn) {
+    UI.elements.resetBtn.disabled = true;
+    UI.elements.resetBtn.classList.add("opacity-50", "cursor-not-allowed");
+  }
+
   UI.updateInputUI(false, "Eingabe...");
 
   const statement = STATE.transformationStatements[STATE.exerciseIndex];
@@ -339,49 +425,38 @@ function setupEventListeners() {
     await switchToTransformationMode(exerciseId);
   });
 
-  UI.elements.sendBtn.addEventListener("click", handleSend);
+  UI.elements.sendBtn.addEventListener("click", handleSend); // Send button for user input
+
+  // The download button in the sidebar now becomes "Create evaluation now"
+  UI.elements.downloadBtn?.addEventListener("click", () => {
+    if (STATE.answers.length > 0 && !STATE.exerciseAwaitingRevision) {
+      finalizeExercise();
+    }
+  });
+
   UI.elements.userInput.addEventListener(
     "keypress",
     (e) => e.key === "Enter" && handleSend(),
   );
-  UI.elements.downloadBtn?.addEventListener("click", downloadCurrentTranscript);
 
-  UI.elements.nextExerciseBtn?.addEventListener("click", () => {
-    if (STATE.exerciseIndex >= STATE.transformationStatements.length - 1) {
-      UI.appendMessage("Alle erledigt!", "partner", {
-        roleName: STATE.config.roleName,
-      });
-      UI.setExerciseActionsVisible(false);
-      return;
+  // Sidebar restart
+  UI.elements.resetBtn?.addEventListener("click", () => {
+    if (
+      confirm(
+        "Möchtest du die aktuelle Übung wirklich neu starten? Alle bisherigen Antworten gehen verloren.",
+      )
+    ) {
+      restartTransformationExercise();
     }
-    STATE.exerciseIndex++;
-    STATE.exerciseAwaitingRevision = false;
-    UI.setExerciseActionsVisible(false);
-    const statement = STATE.transformationStatements[STATE.exerciseIndex];
-    const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
-    UI.appendMessage(taskText, "partner", {
-      roleName: STATE.config.roleName,
-      isIchMode: true,
-      messageType: "task",
-      shouldScroll: false,
-    });
-    if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
-    UI.updateStatus("idle", getTransformationProgressText());
-    UI.updateInputUI(false, "Eingabe...");
-    UI.elements.userInput.focus();
   });
 
-  UI.elements.reviseBtn?.addEventListener("click", () => {
-    UI.setExerciseActionsVisible(false);
-    STATE.exerciseAwaitingRevision = false;
-    UI.updateInputUI(false, "Eingabe korrigieren...");
-    UI.elements.userInput.focus();
-  });
-
-  UI.elements.restartExerciseBtn?.addEventListener("click", () =>
-    restartTransformationExercise(),
+  // New button for transcript export, visible after evaluation
+  UI.elements.exportTranscriptBtn?.addEventListener(
+    "click",
+    downloadCurrentTranscript,
   );
 
+  // Existing event listeners
   UI.elements.briefingHeader.addEventListener("click", () => {
     const h = UI.elements.briefingContent.classList.toggle("hidden");
     UI.elements.chevron.style.transform = h ? "rotate(90deg)" : "rotate(0deg)";
@@ -410,7 +485,7 @@ async function startApp() {
   await initExerciseDropdown();
   setupEventListeners();
 
-  // Setup TTS toggle mit korrekter ID und Initialisierung
+  // Setup TTS toggle with correct ID and initialization
   const ttsToggle = UI.elements.autoSpeakToggle;
   if (ttsToggle) {
     STATE.ttsEnabled = ttsToggle.checked;
@@ -418,7 +493,7 @@ async function startApp() {
       STATE.ttsEnabled = e.target.checked;
 
       if (STATE.ttsEnabled) {
-        // Sofortiges Feedback: Wenn ein Briefing offen ist, lies es vor
+        // Immediate feedback: If a briefing is open, read it aloud
         const briefing = UI.elements.briefingContent.innerText;
         if (
           briefing &&
