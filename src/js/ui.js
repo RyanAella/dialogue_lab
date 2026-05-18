@@ -1,7 +1,3 @@
-/**
- * UI Manager - Zuständig für DOM-Elemente und visuelle Updates
- */
-
 import { Utils } from "./utils.js";
 
 // Constants for Voice Selection
@@ -35,11 +31,12 @@ const VOICE_KEYWORDS = {
 };
 
 export const UI = {
-  // DOM Elemente
+  /** Centralized storage for DOM elements */
   elements: {},
 
   /**
-   * Automatically binds DOM elements to the UI.elements object based on ID mapping
+   * Automatically binds DOM elements to the UI.elements object based on ID mapping.
+   * Converts kebab-case IDs to camelCase properties.
    */
   _bindElements() {
     const ids = [
@@ -50,6 +47,8 @@ export const UI = {
       "exercises",
       "scenario-section",
       "exercise-section",
+      "mode-select",
+      "mode-badge",
       "chat-window",
       "start-info",
       "user-input",
@@ -58,23 +57,19 @@ export const UI = {
       "mobile-menu-btn",
       "sidebar",
       "sidebar-overlay",
-      "mode-badge",
-      "scenario-label",
-      "mode-select",
       "exercise-actions",
-      "restart-exercise-btn",
-      "revise-btn",
-      "next-exercise-btn",
-      "feedback-btn",
-      "reset-btn",
-      "loading-overlay",
-      "feedback-modal",
-      "reset-modal",
-      "auto-speak-toggle",
       "download-btn",
+      "feedback-btn",
+      "export-transcript-btn",
+      "modal-download-btn",
+      "reset-btn",
+      "auto-speak-toggle",
       "speak-briefing-btn",
       "stop-speech-btn",
       "mic-btn",
+      "loading-overlay",
+      "feedback-modal",
+      "reset-modal",
     ];
     ids.forEach((id) => {
       const camelCaseId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
@@ -98,7 +93,6 @@ export const UI = {
     const { statusBox } = this.elements;
     if (!statusBox) return;
 
-    // Konfiguration der Status-Stile für weniger Code-Duplizierung
     const configs = {
       loading: {
         cls: "bg-blue-50 text-blue-700 border-blue-200",
@@ -328,20 +322,20 @@ export const UI = {
       this.elements.speakBriefingBtn.onclick = (e) => {
         e.stopPropagation();
         this.speak(
-          this.elements.briefingContent.innerText,
+          this.elements.briefingContent.innerText, // Briefing content
           "Briefing",
           e.currentTarget,
         );
       };
     }
 
-    // Stopp-Button in der Sidebar
+    // Stop button in the sidebar
     if (this.elements.stopSpeechBtn) {
       this.elements.stopSpeechBtn.onclick = () => {
         window.speechSynthesis.cancel();
         if (this.elements.autoSpeakToggle) {
           this.elements.autoSpeakToggle.checked = false;
-          // Event auslösen, damit app.js den STATE.ttsEnabled auf false setzt
+          // Trigger event so that app.js sets STATE.ttsEnabled to false
           this.elements.autoSpeakToggle.dispatchEvent(new Event("change"));
         }
       };
@@ -371,7 +365,7 @@ export const UI = {
 
     recognition.onstart = () => {
       this._isListening = true;
-      micBtn.classList.add("text-red-600", "animate-pulse");
+      micBtn.classList.add("text-red-600", "animate-pulse"); // Visual feedback for listening
       this.updateStatus("loading", "Ich höre zu...");
     };
 
@@ -401,6 +395,55 @@ export const UI = {
     };
   },
 
+  /**
+   * Internal helper to find the best German voice
+   */
+  _getBestVoice(isFemale) {
+    const voices = window.speechSynthesis.getVoices();
+    const germanVoices = voices.filter((v) => v.lang.startsWith("de"));
+    if (germanVoices.length === 0)
+      return voices.find((v) => v.lang.startsWith("de")) || null;
+
+    const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
+
+    // 1. High Quality Match
+    let voice = germanVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      const isHQ = VOICE_KEYWORDS.highQuality.some((k) => name.includes(k));
+      return isHQ && keywords.some((k) => name.includes(k));
+    });
+
+    // 2. Gender Match Fallback
+    if (!voice) {
+      voice = germanVoices.find((v) =>
+        keywords.some((k) => v.name.toLowerCase().includes(k)),
+      );
+    }
+
+    // 3. Any German Fallback
+    return voice || germanVoices[0];
+  },
+
+  _showBrowserRecommendation() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes("firefox")) {
+      this.updateStatus(
+        "info",
+        "Tipp: Für bessere Stimmen nutze Chrome oder Edge.",
+      );
+    } else if (ua.includes("chrome") && !ua.includes("edge")) {
+      this.updateStatus(
+        "info",
+        "Tipp: In Edge gibt es noch natürlichere Neural-Stimmen.",
+      );
+    } else if (ua.includes("edge")) {
+      this.updateStatus(
+        "info",
+        "Perfekt! Edge hat die besten kostenlosen Stimmen.",
+      );
+    }
+  },
+
   speak(text, roleName, btnElement = null) {
     if (!window.speechSynthesis) return;
 
@@ -415,91 +458,45 @@ export const UI = {
 
     let cleanedText = Utils.cleanTextForSpeech(text);
 
-    // Ein finales Satzzeichen erzwingen, falls keines da ist
+    // Force a final punctuation mark if none is present
     if (!/[.!?]$/.test(cleanedText)) {
       cleanedText += ".";
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
-    let voices = window.speechSynthesis.getVoices();
-
-    // Fallback: If voices are not loaded yet, try to wait or use default
-    if (!voices || voices.length === 0) voices = [];
-
     const isFemale =
       roleName?.toLowerCase().endsWith("in") ||
       roleName?.toLowerCase().includes("mitarbeiterin");
-
     const isMentor =
       roleName?.toLowerCase().includes("mentor") ||
       roleName?.toLowerCase().includes("feedback");
 
-    const germanVoices = voices.filter((v) => v.lang.startsWith("de"));
+    const voice = this._getBestVoice(isFemale);
+    if (voice) utterance.voice = voice;
 
-    // Find optimal voice using predefined keywords
-    let voice = germanVoices.find((v) => {
-      const name = v.name.toLowerCase();
-      const isHighQuality = VOICE_KEYWORDS.highQuality.some((k) =>
-        name.includes(k),
-      );
-
-      const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
-      const match = isFemale
-        ? VOICE_KEYWORDS.female.some((k) => name.includes(k))
-        : VOICE_KEYWORDS.male.some((k) => name.includes(k));
-
-      return isHighQuality && match;
-    });
-    // 2. BROWSER-CHECK: Optimale Stimmen finden
-    if (!voice) {
-      // Browser-spezifische Hinweise für beste Qualität
-      const userAgent = navigator.userAgent.toLowerCase();
-      let recommendation = "";
-
-      if (userAgent.includes("firefox")) {
-        recommendation = "Tipp: Für bessere Stimmen nutze Chrome oder Edge.";
-      } else if (userAgent.includes("chrome") && !userAgent.includes("edge")) {
-        recommendation =
-          "Tipp: In Edge gibt es noch natürlichere Neural-Stimmen.";
-      } else if (userAgent.includes("edge")) {
-        recommendation = "Perfekt! Edge hat die besten kostenlosen Stimmen.";
-      }
-
-      if (recommendation) {
-        this.updateStatus("info", recommendation);
-      }
-
-      // Fallback auf normale Systemstimmen mit erweiterter Suche
-      voice = germanVoices.find((v) => {
-        const name = v.name.toLowerCase();
-        const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
-        return keywords.some((k) => name.includes(k));
-      });
+    // Only show tip if we didn't find a high-quality (neural) voice
+    if (!voice?.name.toLowerCase().includes("neural")) {
+      this._showBrowserRecommendation();
     }
 
-    // 3. Fallbacks
-    if (!voice) voice = germanVoices[0];
-    if (!voice) voice = voices.find((v) => v.lang.startsWith("de"));
-
-    if (voice) utterance.voice = voice;
     utterance.lang = "de-DE";
 
     const isNeural = voice?.name.toLowerCase().includes("neural");
 
-    // Dynamisches Voice-Tweaking für natürlichere Sprache
+    // Dynamic voice tweaking for more natural speech
     if (isMentor) {
-      // Der Mentor spricht ruhiger, autoritärer und etwas gesetzter
+      // The mentor speaks calmer, more authoritative and a bit more composed
       utterance.rate = isNeural ? 0.88 : 0.85;
       utterance.pitch = 0.95;
     } else {
-      // Der Partner spricht natürlicher/etwas schneller
+      // The partner speaks more naturally/a bit faster
       utterance.rate = isNeural ? 0.95 : 0.9;
       utterance.pitch = isFemale ? 1.05 : 0.98;
     }
 
-    // Verbesserte Parameter für natürlichere Aussprache
-    utterance.volume = 0.9; // Etwas leiser für natürlicheren Klang
-    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimale Variation für natürlicherkeit
+    // Improved parameters for more natural pronunciation
+    utterance.volume = 0.9; // Slightly quieter for more natural sound
+    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimal variation for naturalness
 
     if (btnElement) {
       utterance.onstart = () =>
@@ -514,14 +511,14 @@ export const UI = {
           "animate-pulse",
           "opacity-100",
         );
-        // Status nach dem Sprechen wieder auf Standard setzen
-        setTimeout(() => this.updateStatus("default", "Bereit"), 3000);
+        // Reset status to default after speaking
+        setTimeout(() => this.updateStatus("default", "Ready"), 3000);
       };
       utterance.onerror = utterance.onend;
     }
 
-    // Winzige Verzögerung einbauen, um das "Verschlucken" der ersten Buchstaben zu verhindern,
-    // die oft durch die asynchrone Verarbeitung von cancel() und speak() entstehen.
+    // Introduce a tiny delay to prevent "swallowing" the first letters,
+    // which often occur due to the asynchronous processing of cancel() and speak().
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
     }, 100);
@@ -535,10 +532,21 @@ export const UI = {
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <span>Lade Szenario...</span>
+        <span>Lade Übung...</span>
       </div>
     `;
     this.elements.briefingContent.classList.remove("hidden");
+  },
+
+  /**
+   * Toggles the briefing content visibility.
+   * @param {boolean} expanded - Whether the briefing should be shown.
+   */
+  setBriefingExpanded(expanded) {
+    const { briefingContent, chevron } = this.elements;
+    briefingContent?.classList.toggle("hidden", !expanded);
+    if (chevron)
+      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
   },
 
   toggleMobileMenu(forceClose = false) {
@@ -590,12 +598,17 @@ window.closeResetModal = () => {
   setTimeout(() => modal.classList.add("hidden"), 200);
 };
 
-window.updateSubtitleText = () => {
+/**
+ * Updates the subtitle responsive text.
+ */
+export const updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
   if (!sub) return;
-  const base = "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
+  const base = "Wähle ein Szenario aus, um zu starten.";
   sub.innerHTML =
     window.innerWidth < 1024
       ? `${base} <br><span class="text-xs text-blue-600">Szenario wechseln? Klicke oben rechts auf ☰</span>`
       : base;
 };
+
+window.updateSubtitleText = updateSubtitleText;
