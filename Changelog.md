@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.18.0] - 2026-05-08
+
+### Added
+
+- **Sequential Exercise Flow**: Implemented a new progression logic where users work through all transformation statements one after another without interruption.
+- **Batch Evaluation Logic**: Introduced `finalizeExercise` to collect all user answers and request a single, comprehensive AI evaluation at the end of the session.
+- **Functional Sidebar Reset**: The sidebar reset button is now fully functional, featuring a confirmation dialog and state cleanup via a reset modal.
+- **Conditional Export**: Added an "Export Transcript" button that only appears after the final evaluation is generated, keeping the UI focused during the exercise.
+
+### Changed
+
+- **UI Reorganization**: Moved primary control actions (Evaluation, Reset) to the sidebar to clean up the chat footer and improve navigation.
+- **Button Logic Refinement**: The feedback and reset buttons now dynamically activate only after the first response is provided.
+- **Localization**: Translated all internal code comments in `app.js` and `ui.js` from German to English to align with standard development practices.
+- **State Reset**: Enhanced the `restartTransformationExercise` logic to restore the UI to its absolute initial state, including button visibility and instruction expansion.
+
+### Removed
+
+- **Redundant Footer Actions**: Removed the "Revision" and "Next Statement" buttons from the chat window as the flow is now automated and sequential.
+- **Immediate Feedback Loop**: Removed the per-message API call in Transformation mode to reduce latency and allow users to focus on the technique before receiving a critique.
+
+### Fixed
+
+- **Transcript Filename Generation**: Fixed an issue where the exercise/scenario title was missing from the filename in Transformation mode by dynamically detecting the active dropdown.
+- **Button Padding**: Corrected horizontal padding (`px-4`) on sidebar buttons to prevent text from touching the edges.
+- **Evaluation Text Alignment**: Fixed a selector issue where the button text for the evaluation trigger was not updating correctly during state resets.
+- **Event Listener Duplication**: Cleaned up conflicting event listeners on the sidebar buttons to ensure stable interaction.
+
+---
+
 ## [0.17.0] - 2026-05-07
 
 ### Added
