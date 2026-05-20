@@ -54,6 +54,20 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
       }
+      /* Avatar Stack Logik */
+      .avatar-stack {
+        display: grid;
+        grid-template-areas: "stack";
+        aspect-ratio: 3 / 4; /* Festes Porträt-Format (Oberkörper-Fokus) */
+        background-color: #f8fafc; /* Heller Hintergrund für leere Stellen */
+      }
+      .avatar-stack img {
+        grid-area: stack;
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Füllt den Rahmen aus */
+        object-position: top; /* Verankert den Kopf oben im Rahmen */
+      }
     </style>
   </head>
 
@@ -166,101 +180,144 @@
     ></div>
 
     <!-- Main Content Wrapper: Organisiert den scrollbaren Bereich und den festen Footer -->
-    <div class="flex-1 flex flex-col min-h-0">
-      <main
-        class="chat-main-container flex-1 flex flex-col p-4 md:p-6 lg:p-10 overflow-y-auto"
-      >
-        <h1 class="main-title text-2xl md:text-3xl font-bold text-slate-800">
-          Lab für Sozioinformatik: Gesprächstraining
-        </h1>
-        <div class="mt-3">
-          <span
-            id="mode-badge"
-            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"
-          >
-            Modus: Simulationen
-          </span>
-        </div>
-        <p id="main-subtitle" class="main-subtitle text-slate-500 mt-2">
-          Wähle ein Szenario aus, um zu starten.
-        </p>
-
-        <div
-          class="mt-4 max-w-3xl sticky top-0 z-[20] py-2 bg-gray-50/95 backdrop-blur-sm"
-        >
-          <div
-            id="status-box"
-            class="status-box bg-slate-50 text-slate-500 p-2 md:p-3 rounded-xl border border-slate-200 text-[10px] md:text-xs font-medium flex items-center gap-2 w-fit"
-          >
-            <span class="w-2 h-2 rounded-full bg-slate-300"></span>
-            System bereit
-          </div>
-        </div>
-
-        <section
-          class="briefing-card mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 max-w-3xl transition-all duration-500"
-        >
-          <div
-            class="briefing-click-area flex items-center justify-between cursor-pointer"
-            id="briefing-header"
-          >
-            <div class="briefing-title-group flex items-center gap-2">
-              <span class="briefing-icon text-2xl">📋</span>
-              <h2
-                class="briefing-headline text-xl font-semibold text-slate-800"
+    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <main class="chat-main-container flex-1 flex flex-col overflow-y-auto">
+        <div class="flex flex-col lg:flex-row flex-1 p-4 md:p-6 lg:p-10 gap-8">
+          <!-- Linke Spalte: Inhalt (Header, Briefing, Chat) -->
+          <div class="flex-1 flex flex-col min-w-0 max-w-3xl mx-auto lg:mx-0">
+            <div class="content-header">
+              <h1
+                class="main-title text-2xl md:text-3xl font-bold text-slate-800"
               >
-                Deine Aufgabenstellung & Szenario-Details
-              </h2>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                id="speak-briefing-btn"
-                class="hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5"
-                title="Briefing vorlesen"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                Lab für Sozioinformatik: Gesprächstraining
+              </h1>
+              <div class="mt-3">
+                <span
+                  id="mode-badge"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"
                 >
-                  <path
-                    fill-rule="evenodd"
-                    d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-              <span
-                id="chevron"
-                class="briefing-arrow text-slate-400 transition-transform"
-                >▼</span
+                  Modus: Simulationen
+                </span>
+              </div>
+              <p id="main-subtitle" class="main-subtitle text-slate-500 mt-2">
+                Wähle ein Szenario aus, um zu starten.
+              </p>
+
+              <div
+                class="mt-4 sticky top-0 z-[20] py-2 bg-gray-50/95 backdrop-blur-sm"
               >
+                <div
+                  id="status-box"
+                  class="status-box bg-slate-50 text-slate-500 p-2 md:p-3 rounded-xl border border-slate-200 text-[10px] md:text-xs font-medium flex items-center gap-2 w-fit"
+                >
+                  <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                  System bereit
+                </div>
+              </div>
+            </div>
+
+            <section
+              class="briefing-card mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 transition-all duration-500"
+            >
+              <div
+                class="briefing-click-area flex items-center justify-between cursor-pointer"
+                id="briefing-header"
+              >
+                <div class="briefing-title-group flex items-center gap-4">
+                  <!-- Mobile Avatar: Nur auf kleinen Bildschirmen sichtbar -->
+                  <div
+                    id="mobile-portrait-container"
+                    class="lg:hidden w-14 h-16 avatar-stack bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200"
+                  >
+                    <img id="partner-body-mobile" src="" alt="" />
+                    <img id="partner-eyes-mobile" src="" alt="" />
+                    <img id="partner-mouth-mobile" src="" alt="" />
+                    <img id="partner-glasses-mobile" src="" alt="" />
+                    <img id="partner-hair-mobile" src="" alt="" />
+                    <img id="partner-headset-mobile" src="" alt="" />
+                    <img id="partner-clothes-mobile" src="" alt="" />
+                    <img id="partner-hands-mobile" src="" alt="" />
+                  </div>
+                  <h2
+                    class="briefing-headline text-xl font-semibold text-slate-800"
+                  >
+                    Deine Aufgabenstellung & Szenario-Details
+                  </h2>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    id="speak-briefing-btn"
+                    class="hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5"
+                    title="Briefing vorlesen"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  <span
+                    id="chevron"
+                    class="briefing-arrow text-slate-400 transition-transform"
+                    >▼</span
+                  >
+                </div>
+              </div>
+              <div
+                id="briefing-content"
+                class="briefing-body mt-4 space-y-4 text-slate-600 leading-relaxed"
+              ></div>
+            </section>
+
+            <div
+              id="chat-window"
+              class="chat-display flex-1 mt-8 pb-10 flex flex-col space-y-6 bg-gray-50/50 scroll-smooth"
+            >
+              <div
+                id="start-info"
+                class="system-message flex justify-center my-6 w-100 hidden"
+              >
+                <div
+                  class="bg-blue-50 border border-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-sm flex items-center gap-3 shadow-sm max-w-2xl"
+                >
+                  <span class="text-lg">✨</span>
+                  <p>
+                    <strong>Bereit für das Gespräch.</strong> Eröffnen Sie den
+                    Dialog, indem Sie unten eine Nachricht eingeben.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div
-            id="briefing-content"
-            class="briefing-body mt-4 space-y-4 text-slate-600 leading-relaxed"
-          ></div>
-        </section>
 
-        <div
-          id="chat-window"
-          class="chat-display flex flex-col flex-1 mt-8 space-y-6 bg-gray-50/50 scroll-smooth"
-        >
+          <!-- Rechte Spalte: Desktop Portrait (Beginnt nun auf Höhe des Briefings) -->
           <div
-            id="start-info"
-            class="system-message flex justify-center my-6 w-100 hidden"
+            id="desktop-portrait-container"
+            class="hidden lg:flex flex-col w-64 flex-shrink-0 sticky top-6 h-fit"
           >
             <div
-              class="bg-blue-50 border border-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-sm flex items-center gap-3 shadow-sm max-w-2xl"
+              class="avatar-stack bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
             >
-              <span class="text-lg">✨</span>
-              <p>
-                <strong>Bereit für das Gespräch.</strong> Eröffnen Sie den
-                Dialog, indem Sie unten eine Nachricht eingeben.
-              </p>
+              <img id="partner-body" src="" alt="" />
+              <img id="partner-eyes" src="" alt="" />
+              <img id="partner-mouth" src="" alt="" />
+              <img id="partner-glasses" src="" alt="" />
+              <img id="partner-hair" src="" alt="" />
+              <img id="partner-headset" src="" alt="" />
+              <img id="partner-clothes" src="" alt="" />
+              <img id="partner-hands" src="" alt="" />
             </div>
+            <p
+              id="partner-name-display"
+              class="text-center mt-3 font-bold text-slate-700"
+            ></p>
           </div>
         </div>
       </main>
@@ -331,7 +388,7 @@
         >
           <h2 class="text-2xl font-bold text-gray-800">📊 Mentor Feedback</h2>
           <button
-            onclick="closeFeedbackModal()"
+            id="modal-close-feedback"
             class="text-gray-500 hover:text-black text-xl"
           >
             &times;
@@ -383,7 +440,7 @@
         </div>
         <div class="flex gap-3">
           <button
-            onclick="closeResetModal()"
+            id="modal-close-reset"
             class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition"
           >
             Abbrechen

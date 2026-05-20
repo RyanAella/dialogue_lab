@@ -1,6 +1,9 @@
 import { Utils } from "./utils.js";
 
 // Constants for Voice Selection
+const TRANSPARENT_PIXEL =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
 const VOICE_KEYWORDS = {
   female: [
     "katja",
@@ -33,6 +36,147 @@ const VOICE_KEYWORDS = {
 export const UI = {
   /** Centralized storage for DOM elements */
   elements: {},
+
+  /** Cached references to avatar image layers to avoid repeated DOM lookups */
+  _avatarNodes: { main: {}, mobile: {} },
+
+  /** Avatar Animation State */
+  _avatar: {
+    isTalking: false,
+    blinkTimeout: null,
+    mouthInterval: null,
+    config: {
+      // Wird über initAvatar(profile) befüllt
+    },
+    current: {
+      body: 0,
+      clothes: 0,
+      hair: 0,
+      hands: 0,
+      glasses: 0, // Neu: Brillen-Index
+      headset: 0, // Neu: Headset-Index
+      eyes: 0,
+      mouth: 0,
+      skinTone: "a",
+    },
+  },
+
+  initAvatar(data) {
+    if (!data) return;
+
+    // 1. Auswahl eines spezifischen Charakters aus dem Pool (Array), falls vorhanden
+    const selectedProfile = Array.isArray(data)
+      ? data[Math.floor(Math.random() * data.length)]
+      : data;
+
+    this._avatar.config = selectedProfile;
+    const av = this._avatar;
+    if (!av.config || !av.config.heads) return;
+
+    // 2. Randomisierung der Merkmale innerhalb des gewählten Charakters
+    const rand = (list) => Math.floor(Math.random() * list.length);
+
+    av.current.body = rand(av.config.heads);
+    av.current.clothes = rand(av.config.clothes);
+    av.current.hair = rand(av.config.hair);
+    av.current.glasses = rand(av.config.glasses); // Neu: Brille randomisieren
+    av.current.headset = rand(av.config.headset || [""]); // Neu: Headset randomisieren
+
+    // Hautfarbe vom Kopf extrahieren und passende Hände wählen
+    const headPath = av.config.heads[av.current.body];
+    const colorMatch = headPath.match(/_([a-d])\.png$/i);
+    av.current.skinTone = colorMatch ? colorMatch[1].toLowerCase() : "a";
+    const handPool = Array.isArray(av.config.hands)
+      ? av.config.hands
+      : av.config.hands[av.current.skinTone] || [];
+    av.current.hands = rand(handPool);
+
+    av.current.eyes = rand(av.config.eyesOpen);
+    av.current.mouth = rand(av.config.mouthsClosed);
+
+    this._updateAvatarImages();
+    this._startBlinkLoop();
+  },
+
+  _updateAvatarImages(eyesClosed = false, mouthOpen = false) {
+    const av = this._avatar;
+    if (!av.config || !av.config.heads) return;
+    const path = av.config.basePath;
+
+    const getSrc = (file) => (file && file.trim() !== "" ? path + file : "");
+
+    const bodySrc = getSrc(av.config.heads[av.current.body]);
+    const clothesSrc = getSrc(av.config.clothes[av.current.clothes]);
+    const hairSrc = getSrc(av.config.hair[av.current.hair]);
+    const glassesSrc = getSrc(av.config.glasses[av.current.glasses]); // Neu: Brillen-Source
+    const headsetSrc = getSrc(
+      av.config.headset ? av.config.headset[av.current.headset] : "",
+    ); // Neu: Headset-Source
+
+    const handPool = Array.isArray(av.config.hands)
+      ? av.config.hands
+      : av.config.hands[av.current.skinTone] || [];
+
+    const handsSrc = getSrc(handPool[av.current.hands]);
+    const eyeSrc = getSrc(
+      (eyesClosed ? av.config.eyesClosed : av.config.eyesOpen)[av.current.eyes],
+    );
+    const mouthSrc = getSrc(
+      (mouthOpen ? av.config.mouthsOpen : av.config.mouthsClosed)[
+        av.current.mouth
+      ],
+    );
+
+    const targets = [
+      { nodes: this._avatarNodes.main },
+      { nodes: this._avatarNodes.mobile },
+    ];
+
+    targets.forEach(({ nodes }) => {
+      if (nodes.body) nodes.body.src = bodySrc || TRANSPARENT_PIXEL;
+      if (nodes.clothes) nodes.clothes.src = clothesSrc || TRANSPARENT_PIXEL;
+      if (nodes.hair) nodes.hair.src = hairSrc || TRANSPARENT_PIXEL;
+      if (nodes.headset) nodes.headset.src = headsetSrc || TRANSPARENT_PIXEL;
+      if (nodes.glasses) nodes.glasses.src = glassesSrc || TRANSPARENT_PIXEL;
+      if (nodes.hands) nodes.hands.src = handsSrc || TRANSPARENT_PIXEL;
+      if (nodes.eyes) nodes.eyes.src = eyeSrc || TRANSPARENT_PIXEL;
+      if (nodes.mouth) nodes.mouth.src = mouthSrc || TRANSPARENT_PIXEL;
+    });
+  },
+
+  setAvatarTalking(talking) {
+    this._avatar.isTalking = talking;
+    if (
+      talking &&
+      !this._avatar.mouthInterval &&
+      this._avatar.config?.mouthsOpen
+    ) {
+      this._avatar.mouthInterval = setInterval(() => {
+        this._updateAvatarImages(false, Math.random() > 0.5);
+      }, 150);
+    } else if (!talking && this._avatar.mouthInterval) {
+      clearInterval(this._avatar.mouthInterval);
+      this._avatar.mouthInterval = null;
+      this._updateAvatarImages(false, false);
+    }
+  },
+
+  _startBlinkLoop() {
+    if (this._avatar.blinkTimeout) clearTimeout(this._avatar.blinkTimeout);
+    const blink = () => {
+      if (this._avatar.config?.eyesClosed)
+        this._updateAvatarImages(true, this._avatar.isTalking);
+      setTimeout(() => {
+        if (this._avatar.config?.eyesOpen)
+          this._updateAvatarImages(false, this._avatar.isTalking);
+        this._avatar.blinkTimeout = setTimeout(
+          blink,
+          2000 + Math.random() * 4000,
+        );
+      }, 150);
+    };
+    blink();
+  },
 
   /**
    * Automatically binds DOM elements to the UI.elements object based on ID mapping.
@@ -70,6 +214,7 @@ export const UI = {
       "loading-overlay",
       "feedback-modal",
       "reset-modal",
+      "partner-name-display",
     ];
     ids.forEach((id) => {
       const camelCaseId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
@@ -78,6 +223,27 @@ export const UI = {
     // Remap specific non-standard IDs
     this.elements.scenarioSelect = this.elements.scenarios;
     this.elements.exerciseSelect = this.elements.exercises;
+
+    // Cache Avatar Layer Nodes
+    const layers = [
+      "body",
+      "eyes",
+      "mouth",
+      "glasses",
+      "hair",
+      "headset",
+      "clothes",
+      "hands",
+    ];
+    layers.forEach((layer) => {
+      const camelLayer = layer.charAt(0).toUpperCase() + layer.slice(1);
+      this._avatarNodes.main[layer] = document.getElementById(
+        `partner-${layer}`,
+      );
+      this._avatarNodes.mobile[layer] = document.getElementById(
+        `partner-${layer}-mobile`,
+      );
+    });
   },
 
   updateSidebarVisibility(mode) {
@@ -150,6 +316,8 @@ export const UI = {
    */
   showTypingIndicator(roleName) {
     this.hideTypingIndicator(); // Ensure no duplicates
+    this.setAvatarTalking(true);
+
     const wrapper = document.createElement("div");
     wrapper.id = "typing-indicator";
     wrapper.className =
@@ -174,6 +342,7 @@ export const UI = {
 
   hideTypingIndicator() {
     document.getElementById("typing-indicator")?.remove();
+    this.setAvatarTalking(false);
   },
 
   /**
@@ -181,24 +350,42 @@ export const UI = {
    */
   _createAvatar(sender, { roleName = "Partner" }) {
     const avatar = document.createElement("div");
-    const isFemale = sender !== "user" && roleName.toLowerCase().endsWith("in");
-
-    avatar.className = `flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 ${
-      sender === "user"
-        ? "w-8 h-8 rounded-full bg-blue-700 text-white border-2 border-blue-400"
-        : isFemale
-          ? "w-12 h-16 rounded-xl bg-white border-2 border-white overflow-hidden"
-          : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
-    }`;
 
     if (sender === "user") {
+      avatar.className =
+        "flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 w-8 h-8 rounded-full bg-blue-700 text-white border-2 border-blue-400";
       avatar.textContent = "DU";
-    } else if (isFemale) {
-      const img = document.createElement("img");
-      img.src = "src/assets/grafik.png";
-      img.className = "w-full h-full object-cover";
-      avatar.appendChild(img);
+      return avatar;
+    }
+
+    // Partner Avatar: Nutzt das Layer-System (Avatar-Stack)
+    const av = this._avatar;
+    if (av.config && av.config.heads) {
+      avatar.className =
+        "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm";
+      const path = av.config.basePath;
+
+      // Die wichtigsten Layer für die kleine Vorschau
+      const layers = [
+        av.config.heads[av.current.body],
+        av.config.eyesOpen[av.current.eyes],
+        av.config.mouthsClosed[av.current.mouth],
+        av.config.glasses ? av.config.glasses[av.current.glasses] : null,
+        av.config.hair[av.current.hair],
+        av.config.headset ? av.config.headset[av.current.headset] : null,
+        av.config.clothes[av.current.clothes],
+      ];
+
+      layers.forEach((file) => {
+        if (file && file.trim() !== "") {
+          const img = document.createElement("img");
+          img.src = path + file;
+          avatar.appendChild(img);
+        }
+      });
     } else {
+      avatar.className =
+        "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white flex items-center justify-center text-xs flex-shrink-0 mt-1";
       avatar.textContent = roleName.substring(0, 2).toUpperCase();
     }
     return avatar;
@@ -314,9 +501,12 @@ export const UI = {
     if (!disabled) userInput.classList.add("bg-slate-50");
   },
 
-  init() {
+  init(defaultProfile) {
     // Bind all DOM elements to UI.elements before setting up logic
     this._bindElements();
+
+    // Init Avatar on load
+    if (defaultProfile) this.initAvatar(defaultProfile);
 
     if (this.elements.speakBriefingBtn) {
       this.elements.speakBriefingBtn.onclick = (e) => {
@@ -342,6 +532,11 @@ export const UI = {
     }
 
     this.initVoiceInput();
+
+    // Ensure voices are loaded (crucial for Chrome)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => this._getBestVoice(true);
+    }
   },
 
   initVoiceInput() {
@@ -464,12 +659,17 @@ export const UI = {
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
-    const isFemale =
+    // Priority: 1. explicit gender from the generated profile, 2. heuristic based on the name
+    let isFemale =
       roleName?.toLowerCase().endsWith("in") ||
       roleName?.toLowerCase().includes("mitarbeiterin");
     const isMentor =
       roleName?.toLowerCase().includes("mentor") ||
       roleName?.toLowerCase().includes("feedback");
+
+    if (this._avatar.config?.gender) {
+      isFemale = this._avatar.config.gender === "female";
+    }
 
     const voice = this._getBestVoice(isFemale);
     if (voice) utterance.voice = voice;
@@ -499,18 +699,21 @@ export const UI = {
     utterance.pitch += Math.random() * 0.02 - 0.01; // Minimal variation for naturalness
 
     if (btnElement) {
-      utterance.onstart = () =>
+      utterance.onstart = () => {
         btnElement.classList.add(
           "text-blue-600",
           "animate-pulse",
           "opacity-100",
         );
+        this.setAvatarTalking(true);
+      };
       utterance.onend = () => {
         btnElement.classList.remove(
           "text-blue-600",
           "animate-pulse",
           "opacity-100",
         );
+        this.setAvatarTalking(false);
         // Reset status to default after speaking
         setTimeout(() => this.updateStatus("default", "Ready"), 3000);
       };
