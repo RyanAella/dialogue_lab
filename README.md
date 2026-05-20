@@ -12,6 +12,8 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
   Tauche in realistische Gesprächsszenarien ein. Ein KI-Gegenüber reagiert dynamisch auf deine Eingaben, während ein optionaler **KI-Mentor** im Hintergrund wertvolles Feedback zu deiner Strategie gibt.
 - **Gezielte Übungen (Transformation)**
   Hier liegt der Fokus auf der Technik. Trainiere das Umformulieren von Vorwürfen in konstruktive Botschaften (z. B. Ich-Botschaften oder Positive Unterstellungen). Die KI erstellt nach Abschluss der Übungsreihe oder auf Wunsch eine umfassende Gesamtauswertung deiner Formulierungen.
+- **Visuelle Immersion:**
+  Ein modulares **Avatar-System** generiert basierend auf Charakter-Pools dynamische Portraits. Durch das Layering von Kopf (mit automatischer Hautton-Erkennung), Kleidung, Haaren, Brillen und Headsets entstehen bei jedem Start abwechslungsreiche und passende Gesprächspartner.
 
 ### Highlights für die User Experience
 
@@ -28,6 +30,7 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
 - **Architektur**: Modulare Struktur nach dem **Separation of Concerns** Prinzip. Klare Trennung zwischen UI-Steuerung, API-Kommunikation und Hilfsfunktionen.
 - **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
+- **Modulares Grafik-System**: Die Darstellung der Partner erfolgt über einen "Avatar-Stack" (CSS Grid). Bilder werden zur Laufzeit kombiniert, um verschiedene Hauttöne, Accessoires und Animationen (Blinzeln, Mundbewegungen) darzustellen.
 - **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
 - **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
 - **Robuste Kommunikation**: Implementierung von `AbortController` zur Vermeidung von Race-Conditions bei API-Anfragen.
@@ -37,7 +40,8 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - `index.html`: UI / Layout.
 - `src/js/`:
   - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe und Protokoll-Generierung.
+  - `profiles.js`: Zentrale Datenbank für Charakter-Pools, Layer-Sets und Rollenzuweisungen.
+  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe, Protokoll-Generierung und sichere Dateinamenskonvertierung (`slugify`).
   - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
   - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
   - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
@@ -120,6 +124,7 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
 - **Main-Branch:** Hauptversion unter der Root-URL.
+- **Feature-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
 
 ## 7. Neues Szenario hinzufügen
 
@@ -151,6 +156,8 @@ The application offers two specialized training environments:
 
 - **Interactive Simulations (Roleplay):** Dive into realistic conversation scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable background feedback on your strategy.
 - **Targeted Exercises (Transformation):** This mode focuses on technique. Practice rephrasing accusations into constructive messages (e.g., "I-statements" or positive assumptions). The AI generates a comprehensive overall evaluation of your phrasing after the exercise series is completed or upon request.
+- **Visual Immersion:**
+  A modular **Avatar System** generates dynamic portraits based on character pools. By layering heads (with automatic skin tone detection), clothing, hair, glasses, and headsets, varied and appropriate conversation partners are created each time you start.
 
 ### User Experience Highlights
 
@@ -167,6 +174,7 @@ The application combines a static frontend with a server-side proxy (for API key
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g., hosted on **GitHub Pages**.
 - **Architecture**: Modular structure based on **Separation of Concerns**. Clear distinction between UI management, API communication, and utility logic.
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is necessary because API keys must never be exposed in client-side code (JavaScript).
+- **Modular Graphics System:** The representation of partners is handled via an "Avatar Stack" (CSS Grid). Images are combined at runtime to represent different skin tones, accessories, and animations (blinking, mouth movements).
 - **Security (CORS):** The proxy should only accept requests from the **Origin** where the web app is running (e.g., `https://ryanaella.github.io`). Important: **Origin = Scheme + Domain**, not the path (i.e., not `.../dialogue_lab/`).
 - **Interfaces:** Uses the native **Web Speech API** for audio input and output (local/browser-side processing).
 - **Robust Networking**: Usage of `AbortController` to prevent race conditions during concurrent API requests.
@@ -176,7 +184,8 @@ The application combines a static frontend with a server-side proxy (for API key
 - `index.html`: UI / Layout.
 - `src/js/`:
   - `config.js`: Central runtime configuration (Proxy URL, model, temperatures).
-  - `utils.js`: Central utility functions for text parsing, speech output cleaning, and transcript generation.
+  - `profiles.js`: Central database for character pools, layer sets, and role assignments.
+  - `utils.js`: Central utility functions for text parsing, speech output cleaning, transcript generation, and safe filename conversion (`slugify`).
   - `api.js`: Abstraction layer for data exchange, cache management, and parallel resource loading.
   - `ui.js`: Modular UI manager for dynamic rendering, event binding, and multimedia integration (TTS/STT).
   - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
@@ -259,6 +268,7 @@ The script receives the payload from the frontend, adds the Authorization header
 Every push to a branch triggers an automated deployment:
 
 - **Main Branch:** Main version under the root URL.
+- **Feature Branches:** Automatically deployed to subdirectories (e.g., `.../feature-xyz/`), enabling parallel testing of features.
 
 ## 7. Adding a New Scenario
 
