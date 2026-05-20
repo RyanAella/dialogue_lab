@@ -128,6 +128,17 @@ export const Utils = {
   },
 
   /**
+   * Erzeugt einen sicheren Dateinamen aus einem Titel
+   */
+  slugify(text) {
+    if (!text) return "";
+    return text
+      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "_");
+  },
+
+  /**
    * Bereitet Text für die Sprachausgabe vor (entfernt Markdown und Regieanweisungen)
    */
   cleanTextForSpeech(text) {

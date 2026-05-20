@@ -1,5 +1,6 @@
 import { API } from "./api.js";
 import { APP_CONFIG } from "./config.js";
+import { getProfilePool } from "./profiles.js";
 import { UI } from "./ui.js";
 import { Utils } from "./utils.js";
 
@@ -276,6 +277,17 @@ async function loadContent(exerciseId) {
     STATE.config.shortInstruction =
       data.shortInstruction || "Bearbeite die Aussage.";
 
+    // Update Avatar Display Name
+    const nameEl = document.getElementById("partner-name-display");
+    if (nameEl) nameEl.textContent = STATE.config.roleName;
+
+    // Passendes Character-Profil finden und initialisieren
+    const profileKey = data.roleLabel || STATE.config.roleName;
+    const profilePool = getProfilePool(profileKey);
+
+    // initAvatar wählt nun zufällig ein Set aus dem Pool (Array) aus
+    UI.initAvatar(profilePool);
+
     if (isTransform) {
       // Load transformation statements specifically
       const resp = await fetch(`${exConfig.sourceFile}?t=${Date.now()}`);
@@ -360,9 +372,9 @@ function downloadCurrentTranscript() {
       : UI.elements.scenarioSelect;
 
   if (activeSelect && activeSelect.selectedIndex > 0) {
-    scenarioTitle = activeSelect.options[activeSelect.selectedIndex].text;
-    scenarioTitle = scenarioTitle.replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "").trim(); // Sonderzeichen entfernen, Umlaute und Bindestriche behalten
-    scenarioTitle = scenarioTitle.replace(/\s+/g, "_"); // Leerzeichen durch Unterstriche ersetzen
+    scenarioTitle = Utils.slugify(
+      activeSelect.options[activeSelect.selectedIndex].text,
+    );
   }
   if (scenarioTitle) filenameParts.push(scenarioTitle);
 
@@ -574,7 +586,7 @@ async function handleFeedback() {
  */
 async function startApp() {
   await loadExercises();
-  UI.init();
+  UI.init(getProfilePool("default"));
   setupEventListeners();
   await initializeCurrentMode();
 }
