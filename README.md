@@ -10,6 +10,7 @@ Das **Lab für Sozioinformatik: Simulation Lab** ist eine interaktive Web-Anwend
 ### Kernfunktionen dieser Edition
 
 - **Interaktive Simulationen (Rollenspiel):** Tauche in realistische Szenarien ein. Ein KI-Gegenüber reagiert dynamisch auf deine Eingaben, während ein optionaler **KI-Mentor** im Hintergrund wertvolles Feedback zu deiner Strategie gibt.
+- **Optimiertes Responsive Layout:** Die Anwendung ist für Desktop- und Laptop-Auflösungen optimiert. Der Charakter-Avatar wird auf größeren Bildschirmen neben dem Inhalt fixiert, während er auf mobilen Geräten platzsparend in die Header-Sektion wandert.
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung.
@@ -21,7 +22,7 @@ Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum S
 - **Frontend:** Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript).
 - **Backend-Proxy:** Ein serverseitiges Skript (z.B. PHP `chat.php`), das die API-Keys kapselt.
 - **Sicherheit (CORS):** Der Proxy akzeptiert nur Anfragen vom definierten **Origin** der Web-App (z.B. `https://ryanaella.github.io`).
-- **KI-Modell:** OpenAI (Konfigurationswerte werden zentral in der `config.js` verwaltet).
+- **KI-Modell:** OpenAI (Konfigurationswerte werden zentral in der `src/js/config.js` verwaltet).
 
 ## 3. Repository-Dateistruktur
 
@@ -32,6 +33,7 @@ Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum S
   - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
   - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
   - `app.js`: Zentrale Anwendungslogik und State-Management.
+  - `profiles.js`: Definition der Charakter-Pools und Grafik-Layer.
 - `src/data/`: `exercises.json` als zentrale Konfiguration.
 - `scenarios/`: Szenariodateien.
 - `prompts/`: Unterordner für `system/`, `partner/` und `mentor/`.
@@ -94,6 +96,7 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 1. **Frontend:** Repository auf GitHub Pages hosten.
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
 3. **Konfiguration:** Die `PROXY_URL` in `src/js/config.js` an den Pfad deines Proxy-Skripts anpassen.
+4. **Wichtig für GitHub Pages:** Da GitHub Pages auf Linux-Servern läuft, ist das Dateisystem **case-sensitive**. Achte strikt darauf, dass Dateinamen im Code exakt so geschrieben werden wie im Dateisystem. Vermeide Leerzeichen in Dateinamen (nutze stattdessen `snake_case`).
 
 ### Multi-Branch Deployment
 
@@ -113,6 +116,7 @@ Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 1. Szenario-Dateien unter `scenarios/simulations/` bearbeiten (Inhalt und GUI Instruction).
 2. Prompt-Dateien in `prompts/` (system, partner, mentor) anpassen.
 3. Falls neue Szenarien hinzugefügt werden, `exercises.json` aktualisieren.
+4. **Grafiken:** Neue Avatare im Ordner `src/assets/character/` ablegen. Dateinamen dürfen keine Leerzeichen enthalten und sollten kleingeschrieben werden, um Fehler beim Deployment zu vermeiden.
 
 ---
 
@@ -132,6 +136,7 @@ The **Socio-Informatics Lab: Simulation Lab** is an interactive web application 
 ### Core Features of this Edition
 
 - **Interactive Simulations (Roleplay):** Immerse yourself in realistic scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable background feedback on your strategy.
+- **Optimized Responsive Layout:** The application is optimized for desktop and laptop resolutions. The character avatar is fixed next to the content on larger screens, while it moves to the header section on mobile devices to save space.
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with optimized prosody brings dialogues to life. (Tip: Microsoft Edge offers particularly human-like voices!)
 - **Track Your Progress:** Use the **Transcript Export** feature to save the entire conversation history, including the briefing, as a structured text file with a single click—perfect for self-reflection.
@@ -149,11 +154,12 @@ The application uses a static frontend combined with a server-side proxy to prot
 
 - `index.html`: UI / Layout.
 - `src/js/`:
-  - `config.js`: Central runtime configuration (proxy URL, model, temperatures).
+  - `config.js`: Central runtime configuration (Proxy URL, model, temperatures).
   - `utils.js`: Central utility functions for text parsing, speech output cleaning, and transcript generation.
   - `api.js`: Abstraction layer for data exchange, cache management, and parallel resource loading.
   - `ui.js`: Modular UI manager for dynamic rendering, event binding, and multimedia integration (TTS/STT).
   - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
+  - `profiles.js`: Definition of character pools and graphic layers.
 - `src/data/`: `exercises.json` as central configuration.
 - `scenarios/`: Scenario files.
 - `prompts/`: Prompt files in subfolders `system/`, `partner/`, `mentor/`, `trainers/`.
@@ -171,6 +177,13 @@ This file controls which simulations are available within the app.
     "type": "SIMULATION",
     "config": {
       "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
+    }
+  },
+  {
+    "id": "simulation_difficulties",
+    "type": "SIMULATION",
+    "config": {
+      "scenarioFile": "scenarios/simulations/difficulties_scenario.txt"
     }
   }
 ]
@@ -209,6 +222,7 @@ The script receives the payload from the frontend, adds the Authorization header
 1. **Frontend:** Host the repository on GitHub Pages.
 2. **Proxy:** Upload `chat.php` to a web server with HTTPS support.
 3. **Configuration:** Adjust the `PROXY_URL` in `src/js/config.js` to point to the actual path of your proxy script.
+4. **Important for GitHub Pages:** Since GitHub Pages runs on Linux servers, the file system is **case-sensitive**. Ensure that filenames in the code match the filesystem exactly. Avoid spaces in filenames (use `snake_case` instead).
 
 ### Multi-Branch Deployment
 
@@ -228,6 +242,7 @@ Every push to a branch triggers an automatic deployment:
 1. Edit scenario files in `scenarios/simulations/` (content and GUI instructions).
 2. Adjust prompt files in `prompts/` (system, partner, mentor).
 3. Update `exercises.json` whenever new scenarios are added.
+4. **Graphics:** Place new avatars in the `src/assets/character/` folder. Filenames must not contain spaces and should be lowercase to prevent deployment errors.
 
 ---
 

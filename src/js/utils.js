@@ -1,5 +1,5 @@
 /**
- * Utility functions for text parsing, formatting, and role detection.
+ * Utility functions for text parsing, formatting.
  */
 
 export const Utils = {
@@ -99,18 +99,6 @@ export const Utils = {
   },
 
   /**
-   * Shuffles an array using the Fisher-Yates algorithm.
-   */
-  shuffleArray(array) {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  },
-
-  /**
    * Generates a clean text transcript from chat history.
    */
   generateTranscript(history, partnerRoleName) {
@@ -124,26 +112,37 @@ export const Utils = {
   },
 
   /**
-   * Formats a date for filenames (YYYY-MM-DD).
+   * Formats a date for filenames (YYYY-MM-DD)
    */
   getFormattedDate() {
     return new Date().toISOString().slice(0, 10);
   },
 
   /**
-   * Prepares text for speech output (removes markdown and stage directions).
+   * Erzeugt einen sicheren Dateinamen aus einem Titel
+   */
+  slugify(text) {
+    if (!text) return "";
+    return text
+      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "_");
+  },
+
+  /**
+   * Bereitet Text für die Sprachausgabe vor (entfernt Markdown und Regieanweisungen)
    */
   cleanTextForSpeech(text) {
     return text
-      .replace(/\*\*|\*/g, "") // Remove bold/italic markdown
-      .replace(/\(.*?\)/g, "") // Remove (stage directions)
-      .replace(/\[.*?\]/g, "") // Remove [stage directions]
-      .replace(/\n\n+/g, ". ... . ") // Replace paragraphs with long pauses
-      .replace(/:\s*\n/g, ". ... . ") // Replace colon at line end with pause
-      .replace(/:\s*/g, ", ... ") // Replace colon in sentence with short pause
-      .replace(/\n/g, ". ") // Replace simple line breaks with period
-      .replace(/([.!?])\s+/g, "$1 ... ") // Small extra pause after punctuation
-      .replace(/\s+/g, " ") // Clean up excess whitespace
+      .replace(/\*\*|\*/g, "") // Entfernt fett/kursiv Markdown
+      .replace(/\(.*?\)/g, "") // Entfernt (Regieanweisungen)
+      .replace(/\[.*?\]/g, "") // Entfernt [Regieanweisungen]
+      .replace(/\n\n+/g, ". ... . ") // Ersetzt Absätze durch lange Pausen
+      .replace(/:\s*\n/g, ". ... . ") // Doppelpunkt am Ende durch Pause ersetzen
+      .replace(/:\s*/g, ", ... ") // Doppelpunkt im Satz durch kurze Pause ersetzen
+      .replace(/\n/g, ". ") // Einfache Umbrüche durch Punkt ersetzen
+      .replace(/([.!?])\s+/g, "$1 ... ") // Kleine Extra-Pause nach Satzzeichen
+      .replace(/\s+/g, " ") // Bereinigt überschüssige Leerzeichen
       .trim();
   },
 };

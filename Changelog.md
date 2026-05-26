@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.19.0] - 2026-05-26
+
+### Added
+
+- **Modular Avatar System**: Introduced `profiles.js` to manage character pools and multi-layered graphics (Base, Hair, Clothes, Hands, Glasses, Headset).
+- **Dynamic Character Randomization**: Implemented a two-tier randomization logic that first selects a character base from a pool and then randomizes individual traits for maximum variety.
+- **Skin Tone Consistency**: Added automatic skin tone detection from head assets (e.g., `_a.png`) to ensure matching hand graphics are selected.
+- **Accessory Layers**: Added support for optional layers including glasses and headsets, positioned correctly within the avatar stack.
+- **Portrait Focus Layout**: Implemented a 3:4 aspect ratio with `object-fit: cover` and `object-position: top` to focus on the character's upper body and face.
+- **In-Memory Caching**: Implemented a Map-based caching system in `api.js` with TTL logic to reduce redundant network requests for prompt files.
+
+### Changed
+
+- **Refactored Asset Management**: Moved character configurations from `config.js` to a dedicated `profiles.js` for better maintainability.
+- **Layered Chat Bubbles**: Updated the miniature avatars in the chat history to use the same layered rendering system as the main portrait for visual consistency.
+- **Fallback Mechanism**: Improved the role-to-profile mapping to use a robust fallback to a default pool if no specific role match is found.
+
+### Fixed
+
+- **Broken Image Fallback**: Implemented a transparent pixel fallback for missing or empty optional layers (like glasses or headsets) to prevent broken image icons.
+- **Portrait Scaling**: Fixed an issue where different head shapes caused inconsistent container sizes by standardizing the `avatar-stack` CSS.
+- **Z-Index Layering**: Corrected the rendering order to ensure hair correctly overlaps headsets and glasses where appropriate.
+- **Silent Abort**: Improved `api.js` to gracefully handle `AbortError` without triggering UI error states when requests are cancelled.
+- **Prompt Refinement**: Fixed a typo in `reporting_partner_prompt.txt` ("Kritikgespräch") to ensure professional AI persona behavior.
+
+---
+
 ## [0.17.0] - 2026-05-15
 
 ### Added

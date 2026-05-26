@@ -1,7 +1,3 @@
-/**
- * Global application configuration.
- * Centralizes API endpoints, AI model parameters, and data file paths.
- */
 export const APP_CONFIG = {
   PROXY_URL: "https://kite2.site/dialogue_lab/chat.php",
   MODEL: "gpt-4o",

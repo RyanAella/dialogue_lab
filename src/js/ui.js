@@ -1,10 +1,9 @@
-/**
- * UI Manager - Responsible for DOM elements and visual updates
- */
-
 import { Utils } from "./utils.js";
 
 // Constants for Voice Selection
+const TRANSPARENT_PIXEL =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
 const VOICE_KEYWORDS = {
   female: [
     "katja",
@@ -35,11 +34,153 @@ const VOICE_KEYWORDS = {
 };
 
 export const UI = {
-  // DOM Elemente
+  /** Centralized storage for DOM elements */
   elements: {},
 
+  /** Cached references to avatar image layers to avoid repeated DOM lookups */
+  _avatarNodes: { main: {}, mobile: {} },
+
+  /** Avatar Animation State */
+  _avatar: {
+    isTalking: false,
+    blinkTimeout: null,
+    mouthInterval: null,
+    config: {
+      // Wird über initAvatar(profile) befüllt
+    },
+    current: {
+      body: 0,
+      clothes: 0,
+      hair: 0,
+      hands: 0,
+      glasses: 0, // Neu: Brillen-Index
+      headset: 0, // Neu: Headset-Index
+      eyes: 0,
+      mouth: 0,
+      skinTone: "a",
+    },
+  },
+
+  initAvatar(data) {
+    if (!data) return;
+
+    // 1. Auswahl eines spezifischen Charakters aus dem Pool (Array), falls vorhanden
+    const selectedProfile = Array.isArray(data)
+      ? data[Math.floor(Math.random() * data.length)]
+      : data;
+
+    this._avatar.config = selectedProfile;
+    const av = this._avatar;
+    if (!av.config || !av.config.heads) return;
+
+    // 2. Randomisierung der Merkmale innerhalb des gewählten Charakters
+    const rand = (list) => Math.floor(Math.random() * list.length);
+
+    av.current.body = rand(av.config.heads);
+    av.current.clothes = rand(av.config.clothes);
+    av.current.hair = rand(av.config.hair);
+    av.current.glasses = rand(av.config.glasses); // Neu: Brille randomisieren
+    av.current.headset = rand(av.config.headset || [""]); // Neu: Headset randomisieren
+
+    // Hautfarbe vom Kopf extrahieren und passende Hände wählen
+    const headPath = av.config.heads[av.current.body];
+    const colorMatch = headPath.match(/_([a-d])\.png$/i);
+    av.current.skinTone = colorMatch ? colorMatch[1].toLowerCase() : "a";
+    const handPool = Array.isArray(av.config.hands)
+      ? av.config.hands
+      : av.config.hands[av.current.skinTone] || [];
+    av.current.hands = rand(handPool);
+
+    av.current.eyes = rand(av.config.eyesOpen);
+    av.current.mouth = rand(av.config.mouthsClosed);
+
+    this._updateAvatarImages();
+    this._startBlinkLoop();
+  },
+
+  _updateAvatarImages(eyesClosed = false, mouthOpen = false) {
+    const av = this._avatar;
+    if (!av.config || !av.config.heads) return;
+    const path = av.config.basePath;
+
+    const getSrc = (file) => (file && file.trim() !== "" ? path + file : "");
+
+    const bodySrc = getSrc(av.config.heads[av.current.body]);
+    const clothesSrc = getSrc(av.config.clothes[av.current.clothes]);
+    const hairSrc = getSrc(av.config.hair[av.current.hair]);
+    const glassesSrc = getSrc(av.config.glasses[av.current.glasses]); // Neu: Brillen-Source
+    const headsetSrc = getSrc(
+      av.config.headset ? av.config.headset[av.current.headset] : "",
+    ); // Neu: Headset-Source
+
+    const handPool = Array.isArray(av.config.hands)
+      ? av.config.hands
+      : av.config.hands[av.current.skinTone] || [];
+
+    const handsSrc = getSrc(handPool[av.current.hands]);
+    const eyeSrc = getSrc(
+      (eyesClosed ? av.config.eyesClosed : av.config.eyesOpen)[av.current.eyes],
+    );
+    const mouthSrc = getSrc(
+      (mouthOpen ? av.config.mouthsOpen : av.config.mouthsClosed)[
+        av.current.mouth
+      ],
+    );
+
+    const targets = [
+      { nodes: this._avatarNodes.main },
+      { nodes: this._avatarNodes.mobile },
+    ];
+
+    targets.forEach(({ nodes }) => {
+      if (nodes.body) nodes.body.src = bodySrc || TRANSPARENT_PIXEL;
+      if (nodes.clothes) nodes.clothes.src = clothesSrc || TRANSPARENT_PIXEL;
+      if (nodes.hair) nodes.hair.src = hairSrc || TRANSPARENT_PIXEL;
+      if (nodes.headset) nodes.headset.src = headsetSrc || TRANSPARENT_PIXEL;
+      if (nodes.glasses) nodes.glasses.src = glassesSrc || TRANSPARENT_PIXEL;
+      if (nodes.hands) nodes.hands.src = handsSrc || TRANSPARENT_PIXEL;
+      if (nodes.eyes) nodes.eyes.src = eyeSrc || TRANSPARENT_PIXEL;
+      if (nodes.mouth) nodes.mouth.src = mouthSrc || TRANSPARENT_PIXEL;
+    });
+  },
+
+  setAvatarTalking(talking) {
+    this._avatar.isTalking = talking;
+    if (
+      talking &&
+      !this._avatar.mouthInterval &&
+      this._avatar.config?.mouthsOpen
+    ) {
+      this._avatar.mouthInterval = setInterval(() => {
+        this._updateAvatarImages(false, Math.random() > 0.5);
+      }, 150);
+    } else if (!talking && this._avatar.mouthInterval) {
+      clearInterval(this._avatar.mouthInterval);
+      this._avatar.mouthInterval = null;
+      this._updateAvatarImages(false, false);
+    }
+  },
+
+  _startBlinkLoop() {
+    if (this._avatar.blinkTimeout) clearTimeout(this._avatar.blinkTimeout);
+    const blink = () => {
+      if (this._avatar.config?.eyesClosed)
+        this._updateAvatarImages(true, this._avatar.isTalking);
+      setTimeout(() => {
+        if (this._avatar.config?.eyesOpen)
+          this._updateAvatarImages(false, this._avatar.isTalking);
+        this._avatar.blinkTimeout = setTimeout(
+          blink,
+          2000 + Math.random() * 4000,
+        );
+      }, 150);
+    };
+    blink();
+  },
+
   /**
-   * Automatically binds DOM elements to the UI.elements object based on ID mapping
+   * Automatically binds DOM elements to the UI.elements object based on ID mapping.
+   * Converts kebab-case IDs to camelCase properties.
    */
   _bindElements() {
     const ids = [
@@ -47,6 +188,11 @@ export const UI = {
       "briefing-content",
       "chevron",
       "scenarios",
+      "exercises",
+      "scenario-section",
+      "exercise-section",
+      "mode-select",
+      "mode-badge",
       "chat-window",
       "start-info",
       "user-input",
@@ -56,19 +202,19 @@ export const UI = {
       "sidebar",
       "sidebar-overlay",
       "exercise-actions",
-      "restart-exercise-btn",
-      "revise-btn",
-      "next-exercise-btn",
-      "feedback-btn",
-      "reset-btn",
-      "loading-overlay",
-      "feedback-modal",
-      "reset-modal",
-      "auto-speak-toggle",
       "download-btn",
+      "feedback-btn",
+      "export-transcript-btn",
+      "modal-download-btn",
+      "reset-btn",
+      "auto-speak-toggle",
       "speak-briefing-btn",
       "stop-speech-btn",
       "mic-btn",
+      "loading-overlay",
+      "feedback-modal",
+      "reset-modal",
+      "partner-name-display",
     ];
     ids.forEach((id) => {
       const camelCaseId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
@@ -76,6 +222,28 @@ export const UI = {
     });
     // Remap specific non-standard IDs
     this.elements.scenarioSelect = this.elements.scenarios;
+    this.elements.exerciseSelect = this.elements.exercises;
+
+    // Cache Avatar Layer Nodes
+    const layers = [
+      "body",
+      "eyes",
+      "mouth",
+      "glasses",
+      "hair",
+      "headset",
+      "clothes",
+      "hands",
+    ];
+    layers.forEach((layer) => {
+      const camelLayer = layer.charAt(0).toUpperCase() + layer.slice(1);
+      this._avatarNodes.main[layer] = document.getElementById(
+        `partner-${layer}`,
+      );
+      this._avatarNodes.mobile[layer] = document.getElementById(
+        `partner-${layer}-mobile`,
+      );
+    });
   },
 
   updateSidebarVisibility(mode) {
@@ -146,11 +314,11 @@ export const UI = {
 
   /**
    * Displays a typing indicator bubble in the chat.
-   * @param {string} roleName - The name of the role that is typing.
-   * @returns {void}
    */
   showTypingIndicator(roleName) {
     this.hideTypingIndicator(); // Ensure no duplicates
+    this.setAvatarTalking(true);
+
     const wrapper = document.createElement("div");
     wrapper.id = "typing-indicator";
     wrapper.className =
@@ -175,6 +343,7 @@ export const UI = {
 
   hideTypingIndicator() {
     document.getElementById("typing-indicator")?.remove();
+    this.setAvatarTalking(false);
   },
 
   /**
@@ -182,24 +351,42 @@ export const UI = {
    */
   _createAvatar(sender, { roleName = "Partner" }) {
     const avatar = document.createElement("div");
-    const isFemale = sender !== "user" && roleName.toLowerCase().endsWith("in");
-
-    avatar.className = `flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 ${
-      sender === "user"
-        ? "w-8 h-8 rounded-full bg-blue-700 text-white border-2 border-blue-400"
-        : isFemale
-          ? "w-12 h-16 rounded-xl bg-white border-2 border-white overflow-hidden"
-          : "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white"
-    }`;
 
     if (sender === "user") {
+      avatar.className =
+        "flex items-center justify-center text-xs shadow-sm flex-shrink-0 mt-1 w-8 h-8 rounded-full bg-blue-700 text-white border-2 border-blue-400";
       avatar.textContent = "DU";
-    } else if (isFemale) {
-      const img = document.createElement("img");
-      img.src = "src/assets/grafik.png";
-      img.className = "w-full h-full object-cover";
-      avatar.appendChild(img);
+      return avatar;
+    }
+
+    // Partner Avatar: Nutzt das Layer-System (Avatar-Stack)
+    const av = this._avatar;
+    if (av.config && av.config.heads) {
+      avatar.className =
+        "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm";
+      const path = av.config.basePath;
+
+      // Die wichtigsten Layer für die kleine Vorschau
+      const layers = [
+        av.config.heads[av.current.body],
+        av.config.eyesOpen[av.current.eyes],
+        av.config.mouthsClosed[av.current.mouth],
+        av.config.glasses ? av.config.glasses[av.current.glasses] : null,
+        av.config.hair[av.current.hair],
+        av.config.headset ? av.config.headset[av.current.headset] : null,
+        av.config.clothes[av.current.clothes],
+      ];
+
+      layers.forEach((file) => {
+        if (file && file.trim() !== "") {
+          const img = document.createElement("img");
+          img.src = path + file;
+          avatar.appendChild(img);
+        }
+      });
     } else {
+      avatar.className =
+        "w-8 h-8 rounded-full bg-gray-300 text-gray-600 border-2 border-white flex items-center justify-center text-xs flex-shrink-0 mt-1";
       avatar.textContent = roleName.substring(0, 2).toUpperCase();
     }
     return avatar;
@@ -216,8 +403,8 @@ export const UI = {
     const container = document.createElement("div");
     container.className =
       sender === "user"
-        ? "flex flex-col items-end message-animate"
-        : "flex flex-col items-start message-animate";
+        ? "flex flex-col items-end w-full"
+        : "flex flex-col items-start w-full";
 
     const styleMap = {
       user: {
@@ -238,8 +425,7 @@ export const UI = {
       },
     };
 
-    // Simplified styleKey as isIchMode is no longer a factor in specialized version
-    const styleKey = sender === "user" ? sender : messageType;
+    const styleKey = isIchMode && sender !== "user" ? messageType : sender;
     const config = styleMap[styleKey] || styleMap.partner;
 
     // Create Label with Speech Button
@@ -250,7 +436,7 @@ export const UI = {
 
     const speakBtn = document.createElement("button");
     speakBtn.className =
-      "hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5 speak-button"; // Added speak-button class
+      "hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5";
     speakBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z" clip-rule="evenodd" /></svg>`;
     speakBtn.onclick = () => this.speak(text, config.label, speakBtn);
     nameLabel.appendChild(speakBtn);
@@ -266,19 +452,36 @@ export const UI = {
     return container;
   },
 
-  /**
-   * Toggles visibility of exercise action buttons.
-   * @param {boolean} visible - Whether the actions should be visible.
-   */
   setExerciseActionsVisible(visible) {
     this.elements.exerciseActions?.classList.toggle("hidden", !visible);
   },
 
   /**
-   * Updates the user input field and send button state.
-   * @param {boolean} disabled - Whether the input should be disabled.
-   * @param {string} placeholder - The placeholder text for the input field.
+   * Handles all UI transitions when a user starts an interaction
    */
+  prepareForInteraction() {
+    const { briefingContent, chevron, startInfo } = this.elements;
+
+    // Collapse briefing and hide initial info
+    if (briefingContent) briefingContent.classList.add("hidden");
+    if (chevron) chevron.style.transform = "rotate(90deg)";
+    if (startInfo) startInfo.classList.add("hidden");
+  },
+
+  setModeBadge(mode) {
+    const { modeBadge } = this.elements;
+    if (!modeBadge) return;
+    if (mode === "transformation") {
+      modeBadge.textContent = "Modus: Übungen";
+      modeBadge.className =
+        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
+    } else {
+      modeBadge.textContent = "Modus: Simulationen";
+      modeBadge.className =
+        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
+    }
+  },
+
   updateInputUI(disabled, placeholder) {
     const { userInput, sendBtn, micBtn } = this.elements;
     const micDisabled = disabled || !this._voiceSupported;
@@ -299,54 +502,44 @@ export const UI = {
     if (!disabled) userInput.classList.add("bg-slate-50");
   },
 
-  /**
-   * Toggles the briefing content visibility.
-   * @param {boolean} expanded - Whether the briefing should be shown.
-   */
-  setBriefingExpanded(expanded) {
-    const { briefingContent, chevron } = this.elements;
-    if (!briefingContent) return;
-    briefingContent.classList.toggle("hidden", !expanded);
-    if (chevron) {
-      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
-    }
-  },
-
-  init() {
+  init(defaultProfile) {
     // Bind all DOM elements to UI.elements before setting up logic
     this._bindElements();
+
+    // Init Avatar on load
+    if (defaultProfile) this.initAvatar(defaultProfile);
 
     if (this.elements.speakBriefingBtn) {
       this.elements.speakBriefingBtn.onclick = (e) => {
         e.stopPropagation();
         this.speak(
-          this.elements.briefingContent.innerText,
+          this.elements.briefingContent.innerText, // Briefing content
           "Briefing",
           e.currentTarget,
         );
       };
     }
 
-    /**
-     * Stop button in the sidebar.
-     */
+    // Stop button in the sidebar
     if (this.elements.stopSpeechBtn) {
       this.elements.stopSpeechBtn.onclick = () => {
         window.speechSynthesis.cancel();
         if (this.elements.autoSpeakToggle) {
           this.elements.autoSpeakToggle.checked = false;
-          // Event auslösen, damit app.js den STATE.ttsEnabled auf false setzt
+          // Trigger event so that app.js sets STATE.ttsEnabled to false
           this.elements.autoSpeakToggle.dispatchEvent(new Event("change"));
         }
       };
     }
 
     this.initVoiceInput();
+
+    // Ensure voices are loaded (crucial for Chrome)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => this._getBestVoice(true);
+    }
   },
 
-  /**
-   * Initializes the Web Speech API for voice input.
-   */
   initVoiceInput() {
     const { micBtn, userInput } = this.elements;
     if (!micBtn) return;
@@ -368,7 +561,7 @@ export const UI = {
 
     recognition.onstart = () => {
       this._isListening = true;
-      micBtn.classList.add("text-red-600", "animate-pulse");
+      micBtn.classList.add("text-red-600", "animate-pulse"); // Visual feedback for listening
       this.updateStatus("loading", "Ich höre zu...");
     };
 
@@ -399,11 +592,54 @@ export const UI = {
   },
 
   /**
-   * Handles text-to-speech output.
-   * @param {string} text - The text to speak.
-   * @param {string} roleName - The role associated with the text (e.g., 'Briefing', 'Partner', 'Mentor').
-   * @param {HTMLElement} [btnElement=null] - The button element that triggered the speech, for visual feedback.
+   * Internal helper to find the best German voice
    */
+  _getBestVoice(isFemale) {
+    const voices = window.speechSynthesis.getVoices();
+    const germanVoices = voices.filter((v) => v.lang.startsWith("de"));
+    if (germanVoices.length === 0)
+      return voices.find((v) => v.lang.startsWith("de")) || null;
+
+    const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
+
+    // 1. High Quality Match
+    let voice = germanVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      const isHQ = VOICE_KEYWORDS.highQuality.some((k) => name.includes(k));
+      return isHQ && keywords.some((k) => name.includes(k));
+    });
+
+    // 2. Gender Match Fallback
+    if (!voice) {
+      voice = germanVoices.find((v) =>
+        keywords.some((k) => v.name.toLowerCase().includes(k)),
+      );
+    }
+
+    // 3. Any German Fallback
+    return voice || germanVoices[0];
+  },
+
+  _showBrowserRecommendation() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes("firefox")) {
+      this.updateStatus(
+        "info",
+        "Tipp: Für bessere Stimmen nutze Chrome oder Edge.",
+      );
+    } else if (ua.includes("chrome") && !ua.includes("edge")) {
+      this.updateStatus(
+        "info",
+        "Tipp: In Edge gibt es noch natürlichere Neural-Stimmen.",
+      );
+    } else if (ua.includes("edge")) {
+      this.updateStatus(
+        "info",
+        "Perfekt! Edge hat die besten kostenlosen Stimmen.",
+      );
+    }
+  },
+
   speak(text, roleName, btnElement = null) {
     if (!window.speechSynthesis) return;
 
@@ -418,113 +654,75 @@ export const UI = {
 
     let cleanedText = Utils.cleanTextForSpeech(text);
 
-    // Ein finales Satzzeichen erzwingen, falls keines da ist
+    // Force a final punctuation mark if none is present
     if (!/[.!?]$/.test(cleanedText)) {
       cleanedText += ".";
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
-    let voices = window.speechSynthesis.getVoices();
-
-    // Fallback: If voices are not loaded yet, try to wait or use default
-    if (!voices || voices.length === 0) voices = [];
-
-    const isFemale =
+    // Priority: 1. explicit gender from the generated profile, 2. heuristic based on the name
+    let isFemale =
       roleName?.toLowerCase().endsWith("in") ||
       roleName?.toLowerCase().includes("mitarbeiterin");
-
     const isMentor =
       roleName?.toLowerCase().includes("mentor") ||
       roleName?.toLowerCase().includes("feedback");
 
-    const germanVoices = voices.filter((v) => v.lang.startsWith("de"));
-
-    // Find optimal voice using predefined keywords
-    let voice = germanVoices.find((v) => {
-      const name = v.name.toLowerCase();
-      const isHighQuality = VOICE_KEYWORDS.highQuality.some((k) =>
-        name.includes(k),
-      );
-
-      const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
-      const match = keywords.some((k) => name.includes(k));
-
-      return isHighQuality && match;
-    });
-    // 2. BROWSER-CHECK: Optimale Stimmen finden
-    if (!voice) {
-      // Browser-spezifische Hinweise für beste Qualität
-      const userAgent = navigator.userAgent.toLowerCase();
-      let recommendation = "";
-
-      if (userAgent.includes("firefox")) {
-        recommendation = "Tipp: Für bessere Stimmen nutze Chrome oder Edge.";
-      } else if (userAgent.includes("chrome") && !userAgent.includes("edge")) {
-        recommendation =
-          "Tipp: In Edge gibt es noch natürlichere Neural-Stimmen.";
-      } else if (userAgent.includes("edge")) {
-        recommendation = "Perfekt! Edge hat die besten kostenlosen Stimmen.";
-      }
-
-      if (recommendation) {
-        this.updateStatus("info", recommendation);
-      }
-
-      // Fallback auf normale Systemstimmen mit erweiterter Suche
-      voice = germanVoices.find((v) => {
-        const name = v.name.toLowerCase();
-        const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
-        return keywords.some((k) => name.includes(k));
-      });
+    if (this._avatar.config?.gender) {
+      isFemale = this._avatar.config.gender === "female";
     }
 
-    // 3. Fallbacks
-    if (!voice) voice = germanVoices[0];
-    if (!voice) voice = voices.find((v) => v.lang.startsWith("de"));
-
+    const voice = this._getBestVoice(isFemale);
     if (voice) utterance.voice = voice;
+
+    // Only show tip if we didn't find a high-quality (neural) voice
+    if (!voice?.name.toLowerCase().includes("neural")) {
+      this._showBrowserRecommendation();
+    }
+
     utterance.lang = "de-DE";
 
     const isNeural = voice?.name.toLowerCase().includes("neural");
 
-    // Dynamisches Voice-Tweaking für natürlichere Sprache
+    // Dynamic voice tweaking for more natural speech
     if (isMentor) {
-      // Der Mentor spricht ruhiger, autoritärer und etwas gesetzter
+      // The mentor speaks calmer, more authoritative and a bit more composed
       utterance.rate = isNeural ? 0.88 : 0.85;
       utterance.pitch = 0.95;
     } else {
-      // Der Partner spricht natürlicher/etwas schneller
+      // The partner speaks more naturally/a bit faster
       utterance.rate = isNeural ? 0.95 : 0.9;
       utterance.pitch = isFemale ? 1.05 : 0.98;
     }
 
-    // Verbesserte Parameter für natürlichere Aussprache
-    utterance.volume = 0.9; // Etwas leiser für natürlicheren Klang
-    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimale Variation für natürlicherkeit
+    // Improved parameters for more natural pronunciation
+    utterance.volume = 0.9; // Slightly quieter for more natural sound
+    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimal variation for naturalness
 
     if (btnElement) {
-      utterance.onstart = () =>
+      utterance.onstart = () => {
         btnElement.classList.add(
           "text-blue-600",
           "animate-pulse",
           "opacity-100",
         );
+        this.setAvatarTalking(true);
+      };
       utterance.onend = () => {
         btnElement.classList.remove(
           "text-blue-600",
           "animate-pulse",
           "opacity-100",
         );
-        // Status nach dem Sprechen wieder auf Standard setzen
-        setTimeout(() => this.updateStatus("default", "Bereit"), 3000);
+        this.setAvatarTalking(false);
+        // Reset status to default after speaking
+        setTimeout(() => this.updateStatus("default", "Ready"), 3000);
       };
       utterance.onerror = utterance.onend;
     }
 
-    /**
-     * Introduce a tiny delay to prevent the "swallowing" of the first letters,
-     * which often occurs due to the asynchronous processing of cancel() and speak().
-     */
+    // Introduce a tiny delay to prevent "swallowing" the first letters,
+    // which often occur due to the asynchronous processing of cancel() and speak().
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
     }, 100);
@@ -542,6 +740,17 @@ export const UI = {
       </div>
     `;
     this.elements.briefingContent.classList.remove("hidden");
+  },
+
+  /**
+   * Toggles the briefing content visibility.
+   * @param {boolean} expanded - Whether the briefing should be shown.
+   */
+  setBriefingExpanded(expanded) {
+    const { briefingContent, chevron } = this.elements;
+    briefingContent?.classList.toggle("hidden", !expanded);
+    if (chevron)
+      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
   },
 
   toggleMobileMenu(forceClose = false) {
@@ -593,12 +802,17 @@ window.closeResetModal = () => {
   setTimeout(() => modal.classList.add("hidden"), 200);
 };
 
-window.updateSubtitleText = () => {
+/**
+ * Updates the subtitle responsive text.
+ */
+export const updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
   if (!sub) return;
-  const base = "Lies das Briefing und starte das Gespräch mit einer Nachricht."; // Specialized text
+  const base = "Wähle ein Szenario aus, um zu starten.";
   sub.innerHTML =
     window.innerWidth < 1024
-      ? `${base} <br><span class="text-xs text-blue-600">Übung wechseln? Klicke oben rechts auf ☰</span>` // Adapted hint
+      ? `${base} <br><span class="text-xs text-blue-600">Szenario wechseln? Klicke oben rechts auf ☰</span>`
       : base;
 };
+
+window.updateSubtitleText = updateSubtitleText;
