@@ -1,0 +1,148 @@
+/**
+ * Utility functions for text parsing, formatting.
+ */
+
+export const Utils = {
+  appendText(container, text) {
+    container.appendChild(document.createTextNode(text));
+  },
+
+  renderBoldMarkdownWithLineBreaks(container, text) {
+    container.textContent = "";
+    container.style.whiteSpace = "pre-wrap";
+
+    // Very small markdown subset: **bold**
+    const parts = String(text).split(/\*\*(.*?)\*\*/g);
+    parts.forEach((part, index) => {
+      if (!part) return;
+
+      if (index % 2 === 1) {
+        const strong = document.createElement("strong");
+        strong.textContent = part;
+        strong.className = "font-bold text-slate-900";
+        container.appendChild(strong);
+        return;
+      }
+
+      this.appendText(container, part);
+    });
+  },
+
+  parseMetaValue(metaSection, key) {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = metaSection.match(
+      new RegExp(`^\\s*${escapedKey}:\\s*(.+)$`, "mi"),
+    );
+    return match?.[1].trim() || "";
+  },
+
+  parseScenarioContent(rawScenario) {
+    const parts = rawScenario.split(/###\s*GUI INSTRUCTION\s*###/i);
+    if (parts.length < 2) {
+      throw new Error(
+        "Szenarioformat ungültig: Marker '### GUI INSTRUCTION ###' fehlt.",
+      );
+    }
+
+    const metaSection = parts[0];
+    const instructionSection = parts
+      .slice(1)
+      .join("### GUI INSTRUCTION ###")
+      .trim();
+
+    if (!instructionSection) {
+      throw new Error("Szenarioformat ungültig: GUI Instruction ist leer.");
+    }
+
+    return {
+      metaSection,
+      instructionSection,
+    };
+  },
+
+  /**
+   * Attempts to extract the role name from the text or label.
+   */
+  extractRoleName(instructionSection, roleLabel) {
+    if (roleLabel) return this.formatRoleName(roleLabel);
+
+    // Heuristic from "Your Task" section
+    const taskSection =
+      instructionSection.split(/Deine Aufgabe/i)[1] || instructionSection;
+    const roleRegex = /mit\s+(?:der|dem|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/i;
+    const autoRoleMatch = taskSection.match(roleRegex);
+
+    let roleName = "Teammitglied";
+    if (autoRoleMatch) {
+      roleName = autoRoleMatch[1].trim();
+    } else {
+      const fallbackRegex =
+        /\b(?:ein|einen|eine|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/;
+      const fallbackMatch = taskSection.match(fallbackRegex);
+      if (fallbackMatch) roleName = fallbackMatch[1].trim();
+    }
+
+    // Normalization
+    if (
+      roleName.toLowerCase().startsWith("mitarbeitend") &&
+      !roleName.toLowerCase().endsWith("in")
+    ) {
+      roleName = "Mitarbeiter";
+    }
+
+    return this.formatRoleName(roleName);
+  },
+
+  formatRoleName(name) {
+    if (!name) return "";
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  },
+
+  /**
+   * Generates a clean text transcript from chat history.
+   */
+  generateTranscript(history, partnerRoleName) {
+    return history
+      .filter((m) => m.role !== "system")
+      .map((m) => {
+        const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
+        return `${role}: ${m.content}`;
+      })
+      .join("\n\n");
+  },
+
+  /**
+   * Formats a date for filenames (YYYY-MM-DD)
+   */
+  getFormattedDate() {
+    return new Date().toISOString().slice(0, 10);
+  },
+
+  /**
+   * Erzeugt einen sicheren Dateinamen aus einem Titel
+   */
+  slugify(text) {
+    if (!text) return "";
+    return text
+      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "_");
+  },
+
+  /**
+   * Bereitet Text für die Sprachausgabe vor (entfernt Markdown und Regieanweisungen)
+   */
+  cleanTextForSpeech(text) {
+    return text
+      .replace(/\*\*|\*/g, "") // Entfernt fett/kursiv Markdown
+      .replace(/\(.*?\)/g, "") // Entfernt (Regieanweisungen)
+      .replace(/\[.*?\]/g, "") // Entfernt [Regieanweisungen]
+      .replace(/\n\n+/g, ". ... . ") // Ersetzt Absätze durch lange Pausen
+      .replace(/:\s*\n/g, ". ... . ") // Doppelpunkt am Ende durch Pause ersetzen
+      .replace(/:\s*/g, ", ... ") // Doppelpunkt im Satz durch kurze Pause ersetzen
+      .replace(/\n/g, ". ") // Einfache Umbrüche durch Punkt ersetzen
+      .replace(/([.!?])\s+/g, "$1 ... ") // Kleine Extra-Pause nach Satzzeichen
+      .replace(/\s+/g, " ") // Bereinigt überschüssige Leerzeichen
+      .trim();
+  },
+};
