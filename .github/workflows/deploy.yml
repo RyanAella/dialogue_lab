@@ -3,8 +3,10 @@ name: Multi-Branch Deployment to GitHub Pages
 # Trigger the workflow on pushes to specific branches
 on:
   push:
-    # Trigger für alle Branches
-    branches: ["**"]
+    # Correct syntax to trigger on ALL branches
+    branches:
+      - "*"
+      - "**/*"
   # Allow manual triggering from the Actions tab
   workflow_dispatch:
 
