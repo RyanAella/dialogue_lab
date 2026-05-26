@@ -37,16 +37,16 @@ jobs:
         id: subpath
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "SUB_PATH=." >> $GITHUB_ENV
+            echo "SUB_PATH=." >> $GITHUB_OUTPUT
           else
             # Convert branch name to lowercase and replace special characters with hyphens
             CLEAN_NAME=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
-            echo "SUB_PATH=$CLEAN_NAME" >> $GITHUB_ENV
+            echo "SUB_PATH=$CLEAN_NAME" >> $GITHUB_OUTPUT
           fi
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: public # The folder containing our artifacts
-          target-folder: ${{ env.SUB_PATH }} # Deployment destination path
+          target-folder: ${{ steps.subpath.outputs.SUB_PATH }} # Deployment destination path
           branch: gh-pages # The branc
