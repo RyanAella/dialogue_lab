@@ -16,12 +16,7 @@ const STATE = {
   },
   chatHistory: [],
   currentMode: "roleplay",
-  exerciseIndex: 0,
-  exerciseAwaitingRevision: false,
-  ichBotschaftStatements: [],
-  ichBotschaftFeedbackPrompt: "",
   allExercises: [],
-  allScenarios: [],
   ttsEnabled: false,
 };
 
@@ -29,27 +24,19 @@ const STATE = {
  * Resets UI and state for a mode change
  */
 function resetAppForMode(mode) {
-  STATE.currentMode = mode;
+  STATE.currentMode = "roleplay";
   STATE.chatHistory = [];
-  STATE.exerciseIndex = 0;
-  STATE.exerciseAwaitingRevision = false;
-  STATE.answers = [];
   UI.elements.chatWindow.innerHTML = "";
   UI.elements.chatWindow.closest("main")?.scrollTo(0, 0);
   UI.elements.briefingContent.classList.remove("hidden");
   UI.setBriefingExpanded(true);
-  UI.updateSidebarVisibility(mode);
-  UI.setModeBadge(mode);
+  UI.setModeBadge();
 
-  // Centralized button reset
-  const isTransform = mode === "transformation";
   if (UI.elements.feedbackBtn) {
     UI.elements.feedbackBtn.classList.remove("hidden");
     UI.elements.feedbackBtn.disabled = true;
     UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
-    UI.elements.feedbackBtn.innerHTML = isTransform
-      ? "<span>📊</span> Auswertung erstellen"
-      : "<span>📊</span> Feedback erhalten";
+    UI.elements.feedbackBtn.innerHTML = "<span>📊</span> Feedback erhalten";
   }
 
   if (UI.elements.exportTranscriptBtn)
@@ -78,53 +65,6 @@ async function loadExercises() {
     UI.elements.briefingContent.innerHTML = `<p class="text-red-500 p-4">Fehler: ${error.message}</p>`;
     UI.updateInputUI(true, "Fehler beim Laden.");
   }
-}
-
-function getTransformationProgressText() {
-  return STATE.transformationStatements.length
-    ? `Aussage ${STATE.exerciseIndex + 1} von ${STATE.transformationStatements.length}`
-    : "Bereit";
-}
-
-function restartTransformationExercise() {
-  if (STATE.currentMode !== "transformation") return;
-
-  STATE.exerciseIndex = 0;
-  STATE.transformationStatements = Utils.shuffleArray(
-    STATE.transformationStatements,
-  );
-  STATE.exerciseAwaitingRevision = false;
-  STATE.chatHistory = [];
-  STATE.answers = [];
-  UI.elements.chatWindow.innerHTML = "";
-  UI.setExerciseActionsVisible(false);
-
-  // Reset sidebar buttons
-  UI.elements.feedbackBtn.classList.remove("hidden");
-  UI.elements.feedbackBtn.disabled = true;
-  UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
-  UI.elements.feedbackBtn.innerHTML = "<span>📊</span> Auswertung erstellen";
-
-  if (UI.elements.exportTranscriptBtn) {
-    UI.elements.exportTranscriptBtn.classList.add("hidden");
-  }
-  if (UI.elements.resetBtn) {
-    UI.elements.resetBtn.disabled = true;
-    UI.elements.resetBtn.classList.add("opacity-50", "cursor-not-allowed");
-  }
-
-  const statement = STATE.transformationStatements[STATE.exerciseIndex];
-  const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
-  STATE.chatHistory.push({ role: "assistant", content: taskText });
-  UI.appendMessage(taskText, "partner", {
-    roleName: STATE.config.roleName,
-    messageType: "task",
-    isIchMode: true,
-    shouldScroll: false,
-  });
-  if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
-  UI.updateInputUI(false, "Eingabe...");
-  UI.updateStatus("idle", `${getTransformationProgressText()} (restarted)`);
 }
 
 /**
@@ -158,39 +98,6 @@ async function switchToRoleplayMode() {
   document.getElementById("main-subtitle").textContent =
     "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
   UI.updateStatus("idle", "Simulationen aktiv");
-}
-
-async function switchToTransformationMode(
-  exerciseId = "ich_botschaften_basis",
-) {
-  resetAppForMode("transformation");
-  UI.elements.briefingContent.textContent = "Übung wird geladen...";
-  UI.updateInputUI(true, "Wähle eine Übung...");
-
-  await initExerciseDropdown();
-
-  const transformationExercises = STATE.allExercises.filter(
-    (ex) => ex.type === "TRANSFORMATION",
-  );
-  if (transformationExercises.length > 0) {
-    // If no exercise is currently selected, or selected one is not a transformation, select the first transformation
-    if (
-      !UI.elements.exerciseSelect?.value ||
-      !transformationExercises.some(
-        (ex) => ex.id === UI.elements.exerciseSelect?.value,
-      )
-    ) {
-      UI.elements.exerciseSelect.value = exerciseId;
-    }
-
-    // Exercise Dropdown Event Listener wird die Übung laden
-    UI.elements.exerciseSelect.dispatchEvent(new Event("change"));
-  } else {
-    UI.updateStatus("idle", "Keine Transformations-Übungen verfügbar.");
-    UI.updateInputUI(true, "Keine Übungen verfügbar.");
-  }
-
-  UI.updateStatus("idle", "Transformationen aktiv");
 }
 
 // =========================================================
@@ -234,21 +141,12 @@ async function initScenarioDropdown() {
   );
 }
 
-async function initExerciseDropdown() {
-  await initDropdown(
-    "TRANSFORMATION",
-    UI.elements.exerciseSelect,
-    "Wähle eine Übung...",
-  );
-}
-
 /**
  * Unified loader for both Roleplay and Transformation content
  */
 async function loadContent(exerciseId) {
   const exercise = STATE.allExercises.find((ex) => ex.id === exerciseId);
   if (!exercise) return;
-  const isTransform = exercise.type === "TRANSFORMATION";
   const exConfig = exercise.config;
 
   UI.updateStatus("loading", "Lade...");
@@ -257,19 +155,17 @@ async function loadContent(exerciseId) {
   STATE.chatHistory = [];
 
   try {
-    const fileToLoad = isTransform
-      ? exConfig.instructionFile
-      : exConfig.scenarioFile;
+    const fileToLoad = exConfig.scenarioFile;
     const data = await API.fetchCompleteScenario(fileToLoad);
 
     // Common metadata
-    STATE.config.roleName = isTransform
-      ? data.roleLabel || "Trainer"
-      : Utils.extractRoleName(data.instructionSection, data.roleLabel);
+    STATE.config.roleName = Utils.extractRoleName(
+      data.instructionSection,
+      data.roleLabel,
+    );
     STATE.config.systemPrompt = data.prompts.system;
     STATE.config.partnerPrompt = data.prompts.partner;
     STATE.config.mentorPrompt = data.prompts.mentor;
-    STATE.transformationFeedbackPrompt = data.prompts.trainer;
     STATE.config.shortInstruction =
       data.shortInstruction || "Bearbeite die Aussage.";
 
@@ -284,38 +180,9 @@ async function loadContent(exerciseId) {
     // initAvatar wählt nun zufällig ein Set aus dem Pool (Array) aus
     UI.initAvatar(profilePool);
 
-    if (isTransform) {
-      // Load transformation statements specifically
-      const resp = await fetch(`${exConfig.sourceFile}?t=${Date.now()}`);
-      const text = await resp.text();
-      STATE.transformationStatements = Utils.shuffleArray(
-        text
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter((l) => l && !l.startsWith("#")),
-      );
-
-      document.getElementById("main-subtitle").textContent =
-        `${data.title}: ${STATE.config.shortInstruction}`;
-
-      // Auto-post first statement
-      const first = STATE.transformationStatements[0];
-      const taskText = `"${first}"\n\n${STATE.config.shortInstruction}`;
-      STATE.chatHistory.push({ role: "assistant", content: taskText });
-      UI.appendMessage(taskText, "partner", {
-        roleName: STATE.config.roleName,
-        messageType: "task",
-        isIchMode: true,
-        shouldScroll: false,
-      });
-
-      // Bei Übungen das Briefing einklappen, um Platz für den Charakter/Task zu machen
-      UI.prepareForInteraction();
-    } else {
-      // Roleplay specific UI updates
-      UI.elements.startInfo.classList.remove("hidden");
-      UI.elements.chatWindow.appendChild(UI.elements.startInfo);
-    }
+    // Roleplay specific UI updates
+    UI.elements.startInfo.classList.remove("hidden");
+    UI.elements.chatWindow.appendChild(UI.elements.startInfo);
 
     Utils.renderBoldMarkdownWithLineBreaks(
       UI.elements.briefingContent,
@@ -324,14 +191,8 @@ async function loadContent(exerciseId) {
 
     if (STATE.ttsEnabled) UI.speak(data.instructionSection, "Briefing");
     UI.elements.chevron.style.transform = "rotate(0deg)";
-    UI.updateInputUI(
-      false,
-      isTransform ? "Eingabe..." : `Nachricht an ${STATE.config.roleName}...`,
-    );
-    UI.updateStatus(
-      "idle",
-      isTransform ? getTransformationProgressText() : "Bereit",
-    );
+    UI.updateInputUI(false, `Nachricht an ${STATE.config.roleName}...`);
+    UI.updateStatus("idle", "Bereit");
   } catch (error) {
     console.error("Content loading failed:", error);
     UI.elements.briefingContent.innerHTML =
@@ -389,10 +250,8 @@ async function handleSend() {
   const userVal = UI.elements.userInput.value.trim();
   if (!userVal) return;
 
-  const isRoleplay = STATE.currentMode === "roleplay";
-
   UI.prepareForInteraction();
-  UI.appendMessage(userVal, "user", { isIchMode: !isRoleplay });
+  UI.appendMessage(userVal, "user", { isIchMode: false });
   if (STATE.ttsEnabled) UI.speak(userVal, "Ich");
   STATE.chatHistory.push({ role: "user", content: userVal });
   UI.elements.userInput.value = "";
@@ -406,139 +265,42 @@ async function handleSend() {
     }
   });
 
-  if (isRoleplay) {
-    // Simulation Mode: Real-time conversation
-    UI.updateInputUI(true, "Sende...");
-    UI.updateStatus("loading", "Antworten...");
-    UI.showTypingIndicator(STATE.config.roleName);
-
-    if (STATE.chatHistory.filter((m) => m.role === "system").length === 0) {
-      STATE.chatHistory.unshift({
-        role: "system",
-        content: `${STATE.config.systemPrompt}\n\n${STATE.config.partnerPrompt}`,
-      });
-    }
-
-    try {
-      const data = await API.callChatApi(STATE.chatHistory, {
-        proxyUrl: APP_CONFIG.PROXY_URL,
-        model: APP_CONFIG.MODEL,
-        temperature: APP_CONFIG.CHAT_TEMPERATURE,
-      });
-      if (!data) return;
-      UI.hideTypingIndicator();
-      const botResp = data.choices[0].message.content;
-      UI.appendMessage(botResp, "partner", { roleName: STATE.config.roleName });
-      STATE.chatHistory.push({ role: "assistant", content: botResp });
-      if (STATE.ttsEnabled) UI.speak(botResp, STATE.config.roleName);
-      UI.updateStatus("idle", "Bereit");
-    } catch (e) {
-      UI.hideTypingIndicator();
-      UI.updateStatus("error", e.message);
-    } finally {
-      UI.updateInputUI(false, `Message to ${STATE.config.roleName}...`);
-      UI.elements.userInput.focus();
-    }
-  } else {
-    // Transformation Mode: Sequential collection
-    STATE.answers.push({
-      statement: STATE.transformationStatements[STATE.exerciseIndex],
-      answer: userVal,
-    });
-
-    if (STATE.exerciseIndex < STATE.transformationStatements.length - 1) {
-      STATE.exerciseIndex++;
-      const nextStatement = STATE.transformationStatements[STATE.exerciseIndex];
-      const taskText = `"${nextStatement}"\n\n${STATE.config.shortInstruction}`;
-
-      setTimeout(() => {
-        UI.appendMessage(taskText, "partner", {
-          roleName: STATE.config.roleName,
-          isIchMode: true,
-          messageType: "task",
-        });
-        if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
-        UI.updateStatus("idle", getTransformationProgressText());
-        UI.updateInputUI(false, "Eingabe...");
-        UI.elements.userInput.focus();
-      }, 400);
-    } else {
-      finalizeExercise();
-    }
-  }
-}
-
-/**
- * Ends the exercise and requests the AI overall evaluation.
- * Can be triggered automatically at the end or manually by the user.
- */
-async function finalizeExercise() {
-  // Prevent multiple triggers or triggers without answers
-  if (STATE.answers.length === 0) return;
-
-  UI.updateInputUI(true, "Wird ausgewertet...");
-  UI.updateStatus("loading", "Trainer erstellt Gesamtauswertung...");
+  // Simulation Mode: Real-time conversation
+  UI.updateInputUI(true, "Sende...");
+  UI.updateStatus("loading", "Antworten...");
   UI.showTypingIndicator(STATE.config.roleName);
 
+  if (STATE.chatHistory.filter((m) => m.role === "system").length === 0) {
+    STATE.chatHistory.unshift({
+      role: "system",
+      content: `${STATE.config.systemPrompt}\n\n${STATE.config.partnerPrompt}`,
+    });
+  }
+
   try {
-    const combinedResults = STATE.answers
-      .map(
-        (item, idx) =>
-          `Übung ${idx + 1}:\nAusgangslage: "${item.statement}"\nDeine Antwort: "${item.answer}"`,
-      )
-      .join("\n\n---\n\n");
-
-    const messages = [
-      {
-        role: "system",
-        content:
-          STATE.transformationFeedbackPrompt +
-          "\n\nDer Nutzer hat die Übungsreihe abgeschlossen. Bitte gib zu jeder Antwort ein kurzes Feedback und schließe mit einem motivierenden Fazit ab.",
-      },
-      { role: "user", content: combinedResults },
-    ];
-
-    const data = await API.callChatApi(messages, {
+    const data = await API.callChatApi(STATE.chatHistory, {
       proxyUrl: APP_CONFIG.PROXY_URL,
       model: APP_CONFIG.MODEL,
       temperature: APP_CONFIG.CHAT_TEMPERATURE,
     });
-
     if (!data) return;
     UI.hideTypingIndicator();
-
-    const feedback = data.choices[0].message.content;
-    UI.appendMessage(feedback, "partner", {
-      roleName: STATE.config.roleName,
-      isIchMode: true,
-      messageType: "feedback",
-    });
-    STATE.chatHistory.push({ role: "assistant", content: feedback });
-
-    // Swap buttons: Hide feedback, show export
-    UI.elements.feedbackBtn.classList.add("hidden");
-    if (UI.elements.exportTranscriptBtn) {
-      UI.elements.exportTranscriptBtn.classList.remove("hidden");
-    }
-    UI.updateStatus("idle", "Übung beendet");
+    const botResp = data.choices[0].message.content;
+    UI.appendMessage(botResp, "partner", { roleName: STATE.config.roleName });
+    STATE.chatHistory.push({ role: "assistant", content: botResp });
+    if (STATE.ttsEnabled) UI.speak(botResp, STATE.config.roleName);
+    UI.updateStatus("idle", "Bereit");
   } catch (e) {
     UI.hideTypingIndicator();
-    UI.updateStatus("error", "Fehler bei der Auswertung");
-    UI.updateInputUI(false, "Eingabe...");
+    UI.updateStatus("error", e.message);
+  } finally {
+    UI.updateInputUI(false, `Message to ${STATE.config.roleName}...`);
+    UI.elements.userInput.focus();
   }
 }
 
 async function handleFeedback() {
   if (STATE.chatHistory.length === 0) return;
-
-  if (STATE.currentMode === "transformation") {
-    await finalizeExercise();
-    return;
-  } else if (STATE.currentMode === "roleplay") {
-    // In roleplay mode, the feedback button triggers mentor analysis
-    // The logic for this is already present below
-    // No 'return' here, let it fall through to the mentor analysis
-  }
 
   UI.elements.loadingOverlay.classList.remove("hidden");
   UI.updateStatus("loading", "Mentor analyzing...");
@@ -597,30 +359,12 @@ function setupEventListeners() {
   UI.elements.scenarioSelect.addEventListener("change", (e) =>
     loadContent(e.target.value),
   );
-  UI.elements.exerciseSelect?.addEventListener("change", (e) =>
-    loadContent(e.target.value),
-  );
 
   UI.elements.sendBtn.addEventListener("click", handleSend);
   UI.elements.userInput.addEventListener(
     "keypress",
     (e) => e.key === "Enter" && handleSend(),
   );
-
-  UI.elements.modeSelect?.addEventListener("change", async (e) => {
-    const selectedMode = e.target.value;
-    STATE.currentMode = selectedMode;
-
-    if (selectedMode === "transformation") {
-      await initExerciseDropdown();
-      const firstEx = STATE.allExercises.find(
-        (ex) => ex.type === "TRANSFORMATION",
-      );
-      if (firstEx) await switchToTransformationMode(firstEx.id);
-    } else {
-      await switchToRoleplayMode();
-    }
-  });
 
   UI.elements.feedbackBtn.addEventListener("click", handleFeedback);
   UI.elements.exportTranscriptBtn?.addEventListener(
@@ -635,42 +379,6 @@ function setupEventListeners() {
   // Sidebar Reset Button logic
   UI.elements.resetBtn?.addEventListener("click", () => {
     UI.openResetModal();
-  });
-
-  UI.elements.nextExerciseBtn?.addEventListener("click", () => {
-    if (STATE.currentMode === "transformation") {
-      if (STATE.exerciseIndex >= STATE.transformationStatements.length - 1) {
-        UI.appendMessage("Alle erledigt!", "partner", { isIchMode: true });
-        return;
-      }
-      STATE.exerciseIndex++;
-      STATE.exerciseAwaitingRevision = false;
-      UI.setExerciseActionsVisible(false);
-      const statement = STATE.transformationStatements[STATE.exerciseIndex];
-      const taskText = `"${statement}"\n\n${STATE.config.shortInstruction}`;
-      UI.appendMessage(taskText, "partner", {
-        roleName: STATE.config.roleName,
-        messageType: "task",
-        isIchMode: true,
-      });
-      if (STATE.ttsEnabled) UI.speak(taskText, STATE.config.roleName);
-      UI.updateStatus("idle", getTransformationProgressText());
-      UI.updateInputUI(false, "Eingabe...");
-      UI.elements.userInput.focus();
-    }
-  });
-
-  UI.elements.reviseBtn?.addEventListener("click", () => {
-    UI.setExerciseActionsVisible(false);
-    STATE.exerciseAwaitingRevision = false;
-    UI.updateInputUI(false, "Eingabe korrigieren...");
-    UI.elements.userInput.focus();
-  });
-
-  UI.elements.restartExerciseBtn?.addEventListener("click", () => {
-    if (STATE.currentMode === "transformation") {
-      restartTransformationExercise();
-    }
   });
 
   UI.elements.briefingHeader.addEventListener("click", () => {
@@ -719,18 +427,9 @@ function setupEventListeners() {
  * Determines and activates the initial mode based on UI state
  */
 async function initializeCurrentMode() {
-  STATE.currentMode = UI.elements.modeSelect?.value || "roleplay";
+  STATE.currentMode = "roleplay";
 
   await initScenarioDropdown();
-  if (STATE.currentMode === "transformation") {
-    const firstEx = STATE.allExercises.find(
-      (ex) => ex.type === "TRANSFORMATION",
-    );
-    if (firstEx) {
-      await switchToTransformationMode(firstEx.id);
-    }
-    return;
-  }
   await switchToRoleplayMode();
 }
 

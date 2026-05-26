@@ -188,10 +188,7 @@ export const UI = {
       "briefing-content",
       "chevron",
       "scenarios",
-      "exercises",
       "scenario-section",
-      "exercise-section",
-      "mode-select",
       "mode-badge",
       "chat-window",
       "start-info",
@@ -201,7 +198,6 @@ export const UI = {
       "mobile-menu-btn",
       "sidebar",
       "sidebar-overlay",
-      "exercise-actions",
       "download-btn",
       "feedback-btn",
       "export-transcript-btn",
@@ -222,7 +218,6 @@ export const UI = {
     });
     // Remap specific non-standard IDs
     this.elements.scenarioSelect = this.elements.scenarios;
-    this.elements.exerciseSelect = this.elements.exercises;
 
     // Cache Avatar Layer Nodes
     const layers = [
@@ -248,11 +243,6 @@ export const UI = {
 
   updateSidebarVisibility(mode) {
     const isTransformation = mode === "transformation";
-    this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
-    this.elements.exerciseSection?.classList.toggle(
-      "hidden",
-      !isTransformation,
-    );
   },
 
   updateStatus(type, message) {
@@ -468,18 +458,12 @@ export const UI = {
     if (startInfo) startInfo.classList.add("hidden");
   },
 
-  setModeBadge(mode) {
+  setModeBadge() {
     const { modeBadge } = this.elements;
     if (!modeBadge) return;
-    if (mode === "transformation") {
-      modeBadge.textContent = "Modus: Übungen";
-      modeBadge.className =
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
-    } else {
-      modeBadge.textContent = "Modus: Simulationen";
-      modeBadge.className =
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
-    }
+    modeBadge.textContent = "Modus: Simulationen";
+    modeBadge.className =
+      "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
   },
 
   updateInputUI(disabled, placeholder) {
