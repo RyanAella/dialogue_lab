@@ -2,7 +2,7 @@
 
 ## 1. Das Projekt auf einen Blick
 
-Das **Lab für Sozioinformatik: Gesprächstraining** ist eine interaktive Web-Anwendung, die die Brücke zwischen psychologischer Gesprächsführung und moderner KI schlägt. Nutzer können hier in einem geschützten Raum schwierige Gesprächssituationen trainieren oder gezielt an ihrer Ausdrucksweise arbeiten.
+Das **Lab für Sozioinformatik: Simulation Lab** ist eine interaktive Web-Anwendung, die die Brücke zwischen psychologischer Gesprächsführung und moderner KI schlägt. Nutzer können hier in einem geschützten Raum komplexe Gesprächssituationen trainieren und direktes Feedback erhalten.
 
 ### Kernfunktionen & Modi
 
@@ -37,21 +37,29 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 
 ## 3. Repository-Dateistruktur
 
-- `index.html`: UI / Layout.
-- `src/js/`:
-  - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-  - `profiles.js`: Zentrale Datenbank für Charakter-Pools, Layer-Sets und Rollenzuweisungen.
-  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe, Protokoll-Generierung und sichere Dateinamenskonvertierung (`slugify`).
-  - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
-  - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
-  - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
-- `src/data/`: `exercises.json` als zentrale Konfiguration.
-- `scenarios/`: Szenariodateien.
-- `prompts/`: Prompt-Dateien in Unterordnern `system/`, `partner/`, `mentor/`, `trainers/`.
+### Kern-Module (`src/js/`)
 
-Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
+| Modul             | Verantwortung                                                                              |
+| :---------------- | :----------------------------------------------------------------------------------------- |
+| **`app.js`**      | **Controller**: Orchestriert den Programmfluss und initialisiert die Services.             |
+| **`ui.js`**       | **View-Manager**: Verwaltet DOM-Elemente, Event-Listener und das Chat-Rendering.           |
+| **`avatar.js`**   | **Visuals**: Steuert das Multi-Layer-System, Animationen (Blinken) und Lippensynchronität. |
+| **`speech.js`**   | **Audio-Service**: Kapselt TTS (Sprachausgabe) und STT (Diktierfunktion).                  |
+| **`chat.js`**     | **State-Manager**: Hält die Gesprächshistorie und bereitet Transkripte vor.                |
+| **`scenario.js`** | **Data-Service**: Lädt Übungspools und verwaltet das aktive Szenario-State.                |
+| **`api.js`**      | **Network**: Handling der API-Anfragen mit integriertem Caching.                           |
+| **`utils.js`**    | **Helpers**: Statische Funktionen für Markdown-Parsing und Text-Bereinigung.               |
+| **`profiles.js`** | **Assets**: Konfiguration der Charakter-Pools und Grafik-Ebenen.                           |
+
+### Daten & Inhalte
+
+- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen.
+- `scenarios/`: Markdown-ähnliche Szenario-Beschreibungen und GUI-Instruktionen.
+- `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Szenarien und Konfiguration
+
+Dieser Abschnitt beschreibt, wie die Inhalte für die Simulationen strukturiert und konfiguriert werden. Die App trennt strikt zwischen Code und Inhalt, um eine einfache Wartung und Erweiterung zu ermöglichen.
 
 ### 4.1 Die `exercises.json`
 
@@ -77,9 +85,9 @@ Diese Datei steuert alle verfügbaren Inhalte und unterscheidet zwischen den Typ
 ]
 ```
 
-### 4.2 Szenarioformat (`*.txt`)
+### 4.2 Szenarioformat & Prompt-Mapping (`*.txt`)
 
-Jedes Szenario besteht aus einem **META-Block** und der **GUI Instruction**.
+Jedes Szenario besteht aus einem **META-Block** (Referenzierung der Prompts) und der **GUI Instruction** (Briefing für den Nutzer).
 
 **Variante A: Simulationen (Gesprächstraining)**
 
@@ -128,15 +136,22 @@ Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
 ## 7. Neues Szenario hinzufügen
 
-1. Prompt-Dateien (`.txt`) in den entsprechenden `prompts/`-Unterordnern erstellen.
-2. Szenario-Datei in `scenarios/` anlegen (inkl. META-Block und GUI Instruction).
-3. Neuen Eintrag in `exercises.json` hinzufügen.
+1. **Prompts erstellen:** Drei Dateien in `prompts/system/`, `prompts/partner/` und `prompts/mentor/` anlegen.
+2. **Szenario-File:** Eine `.txt`-Datei in `scenarios/simulations/` erstellen. Im `### META ###`-Block auf die neuen Prompt-Dateinamen verweisen (ohne Endung).
+3. **Pool erweitern:** Die neue ID und den Pfad in `src/data/exercises.json` registrieren.
+4. **Avatar-Mapping:** Sicherstellen, dass der `role_label` in der META-Sektion einem Key in `profiles.js` entspricht, um den korrekten Charakter-Pool zu laden.
 
 ## 8. Inhalte pflegen
 
-1. Szenario-Dateien unter `scenarios/` bearbeiten (Inhalt und GUI Instruction).
-2. Prompt-Dateien in `prompts/` anpassen.
-3. Falls neue Szenarien hinzugefügt werden, `exercises.json` aktualisieren.
+### Best Practices für Prompts
+
+- **Vermeide Meta-Talk:** Die KI-Partner sollten nie über "Phasen" oder "Prompts" sprechen, sondern immer in der Rolle bleiben.
+- **Einwand-Rotation:** Hinterlege im Partner-Prompt eine Liste mit 4-5 Einwänden, damit Gespräche variieren.
+- **Strukturierte Mentor-Ausgabe:** Nutze im Mentor-Prompt klare Trenner (z.B. `---`), damit die `utils.js` das Feedback sauber im Modal darstellen kann.
+
+### Grafiken & Assets
+
+Neue Avatare müssen im Ordner `src/assets/Character/` abgelegt werden. Achte auf das Suffix für Hauttöne (z.B. `head_v1_a.png` bis `head_v1_d.png`), damit das automatische Matching der Hände funktioniert.
 
 ---
 
@@ -148,13 +163,13 @@ _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht d
 
 ## 1. Project at a Glance
 
-The **Socio-Informatics Lab: Conversation Training** is an interactive web application that bridges the gap between psychological counseling techniques and modern AI. It provides users with a safe space to practice difficult conversation scenarios or specifically refine their communication style.
+The **Socio-Informatics Lab: Dialogue Lab** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. Users can practice complex conversation scenarios in a safe environment and receive direct feedback.
 
 ### Core Functions & Modes
 
 The application offers two specialized training environments:
 
-- **Interactive Simulations (Roleplay):** Dive into realistic conversation scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable background feedback on your strategy.
+- **Interactive Simulations (Roleplay):** Immerse yourself in realistic conversation scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable background feedback on your strategy.
 - **Targeted Exercises (Transformation):** This mode focuses on technique. Practice rephrasing accusations into constructive messages (e.g., "I-statements" or positive assumptions). The AI generates a comprehensive overall evaluation of your phrasing after the exercise series is completed or upon request.
 - **Visual Immersion:**
   A modular **Avatar System** generates dynamic portraits based on character pools. By layering heads (with automatic skin tone detection), clothing, hair, glasses, and headsets, varied and appropriate conversation partners are created each time you start.
@@ -163,8 +178,8 @@ The application offers two specialized training environments:
 
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Visual Feedback:** An animated **typing indicator** signals when the AI is generating a response, enhancing the interactive feel.
-- **Natural Speech Feel:** Thanks to integrated **Text-to-Speech (TTS)** with optimized emphasis and automatic pauses at punctuation marks, dialogues come to life. A global **Stop Button** in the sidebar allows you to cancel the output immediately at any time. (Pro tip: Voices sound particularly human in Microsoft Edge!)
-- **Save Your Progress:** The **Protocol Export** allows you to save the entire conversation history, including the original briefing, as a structured text file (`[Mode]_[Title]_[Date].txt`) with one click—ideal for review or documenting learning progress.
+- **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with context-aware rate and pitch modulation creates lifelike dialogues. Optimized for Microsoft Edge (Neural Voices).
+- **Track Your Progress:** Use the **Transcript Export** feature to save the entire conversation history, including the briefing, as a structured text file (`[Mode]_[Title]_[Date].txt`) with a single click—perfect for review or documenting learning progress.
 - **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
 
 ## 2. Technical Architecture
@@ -176,22 +191,30 @@ The application combines a static frontend with a server-side proxy (for API key
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is necessary because API keys must never be exposed in client-side code (JavaScript).
 - **Modular Graphics System:** The representation of partners is handled via an "Avatar Stack" (CSS Grid). Images are combined at runtime to represent different skin tones, accessories, and animations (blinking, mouth movements).
 - **Security (CORS):** The proxy should only accept requests from the **Origin** where the web app is running (e.g., `https://ryanaella.github.io`). Important: **Origin = Scheme + Domain**, not the path (i.e., not `.../dialogue_lab/`).
-- **Interfaces:** Uses the native **Web Speech API** for audio input and output (local/browser-side processing).
+- **Interfaces:** Uses the native **Web Speech API** for audio input and output.
 - **Robust Networking**: Usage of `AbortController` to prevent race conditions during concurrent API requests.
 
 ## 3. Repository File Structure
 
-- `index.html`: UI / Layout.
-- `src/js/`:
-  - `config.js`: Central runtime configuration (Proxy URL, model, temperatures).
-  - `profiles.js`: Central database for character pools, layer sets, and role assignments.
-  - `utils.js`: Central utility functions for text parsing, speech output cleaning, transcript generation, and safe filename conversion (`slugify`).
-  - `api.js`: Abstraction layer for data exchange, cache management, and parallel resource loading.
-  - `ui.js`: Modular UI manager for dynamic rendering, event binding, and multimedia integration (TTS/STT).
-  - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
-- `src/data/`: `exercises.json` as central configuration.
-- `scenarios/`: Scenario files.
-- `prompts/`: Prompt files in subfolders `system/`, `partner/`, `mentor/`, `trainers/`.
+### Core Modules (`src/js/`)
+
+| Module            | Responsibility                                                                        |
+| :---------------- | :------------------------------------------------------------------------------------ |
+| **`app.js`**      | **Controller**: Orchestrates the application flow and initializes services.           |
+| **`ui.js`**       | **View-Manager**: Manages DOM elements, event listeners, and chat rendering.          |
+| **`avatar.js`**   | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-syncing. |
+| **`speech.js`**   | **Audio-Service**: Encapsulates TTS (Speech Output) and STT (Dictation).              |
+| **`chat.js`**     | **State-Manager**: Maintains conversation history and prepares transcripts.           |
+| **`scenario.js`** | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
+| **`api.js`**      | **Network**: Handles API requests with integrated caching.                            |
+| **`utils.js`**    | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
+| **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                      |
+
+### Data & Content
+
+- `src/data/exercises.json`: The central catalog of all available simulations.
+- `scenarios/`: Markdown-like scenario descriptions and GUI instructions.
+- `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`).
 
 > **Note:** A server-side proxy script like `chat.php` is **not necessarily part of this repository**. It can be stored separately on the server to ensure no secrets are committed to the repo.
 
@@ -233,6 +256,9 @@ title: Performance Review: Delayed Reporting
 system_prompt: reporting_system_prompt
 partner_prompt: reporting_partner_prompt
 mentor_prompt: reporting_mentor_prompt
+
+### GUI INSTRUCTION ###
+Here follows the briefing shown to the user before starting...
 ```
 
 **Variant B: Transformations (Exercise Mode)**
@@ -272,15 +298,22 @@ Every push to a branch triggers an automated deployment:
 
 ## 7. Adding a New Scenario
 
-1.  Create prompt files (`.txt`) in the corresponding `prompts/` subfolders.
-2.  Create a scenario file in `scenarios/` (including the META block and GUI Instruction).
-3.  Add a new entry to `exercises.json`.
+1.  **Create Prompts:** Add three files to `prompts/system/`, `prompts/partner/`, and `prompts/mentor/`.
+2.  **Scenario File:** Create a `.txt` file in `scenarios/simulations/`. Reference the new prompt filenames in the `### META ###` block (without extensions).
+3.  **Register Exercise:** Add the new ID and path to `src/data/exercises.json`.
+4.  **Avatar Mapping:** Ensure the `role_label` in the META section matches a key in `profiles.js` to load the correct character pool.
 
 ## 8. Content Maintenance
 
-1.  Edit scenario files under `scenarios/` (content and GUI Instruction).
-2.  Adjust prompt files in `prompts/`.
-3.  If new scenarios are added, update `exercises.json`.
+### Best Practices for Prompts
+
+- **Avoid Meta-Talk:** AI partners should never discuss "phases" or "prompts"; they must remain in character.
+- **Objection Rotation:** Include a list of 4-5 objections in the partner prompt to ensure variety across sessions.
+- **Structured Mentor Output:** Use clear separators (e.g., `---`) in the mentor prompt so `utils.js` can render the feedback cleanly in the modal.
+
+### Graphics & Assets
+
+Place new avatars in the `src/assets/Character/` folder. Use skin tone suffixes (e.g., `head_v1_a.png` to `head_v1_d.png`) to enable automatic hand graphic matching.
 
 ---
 

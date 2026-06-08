@@ -1,40 +1,59 @@
+import { Avatar } from "./avatar.js";
+import { Speech } from "./speech.js";
 import { Utils } from "./utils.js";
 
-// Constants for Voice Selection
-const TRANSPARENT_PIXEL =
-  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+/**
+ * @module UI
+ * Modular UI Manager for the Dialogue Lab.
+ * Handles dynamic rendering, DOM event binding, and multimedia integration (TTS/STT).
+ */
 
-const VOICE_KEYWORDS = {
-  female: [
-    "katja",
-    "maren",
-    "anna",
-    "zira",
-    "hedda",
-    "clara",
-    "julia",
-    "sabrina",
-    "monika",
-    "verena",
-    "elke",
-  ],
-  male: [
-    "stefan",
-    "conrad",
-    "kasper",
-    "killian",
-    "hans",
-    "gustav",
-    "florian",
-    "michael",
-    "markus",
-    "peter",
-  ],
-  highQuality: ["neural", "natural", "online", "premium", "enhanced"],
+/**
+ * Visual configurations for the status box to prevent re-allocation during updates.
+ */
+const STATUS_CONFIGS = {
+  loading: {
+    cls: "bg-blue-50 text-blue-700 border-blue-200",
+    dot: "bg-blue-500 animate-ping",
+  },
+  error: {
+    cls: "bg-red-50 text-red-700 border-red-200",
+    dot: "bg-red-500",
+  },
+  default: {
+    cls: "bg-slate-50 text-slate-600 border-slate-200",
+    dot: "bg-green-500",
+  },
+};
+
+/**
+ * Mapping of message senders/types to their respective visual styles and labels.
+ */
+const MESSAGE_STYLES = {
+  user: {
+    label: "Deine Antwort",
+    cls: "bg-blue-600 text-white rounded-tr-none",
+  },
+  partner: {
+    // label is dynamic (passed as roleName)
+    cls: "bg-white text-slate-800 border-slate-100 rounded-tl-none",
+  },
+  task: {
+    // label is dynamic (passed as roleName)
+    cls: "bg-sky-50 text-sky-900 border-sky-100 rounded-tl-none",
+  },
+  feedback: {
+    // label is dynamic (passed as roleName)
+    cls: "bg-indigo-50 text-indigo-900 border-indigo-100 rounded-tl-none",
+  },
 };
 
 export const UI = {
-  /** Centralized storage for DOM elements */
+  /**
+   * Centralized storage for DOM elements.
+   * Properties are populated during initialization.
+   * @type {Object.<string, HTMLElement>}
+   */
   elements: {},
 
   /** Cached references to avatar image layers to avoid repeated DOM lookups */
@@ -61,126 +80,19 @@ export const UI = {
     },
   },
 
+  /**
+   * Initializes the avatar character and randomizes its appearance.
+   * @param {Object|Object[]} data - A single character profile or a pool of profiles.
+   */
   initAvatar(data) {
-    if (!data) return;
-
-    // 1. Auswahl eines spezifischen Charakters aus dem Pool (Array), falls vorhanden
-    const selectedProfile = Array.isArray(data)
-      ? data[Math.floor(Math.random() * data.length)]
-      : data;
-
-    this._avatar.config = selectedProfile;
-    const av = this._avatar;
-    if (!av.config || !av.config.heads) return;
-
-    // 2. Randomisierung der Merkmale innerhalb des gewählten Charakters
-    const rand = (list) => Math.floor(Math.random() * list.length);
-
-    av.current.body = rand(av.config.heads);
-    av.current.clothes = rand(av.config.clothes);
-    av.current.hair = rand(av.config.hair);
-    av.current.glasses = rand(av.config.glasses); // Neu: Brille randomisieren
-    av.current.headset = rand(av.config.headset || [""]); // Neu: Headset randomisieren
-
-    // Hautfarbe vom Kopf extrahieren und passende Hände wählen
-    const headPath = av.config.heads[av.current.body];
-    const colorMatch = headPath.match(/_([a-d])\.png$/i);
-    av.current.skinTone = colorMatch ? colorMatch[1].toLowerCase() : "a";
-    const handPool = Array.isArray(av.config.hands)
-      ? av.config.hands
-      : av.config.hands[av.current.skinTone] || [];
-    av.current.hands = rand(handPool);
-
-    av.current.eyes = rand(av.config.eyesOpen);
-    av.current.mouth = rand(av.config.mouthsClosed);
-
-    this._updateAvatarImages();
-    this._startBlinkLoop();
-  },
-
-  _updateAvatarImages(eyesClosed = false, mouthOpen = false) {
-    const av = this._avatar;
-    if (!av.config || !av.config.heads) return;
-    const path = av.config.basePath;
-
-    const getSrc = (file) => (file && file.trim() !== "" ? path + file : "");
-
-    const bodySrc = getSrc(av.config.heads[av.current.body]);
-    const clothesSrc = getSrc(av.config.clothes[av.current.clothes]);
-    const hairSrc = getSrc(av.config.hair[av.current.hair]);
-    const glassesSrc = getSrc(av.config.glasses[av.current.glasses]); // Neu: Brillen-Source
-    const headsetSrc = getSrc(
-      av.config.headset ? av.config.headset[av.current.headset] : "",
-    ); // Neu: Headset-Source
-
-    const handPool = Array.isArray(av.config.hands)
-      ? av.config.hands
-      : av.config.hands[av.current.skinTone] || [];
-
-    const handsSrc = getSrc(handPool[av.current.hands]);
-    const eyeSrc = getSrc(
-      (eyesClosed ? av.config.eyesClosed : av.config.eyesOpen)[av.current.eyes],
-    );
-    const mouthSrc = getSrc(
-      (mouthOpen ? av.config.mouthsOpen : av.config.mouthsClosed)[
-        av.current.mouth
-      ],
-    );
-
-    const targets = [
-      { nodes: this._avatarNodes.main },
-      { nodes: this._avatarNodes.mobile },
-    ];
-
-    targets.forEach(({ nodes }) => {
-      if (nodes.body) nodes.body.src = bodySrc || TRANSPARENT_PIXEL;
-      if (nodes.clothes) nodes.clothes.src = clothesSrc || TRANSPARENT_PIXEL;
-      if (nodes.hair) nodes.hair.src = hairSrc || TRANSPARENT_PIXEL;
-      if (nodes.headset) nodes.headset.src = headsetSrc || TRANSPARENT_PIXEL;
-      if (nodes.glasses) nodes.glasses.src = glassesSrc || TRANSPARENT_PIXEL;
-      if (nodes.hands) nodes.hands.src = handsSrc || TRANSPARENT_PIXEL;
-      if (nodes.eyes) nodes.eyes.src = eyeSrc || TRANSPARENT_PIXEL;
-      if (nodes.mouth) nodes.mouth.src = mouthSrc || TRANSPARENT_PIXEL;
-    });
-  },
-
-  setAvatarTalking(talking) {
-    this._avatar.isTalking = talking;
-    if (
-      talking &&
-      !this._avatar.mouthInterval &&
-      this._avatar.config?.mouthsOpen
-    ) {
-      this._avatar.mouthInterval = setInterval(() => {
-        this._updateAvatarImages(false, Math.random() > 0.5);
-      }, 150);
-    } else if (!talking && this._avatar.mouthInterval) {
-      clearInterval(this._avatar.mouthInterval);
-      this._avatar.mouthInterval = null;
-      this._updateAvatarImages(false, false);
-    }
-  },
-
-  _startBlinkLoop() {
-    if (this._avatar.blinkTimeout) clearTimeout(this._avatar.blinkTimeout);
-    const blink = () => {
-      if (this._avatar.config?.eyesClosed)
-        this._updateAvatarImages(true, this._avatar.isTalking);
-      setTimeout(() => {
-        if (this._avatar.config?.eyesOpen)
-          this._updateAvatarImages(false, this._avatar.isTalking);
-        this._avatar.blinkTimeout = setTimeout(
-          blink,
-          2000 + Math.random() * 4000,
-        );
-      }, 150);
-    };
-    blink();
+    Avatar.setup(data);
   },
 
   /**
    * Automatically binds DOM elements to the UI.elements object based on ID mapping.
-   * Converts kebab-case IDs to camelCase properties.
+   * Converts kebab-case HTML IDs to camelCase JS properties.
+   * Also initializes Avatar node references.
+   * @private
    */
   _bindElements() {
     const ids = [
@@ -224,28 +136,20 @@ export const UI = {
     this.elements.scenarioSelect = this.elements.scenarios;
     this.elements.exerciseSelect = this.elements.exercises;
 
-    // Cache Avatar Layer Nodes
-    const layers = [
-      "body",
-      "eyes",
-      "mouth",
-      "glasses",
-      "hair",
-      "headset",
-      "clothes",
-      "hands",
-    ];
-    layers.forEach((layer) => {
-      const camelLayer = layer.charAt(0).toUpperCase() + layer.slice(1);
-      this._avatarNodes.main[layer] = document.getElementById(
-        `partner-${layer}`,
-      );
-      this._avatarNodes.mobile[layer] = document.getElementById(
-        `partner-${layer}-mobile`,
-      );
+    const mainNodes = {};
+    const mobileNodes = {};
+    Avatar.getLayers().forEach((layer) => {
+      mainNodes[layer] = document.getElementById(`partner-${layer}`);
+      mobileNodes[layer] = document.getElementById(`partner-${layer}-mobile`);
     });
+    Avatar.init(mainNodes, mobileNodes);
   },
 
+  /**
+   * Updates the sidebar visibility or layout based on the current application mode.
+   * @param {string} mode - The active mode (e.g., 'roleplay', 'transformation').
+   * @todo Implement logic for transformation mode if needed.
+   */
   updateSidebarVisibility(mode) {
     const isTransformation = mode === "transformation";
     this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
@@ -255,26 +159,16 @@ export const UI = {
     );
   },
 
+  /**
+   * Updates the global status box with a message and a colored visual indicator.
+   * @param {string} type - The status type ('loading', 'error', or 'default').
+   * @param {string} message - The text to display.
+   */
   updateStatus(type, message) {
     const { statusBox } = this.elements;
     if (!statusBox) return;
 
-    const configs = {
-      loading: {
-        cls: "bg-blue-50 text-blue-700 border-blue-200",
-        dot: "bg-blue-500 animate-ping",
-      },
-      error: {
-        cls: "bg-red-50 text-red-700 border-red-200",
-        dot: "bg-red-500",
-      },
-      default: {
-        cls: "bg-slate-50 text-slate-600 border-slate-200",
-        dot: "bg-green-500",
-      },
-    };
-
-    const config = configs[type] || configs.default;
+    const config = STATUS_CONFIGS[type] || STATUS_CONFIGS.default;
     const baseCls =
       "status-box p-3 rounded-xl border text-xs font-medium transition-all duration-300 flex items-center gap-2";
 
@@ -287,7 +181,14 @@ export const UI = {
   },
 
   /**
-   * Orchestrates the creation and addition of a message to the chat
+   * Creates and appends a new message bubble to the chat window.
+   * @param {string} text - The message content.
+   * @param {string} sender - Who sent the message ('user' or 'partner').
+   * @param {Object} [options] - Additional configuration.
+   * @param {string} [options.roleName] - Name to display for the partner (defaults to 'Partner').
+   * @param {boolean} [options.isIchMode] - Special formatting mode (defaults to false).
+   * @param {string} [options.messageType] - Visual style of the bubble (defaults to 'default').
+   * @param {boolean} [options.shouldScroll=true] - Whether to auto-scroll to bottom.
    */
   appendMessage(text, sender, options = {}) {
     const { chatWindow } = this.elements;
@@ -312,11 +213,12 @@ export const UI = {
   },
 
   /**
-   * Displays a typing indicator bubble in the chat
+   * Displays a typing indicator bubble in the chat.
+   * @param {string} roleName - The name of the character currently "typing".
    */
   showTypingIndicator(roleName) {
     this.hideTypingIndicator(); // Ensure no duplicates
-    this.setAvatarTalking(true);
+    Avatar.setTalking(true);
 
     const wrapper = document.createElement("div");
     wrapper.id = "typing-indicator";
@@ -340,13 +242,21 @@ export const UI = {
       ?.scrollTo(0, this.elements.chatWindow.scrollHeight);
   },
 
+  /**
+   * Removes the typing indicator and stops avatar talking animation.
+   */
   hideTypingIndicator() {
     document.getElementById("typing-indicator")?.remove();
-    this.setAvatarTalking(false);
+    Avatar.setTalking(false);
   },
 
   /**
-   * Internal helper to create the avatar element
+   * Internal helper to create the avatar visual for a message.
+   * For the user, it returns a simple circle; for the partner, it renders the layered stack.
+   * @param {string} sender - 'user' or 'partner'.
+   * @param {Object} options - Configuration object containing roleName.
+   * @returns {HTMLElement} The created avatar element.
+   * @private
    */
   _createAvatar(sender, { roleName = "Partner" }) {
     const avatar = document.createElement("div");
@@ -358,28 +268,16 @@ export const UI = {
       return avatar;
     }
 
-    // Partner Avatar: Nutzt das Layer-System (Avatar-Stack)
-    const av = this._avatar;
-    if (av.config && av.config.heads) {
+    // Partner Avatar: Uses the layer system (avatar stack)
+    if (Avatar.getConfig()) {
       avatar.className =
         "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm";
-      const path = av.config.basePath;
 
-      // Die wichtigsten Layer für die kleine Vorschau
-      const layers = [
-        av.config.heads[av.current.body],
-        av.config.eyesOpen[av.current.eyes],
-        av.config.mouthsClosed[av.current.mouth],
-        av.config.glasses ? av.config.glasses[av.current.glasses] : null,
-        av.config.hair[av.current.hair],
-        av.config.headset ? av.config.headset[av.current.headset] : null,
-        av.config.clothes[av.current.clothes],
-      ];
-
-      layers.forEach((file) => {
-        if (file && file.trim() !== "") {
+      Avatar.getLayers().forEach((layer) => {
+        const src = Avatar._getLayerSrc(layer);
+        if (src) {
           const img = document.createElement("img");
-          img.src = path + file;
+          img.src = src;
           avatar.appendChild(img);
         }
       });
@@ -392,7 +290,16 @@ export const UI = {
   },
 
   /**
-   * Internal helper to create the message content (label + bubble)
+   * Internal helper to create the message content container (label + bubble).
+   * Includes the text-to-speech trigger button.
+   * @param {string} text - Message text.
+   * @param {string} sender - 'user' or 'partner'.
+   * @param {Object} options - Configuration object.
+   * @param {string} options.messageType - Style key.
+   * @param {string} options.roleName - Label for the partner.
+   * @param {boolean} options.isIchMode - Formatting toggle.
+   * @returns {HTMLElement} The created message body container.
+   * @private
    */
   _createMessageBody(
     text,
@@ -405,39 +312,21 @@ export const UI = {
         ? "flex flex-col items-end w-full"
         : "flex flex-col items-start w-full";
 
-    const styleMap = {
-      user: {
-        label: "Deine Antwort",
-        cls: "bg-blue-600 text-white rounded-tr-none",
-      },
-      partner: {
-        label: roleName,
-        cls: "bg-white text-slate-800 border-slate-100 rounded-tl-none",
-      },
-      task: {
-        label: roleName,
-        cls: "bg-sky-50 text-sky-900 border-sky-100 rounded-tl-none",
-      },
-      feedback: {
-        label: roleName,
-        cls: "bg-indigo-50 text-indigo-900 border-indigo-100 rounded-tl-none",
-      },
-    };
-
     const styleKey = isIchMode && sender !== "user" ? messageType : sender;
-    const config = styleMap[styleKey] || styleMap.partner;
+    const config = MESSAGE_STYLES[styleKey] || MESSAGE_STYLES.partner;
+    const displayLabel = sender === "user" ? config.label : roleName;
 
     // Create Label with Speech Button
     const nameLabel = document.createElement("div");
     nameLabel.className =
       "text-xs text-gray-500 mb-1 px-1 flex items-center gap-1.5";
-    nameLabel.textContent = config.label;
+    nameLabel.textContent = displayLabel;
 
     const speakBtn = document.createElement("button");
     speakBtn.className =
       "hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5";
     speakBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z" clip-rule="evenodd" /></svg>`;
-    speakBtn.onclick = () => this.speak(text, config.label, speakBtn);
+    speakBtn.onclick = () => this.speak(text, displayLabel, speakBtn);
     nameLabel.appendChild(speakBtn);
 
     // Create Bubble
@@ -451,12 +340,16 @@ export const UI = {
     return container;
   },
 
+  /**
+   * Shows or hides additional exercise action buttons.
+   * @param {boolean} visible
+   */
   setExerciseActionsVisible(visible) {
     this.elements.exerciseActions?.classList.toggle("hidden", !visible);
   },
 
   /**
-   * Handles all UI transitions when a user starts an interaction
+   * Handles UI transitions when a user starts an interaction (collapses briefing).
    */
   prepareForInteraction() {
     const { briefingContent, chevron, startInfo } = this.elements;
@@ -467,6 +360,13 @@ export const UI = {
     if (startInfo) startInfo.classList.add("hidden");
   },
 
+  /**
+   * Updates the text content and visual styling of the mode badge element.
+   * Differentiates between 'transformation' (Exercises) and default (Simulations) modes.
+   *
+   * @param {string} mode - The active application mode (e.g., 'transformation', 'roleplay').
+   * @returns {void}
+   */
   setModeBadge(mode) {
     const { modeBadge } = this.elements;
     if (!modeBadge) return;
@@ -481,6 +381,12 @@ export const UI = {
     }
   },
 
+  /**
+   * Updates the state and appearance of input elements (User Input, Send, Mic).
+   * @param {boolean} disabled - Whether the inputs should be locked.
+   * @param {string} placeholder - The text to show in the empty input field.
+   * @returns {void}
+   */
   updateInputUI(disabled, placeholder) {
     const { userInput, sendBtn, micBtn } = this.elements;
     const micDisabled = disabled || !this._voiceSupported;
@@ -501,6 +407,10 @@ export const UI = {
     if (!disabled) userInput.classList.add("bg-slate-50");
   },
 
+  /**
+   * Main UI entry point. Binds elements, initializes avatar and voice systems.
+   * @param {Object} defaultProfile - The initial character profile to use.
+   */
   init(defaultProfile) {
     // Bind all DOM elements to UI.elements before setting up logic
     this._bindElements();
@@ -531,94 +441,23 @@ export const UI = {
       };
     }
 
-    this.initVoiceInput();
+    this._voiceSupported = Speech.initSTT(
+      this.elements.micBtn,
+      this.elements.userInput,
+      (t, m) => this.updateStatus(t, m),
+    );
 
     // Ensure voices are loaded (crucial for Chrome)
     if (window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = () => this._getBestVoice(true);
+      window.speechSynthesis.onvoiceschanged = () => Speech._getBestVoice(true);
     }
-  },
-
-  initVoiceInput() {
-    const { micBtn, userInput } = this.elements;
-    if (!micBtn) return;
-
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    this._voiceSupported = !!SpeechRecognition;
-
-    if (!SpeechRecognition) {
-      micBtn.title =
-        "Spracherkennung wird von Firefox leider nicht unterstützt. Bitte nutze Chrome oder Edge.";
-      micBtn.classList.add("cursor-help");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "de-DE";
-    recognition.continuous = false;
-
-    recognition.onstart = () => {
-      this._isListening = true;
-      micBtn.classList.add("text-red-600", "animate-pulse"); // Visual feedback for listening
-      this.updateStatus("loading", "Ich höre zu...");
-    };
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      if (userInput) {
-        const currentVal = userInput.value.trim();
-        const space = currentVal.length > 0 ? " " : "";
-        userInput.value = currentVal + space + transcript;
-        userInput.focus();
-      }
-    };
-
-    recognition.onend = () => {
-      this._isListening = false;
-      micBtn.classList.remove("text-red-600", "animate-pulse");
-      this.updateStatus("default", "Bereit");
-    };
-
-    recognition.onerror = () => {
-      this.updateStatus("error", "Spracherkennung abgebrochen");
-    };
-
-    micBtn.onclick = () => {
-      if (this._isListening) recognition.stop();
-      else recognition.start();
-    };
   },
 
   /**
-   * Internal helper to find the best German voice
+   * Shows a one-time status hint recommending browsers with better voice support.
+   * @returns {void}
+   * @private
    */
-  _getBestVoice(isFemale) {
-    const voices = window.speechSynthesis.getVoices();
-    const germanVoices = voices.filter((v) => v.lang.startsWith("de"));
-    if (germanVoices.length === 0)
-      return voices.find((v) => v.lang.startsWith("de")) || null;
-
-    const keywords = isFemale ? VOICE_KEYWORDS.female : VOICE_KEYWORDS.male;
-
-    // 1. High Quality Match
-    let voice = germanVoices.find((v) => {
-      const name = v.name.toLowerCase();
-      const isHQ = VOICE_KEYWORDS.highQuality.some((k) => name.includes(k));
-      return isHQ && keywords.some((k) => name.includes(k));
-    });
-
-    // 2. Gender Match Fallback
-    if (!voice) {
-      voice = germanVoices.find((v) =>
-        keywords.some((k) => v.name.toLowerCase().includes(k)),
-      );
-    }
-
-    // 3. Any German Fallback
-    return voice || germanVoices[0];
-  },
-
   _showBrowserRecommendation() {
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes("firefox")) {
@@ -639,94 +478,31 @@ export const UI = {
     }
   },
 
+  /**
+   * Performs text-to-speech for a given text.
+   * Handles voice selection, text cleaning, and UI animation states.
+   * @param {string} text - The raw text to speak.
+   * @param {string} roleName - Used to determine the appropriate voice (gender/role).
+   * @param {HTMLElement} [btnElement=null] - The button to animate during playback.
+   */
   speak(text, roleName, btnElement = null) {
-    if (!window.speechSynthesis) return;
+    const showHint = Speech.speak(text, {
+      roleName,
+      btnElement,
+      avatar: Avatar,
+      onStatus: (t, m) => this.updateStatus(t, m),
+    });
 
-    if (window.speechSynthesis.speaking && this._lastSpokenText === text) {
-      window.speechSynthesis.cancel();
-      this._lastSpokenText = null;
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    this._lastSpokenText = text;
-
-    let cleanedText = Utils.cleanTextForSpeech(text);
-
-    // Force a final punctuation mark if none is present
-    if (!/[.!?]$/.test(cleanedText)) {
-      cleanedText += ".";
-    }
-
-    const utterance = new SpeechSynthesisUtterance(cleanedText);
-    // Priority: 1. explicit gender from the generated profile, 2. heuristic based on the name
-    let isFemale =
-      roleName?.toLowerCase().endsWith("in") ||
-      roleName?.toLowerCase().includes("mitarbeiterin");
-    const isMentor =
-      roleName?.toLowerCase().includes("mentor") ||
-      roleName?.toLowerCase().includes("feedback");
-
-    if (this._avatar.config?.gender) {
-      isFemale = this._avatar.config.gender === "female";
-    }
-
-    const voice = this._getBestVoice(isFemale);
-    if (voice) utterance.voice = voice;
-
-    // Only show tip if we didn't find a high-quality (neural) voice
-    if (!voice?.name.toLowerCase().includes("neural")) {
+    if (showHint) {
       this._showBrowserRecommendation();
     }
-
-    utterance.lang = "de-DE";
-
-    const isNeural = voice?.name.toLowerCase().includes("neural");
-
-    // Dynamic voice tweaking for more natural speech
-    if (isMentor) {
-      // The mentor speaks calmer, more authoritative and a bit more composed
-      utterance.rate = isNeural ? 0.88 : 0.85;
-      utterance.pitch = 0.95;
-    } else {
-      // The partner speaks more naturally/a bit faster
-      utterance.rate = isNeural ? 0.95 : 0.9;
-      utterance.pitch = isFemale ? 1.05 : 0.98;
-    }
-
-    // Improved parameters for more natural pronunciation
-    utterance.volume = 0.9; // Slightly quieter for more natural sound
-    utterance.pitch += Math.random() * 0.02 - 0.01; // Minimal variation for naturalness
-
-    if (btnElement) {
-      utterance.onstart = () => {
-        btnElement.classList.add(
-          "text-blue-600",
-          "animate-pulse",
-          "opacity-100",
-        );
-        this.setAvatarTalking(true);
-      };
-      utterance.onend = () => {
-        btnElement.classList.remove(
-          "text-blue-600",
-          "animate-pulse",
-          "opacity-100",
-        );
-        this.setAvatarTalking(false);
-        // Reset status to default after speaking
-        setTimeout(() => this.updateStatus("default", "Ready"), 3000);
-      };
-      utterance.onerror = utterance.onend;
-    }
-
-    // Introduce a tiny delay to prevent "swallowing" the first letters,
-    // which often occur due to the asynchronous processing of cancel() and speak().
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 100);
   },
 
+  /**
+   * Replaces briefing content with a loading spinner.
+   * @param {boolean} isLoading
+   * @returns {void}
+   */
   setBriefingLoading(isLoading) {
     if (!isLoading) return;
     this.elements.briefingContent.innerHTML = `
@@ -744,6 +520,7 @@ export const UI = {
   /**
    * Toggles the briefing content visibility.
    * @param {boolean} expanded - Whether the briefing should be shown.
+   * @returns {void}
    */
   setBriefingExpanded(expanded) {
     const { briefingContent, chevron } = this.elements;
@@ -752,6 +529,11 @@ export const UI = {
       chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
   },
 
+  /**
+   * Toggles the mobile navigation sidebar and the background overlay.
+   * @param {boolean} [forceClose=false] - If true, always closes the menu.
+   * @returns {void}
+   */
   toggleMobileMenu(forceClose = false) {
     const { sidebar, sidebarOverlay } = this.elements;
     const isOpen = !sidebar.classList.contains("-translate-x-full");
@@ -766,6 +548,10 @@ export const UI = {
     }
   },
 
+  /**
+   * Populates and displays the feedback modal window.
+   * @param {string} feedback - The markdown/text content for the feedback.
+   */
   showFeedbackModal(feedback) {
     const { feedbackModal } = this.elements;
     const feedbackText = document.getElementById("feedback-text");
@@ -776,6 +562,10 @@ export const UI = {
     document.body.style.overflow = "hidden";
   },
 
+  /**
+   * Opens the confirmation modal for resetting the current simulation.
+   * @returns {void}
+   */
   openResetModal() {
     const modal = this.elements.resetModal;
     this.toggleMobileMenu(true);
@@ -788,12 +578,19 @@ export const UI = {
   },
 };
 
-// Global bindings for HTML onclick attributes
+/**
+ * Global helper for closing the feedback modal.
+ * Bound to window for HTML onclick compatibility.
+ * @returns {void}
+ */
 window.closeFeedbackModal = () => {
   UI.elements.feedbackModal.classList.add("hidden");
   document.body.style.overflow = "auto";
 };
 
+/**
+ * Global helper for closing the reset modal with a scale-out animation.
+ */
 window.closeResetModal = () => {
   const modal = UI.elements.resetModal;
   const content = modal.querySelector("div");
@@ -802,7 +599,9 @@ window.closeResetModal = () => {
 };
 
 /**
- * Updates the subtitle responsive text.
+ * Updates the subtitle text based on screen width.
+ * Provides a hint for mobile users on how to access the menu.
+ * @returns {void}
  */
 export const updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
