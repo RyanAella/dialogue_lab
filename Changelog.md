@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.20.0] - 2026-06-08
+
+### Added
+
+- **Service-Oriented Architecture**: Extracted core logic into standalone ES6 modules: `Avatar`, `Speech`, `Chat`, and `ScenarioService`.
+- **JSDoc Standardization**: Implemented comprehensive English JSDoc comments across all core utility and service modules for better maintainability and IDE support.
+
+### Changed
+
+- **Controller Refactoring**: Simplified `app.js` and `ui.js` by delegating business logic, state management, and multimedia handling to specialized services.
+- **Enhanced Utility Layer**: Added `downloadFile` helper and refined text-to-speech cleaning logic in `utils.js`.
+- **Documentation Overhaul**: Completely updated the `README.md` to reflect the new modular structure and define clear responsibilities for each module.
+
+### Fixed
+
+- **State Management Consistency**: Resolved potential race conditions and synchronization issues by centralizing chat history and scenario state.
+
 ## [0.19.0] - 2026-05-26
 
 ### Added

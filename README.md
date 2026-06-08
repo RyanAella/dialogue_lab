@@ -10,14 +10,14 @@ Das **Lab für Sozioinformatik: Simulation Lab** ist eine interaktive Web-Anwend
 ### Kernfunktionen dieser Edition
 
 - **Interaktive Simulationen (Rollenspiel):** Tauche in realistische Szenarien ein. Ein KI-Gegenüber reagiert dynamisch auf deine Eingaben, während ein optionaler **KI-Mentor** im Hintergrund wertvolles Feedback zu deiner Strategie gibt.
-- **Optimiertes Responsive Layout:** Die Anwendung ist für Desktop- und Laptop-Auflösungen optimiert. Der Charakter-Avatar wird auf größeren Bildschirmen neben dem Inhalt fixiert, während er auf mobilen Geräten platzsparend in die Header-Sektion wandert.
+- **Dynamisches Avatar-System:** Ein Multi-Layer Rendering-System (PNG/SVG) sorgt für visuelle Vielfalt. Avatare verfügen über automatisches Blinken, Lippensynchronität beim Sprechen und zufällige Trait-Zuweisung (Haare, Kleidung, Accessoires).
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
-- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Natürliches Sprachgefühl:** Integrierte **Sprachausgabe (TTS)** mit kontextabhängiger Geschwindigkeit und Pitch-Modulation erzeugt lebendige Dialoge. Optimiert für Microsoft Edge (Neural Voices).
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung.
 
 ## 2. Technische Architektur
 
-Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum Schutz der API-Keys:
+Das Projekt folgt einem modernen, service-orientierten JavaScript-Ansatz (ES6 Module) mit einem serverseitigen Proxy zum Schutz der API-Keys:
 
 - **Frontend:** Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript).
 - **Backend-Proxy:** Ein serverseitiges Skript (z.B. PHP `chat.php`), das die API-Keys kapselt.
@@ -26,23 +26,33 @@ Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum S
 
 ## 3. Repository-Dateistruktur
 
-- `index.html`: UI / Layout.
-- `src/js/`:
-  - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe und Protokoll-Generierung.
-  - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
-  - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
-  - `app.js`: Zentrale Anwendungslogik und State-Management.
-  - `profiles.js`: Definition der Charakter-Pools und Grafik-Layer.
-- `src/data/`: `exercises.json` als zentrale Konfiguration.
-- `scenarios/`: Szenariodateien.
-- `prompts/`: Unterordner für `system/`, `partner/` und `mentor/`.
+### Kern-Module (`src/js/`)
+
+| Modul             | Verantwortung                                                                              |
+| :---------------- | :----------------------------------------------------------------------------------------- |
+| **`app.js`**      | **Controller**: Orchestriert den Programmfluss und initialisiert die Services.             |
+| **`ui.js`**       | **View-Manager**: Verwaltet DOM-Elemente, Event-Listener und das Chat-Rendering.           |
+| **`avatar.js`**   | **Visuals**: Steuert das Multi-Layer-System, Animationen (Blinken) und Lippensynchronität. |
+| **`speech.js`**   | **Audio-Service**: Kapselt TTS (Sprachausgabe) und STT (Diktierfunktion).                  |
+| **`chat.js`**     | **State-Manager**: Hält die Gesprächshistorie und bereitet Transkripte vor.                |
+| **`scenario.js`** | **Data-Service**: Lädt Übungspools und verwaltet das aktive Szenario-State.                |
+| **`api.js`**      | **Network**: Handling der API-Anfragen mit integriertem Caching.                           |
+| **`utils.js`**    | **Helpers**: Statische Funktionen für Markdown-Parsing und Text-Bereinigung.               |
+| **`profiles.js`** | **Assets**: Konfiguration der Charakter-Pools und Grafik-Ebenen.                           |
+
+### Daten & Inhalte
+
+- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen.
+- `scenarios/`: Markdown-ähnliche Szenario-Beschreibungen und GUI-Instruktionen.
+- `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Szenarien und Konfiguration
 
+Dieser Abschnitt beschreibt, wie die Inhalte für die Simulationen strukturiert und konfiguriert werden. Die App trennt strikt zwischen Code und Inhalt, um eine einfache Wartung und Erweiterung zu ermöglichen.
+
 ### 4.1 Die `exercises.json`
 
-Diese Datei steuert, welche Simulationen in der App zur Verfügung stehen.
+Diese Datei (`src/data/exercises.json`) steuert, welche Simulationen in der App zur Verfügung stehen. Jedes Objekt repräsentiert eine Übung.
 
 ```json
 [
@@ -63,7 +73,7 @@ Diese Datei steuert, welche Simulationen in der App zur Verfügung stehen.
 ]
 ```
 
-### 4.2 Szenarioformat (`*.txt`)
+### 4.2 Szenarioformat & Prompt-Mapping (`*.txt`)
 
 Jedes Szenario besteht aus einem **META-Block** (Referenzierung der Prompts) und der **GUI Instruction** (Briefing für den Nutzer).
 
@@ -107,16 +117,22 @@ Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
 ## 7. Neues Szenario hinzufügen
 
-1. Erstelle die Prompt-Dateien (`system`, `partner`, `mentor`) unter `prompts/`.
-2. Erstelle eine neue Szenario-Datei unter `scenarios/simulations/`.
-3. Trage die neue ID und den Pfad in die `exercises.json` ein.
+1. **Prompts erstellen:** Drei Dateien in `prompts/system/`, `prompts/partner/` und `prompts/mentor/` anlegen.
+2. **Szenario-File:** Eine `.txt`-Datei in `scenarios/simulations/` erstellen. Im `### META ###`-Block auf die neuen Prompt-Dateinamen verweisen (ohne Endung).
+3. **Pool erweitern:** Die neue ID und den Pfad in `src/data/exercises.json` registrieren.
+4. **Avatar-Mapping:** Sicherstellen, dass der `role_label` in der META-Sektion einem Key in `profiles.js` entspricht, um den korrekten Charakter-Pool zu laden.
 
 ## 8. Inhalte pflegen
 
-1. Szenario-Dateien unter `scenarios/simulations/` bearbeiten (Inhalt und GUI Instruction).
-2. Prompt-Dateien in `prompts/` (system, partner, mentor) anpassen.
-3. Falls neue Szenarien hinzugefügt werden, `exercises.json` aktualisieren.
-4. **Grafiken:** Neue Avatare im Ordner `src/assets/character/` ablegen. Dateinamen dürfen keine Leerzeichen enthalten und sollten kleingeschrieben werden, um Fehler beim Deployment zu vermeiden.
+### Best Practices für Prompts
+
+- **Vermeide Meta-Talk:** Die KI-Partner sollten nie über "Phasen" oder "Prompts" sprechen, sondern immer in der Rolle bleiben.
+- **Einwand-Rotation:** Hinterlege im Partner-Prompt eine Liste mit 4-5 Einwänden, damit Gespräche variieren.
+- **Strukturierte Mentor-Ausgabe:** Nutze im Mentor-Prompt klare Trenner (z.B. `---`), damit die `utils.js` das Feedback sauber im Modal darstellen kann.
+
+### Grafiken & Assets
+
+Neue Avatare müssen im Ordner `src/assets/Character/` abgelegt werden. Achte auf das Suffix für Hauttöne (z.B. `head_v1_a.png` bis `head_v1_d.png`), damit das automatische Matching der Hände funktioniert.
 
 ---
 
@@ -136,14 +152,14 @@ The **Socio-Informatics Lab: Simulation Lab** is an interactive web application 
 ### Core Features of this Edition
 
 - **Interactive Simulations (Roleplay):** Immerse yourself in realistic scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable background feedback on your strategy.
-- **Optimized Responsive Layout:** The application is optimized for desktop and laptop resolutions. The character avatar is fixed next to the content on larger screens, while it moves to the header section on mobile devices to save space.
+- **Dynamic Avatar System:** A multi-layer rendering system (PNG/SVG) provides visual variety. Avatars feature automatic blinking, lip-syncing during speech, and randomized trait assignment (hair, clothes, accessories).
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
-- **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with optimized prosody brings dialogues to life. (Tip: Microsoft Edge offers particularly human-like voices!)
+- **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with context-aware rate and pitch modulation creates lifelike dialogues. Optimized for Microsoft Edge (Neural Voices).
 - **Track Your Progress:** Use the **Transcript Export** feature to save the entire conversation history, including the briefing, as a structured text file with a single click—perfect for self-reflection.
 
 ## 2. Technical Architecture
 
-The application uses a static frontend combined with a server-side proxy to protect API keys:
+The project follows a modern, service-oriented JavaScript approach (ES6 Modules) combined with a server-side proxy to protect API keys:
 
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript).
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) that encapsulates the API keys.
@@ -152,23 +168,33 @@ The application uses a static frontend combined with a server-side proxy to prot
 
 ## 3. Repository File Structure
 
-- `index.html`: UI / Layout.
-- `src/js/`:
-  - `config.js`: Central runtime configuration (Proxy URL, model, temperatures).
-  - `utils.js`: Central utility functions for text parsing, speech output cleaning, and transcript generation.
-  - `api.js`: Abstraction layer for data exchange, cache management, and parallel resource loading.
-  - `ui.js`: Modular UI manager for dynamic rendering, event binding, and multimedia integration (TTS/STT).
-  - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
-  - `profiles.js`: Definition of character pools and graphic layers.
-- `src/data/`: `exercises.json` as central configuration.
-- `scenarios/`: Scenario files.
-- `prompts/`: Prompt files in subfolders `system/`, `partner/`, `mentor/`, `trainers/`.
+### Core Modules (`src/js/`)
+
+| Module            | Responsibility                                                                        |
+| :---------------- | :------------------------------------------------------------------------------------ |
+| **`app.js`**      | **Controller**: Orchestrates the application flow and initializes services.           |
+| **`ui.js`**       | **View-Manager**: Manages DOM elements, event listeners, and chat rendering.          |
+| **`avatar.js`**   | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-syncing. |
+| **`speech.js`**   | **Audio-Service**: Encapsulates TTS (Speech Output) and STT (Dictation).              |
+| **`chat.js`**     | **State-Manager**: Maintains conversation history and prepares transcripts.           |
+| **`scenario.js`** | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
+| **`api.js`**      | **Network**: Handles API requests with integrated caching.                            |
+| **`utils.js`**    | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
+| **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                      |
+
+### Data & Content
+
+- `src/data/exercises.json`: The central catalog of all available simulations.
+- `scenarios/`: Markdown-like scenario descriptions and GUI instructions.
+- `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Scenarios and Configuration
 
+This section describes how the content for the simulations is structured and configured. The app strictly separates code from content to facilitate easy maintenance and expansion.
+
 ### 4.1 The `exercises.json`
 
-This file controls which simulations are available within the app.
+This file (`src/data/exercises.json`) controls which simulations are available in the app. Each object represents an exercise.
 
 ```json
 [
@@ -189,7 +215,7 @@ This file controls which simulations are available within the app.
 ]
 ```
 
-### 4.2 Scenario Format (`*.txt`)
+### 4.2 Scenario Format & Prompt Mapping (`*.txt`)
 
 Each scenario consists of a **META block** (referencing the prompts) and the **GUI Instruction** (briefing for the user).
 
@@ -233,16 +259,22 @@ Every push to a branch triggers an automatic deployment:
 
 ## 7. Adding a New Scenario
 
-1. Create the prompt files (`system`, `partner`, `mentor`) in the `prompts/` directory.
-2. Create a new scenario file in `scenarios/simulations/`.
-3. Add the new ID and path to the `exercises.json` file.
+1. **Create Prompts:** Add three files to `prompts/system/`, `prompts/partner/`, and `prompts/mentor/`.
+2. **Scenario File:** Create a `.txt` file in `scenarios/simulations/`. Reference the new prompt filenames in the `### META ###` block (without extensions).
+3. **Register Exercise:** Add the new ID and path to `src/data/exercises.json`.
+4. **Avatar Mapping:** Ensure the `role_label` in the META section matches a key in `profiles.js` to load the correct character pool.
 
 ## 8. Maintaining Content
 
-1. Edit scenario files in `scenarios/simulations/` (content and GUI instructions).
-2. Adjust prompt files in `prompts/` (system, partner, mentor).
-3. Update `exercises.json` whenever new scenarios are added.
-4. **Graphics:** Place new avatars in the `src/assets/character/` folder. Filenames must not contain spaces and should be lowercase to prevent deployment errors.
+### Best Practices for Prompts
+
+- **Avoid Meta-Talk:** AI partners should never discuss "phases" or "prompts"; they must remain in character.
+- **Objection Rotation:** Include a list of 4-5 objections in the partner prompt to ensure variety across sessions.
+- **Structured Mentor Output:** Use clear separators (e.g., `---`) in the mentor prompt so `utils.js` can render the feedback cleanly in the modal.
+
+### Graphics & Assets
+
+Place new avatars in the `src/assets/Character/` folder. Use skin tone suffixes (e.g., `head_v1_a.png` to `head_v1_d.png`) to enable automatic hand graphic matching.
 
 ---
 

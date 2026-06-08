@@ -1,13 +1,29 @@
 /**
- * Utility functions for text parsing, formatting.
+ * @module Utils
+ * Provides stateless helper functions for text processing, markdown rendering,
+ * scenario parsing, and file management.
  */
 
 export const Utils = {
+  /**
+   * Appends a plain text node to a DOM container.
+   * @param {HTMLElement} container - The target DOM element.
+   * @param {string} text - The text to append.
+   */
   appendText(container, text) {
     container.appendChild(document.createTextNode(text));
   },
 
+  /**
+   * Renders a limited subset of Markdown (bolding via **) and preserves line breaks.
+   * Uses 'pre-wrap' white-space styling for layout consistency.
+   *
+   * @param {HTMLElement} container - The target DOM element to clear and populate.
+   * @param {string} text - The raw text containing potential markdown patterns.
+   */
   renderBoldMarkdownWithLineBreaks(container, text) {
+    if (!container) return;
+
     container.textContent = "";
     container.style.whiteSpace = "pre-wrap";
 
@@ -28,6 +44,13 @@ export const Utils = {
     });
   },
 
+  /**
+   * Extracts a specific metadata value from a text block based on a key.
+   *
+   * @param {string} metaSection - The block of text containing key-value pairs.
+   * @param {string} key - The key to look for (e.g., 'title').
+   * @returns {string} The trimmed value or an empty string if not found.
+   */
   parseMetaValue(metaSection, key) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const match = metaSection.match(
@@ -36,6 +59,13 @@ export const Utils = {
     return match?.[1].trim() || "";
   },
 
+  /**
+   * Splits raw scenario text into metadata and instruction sections.
+   *
+   * @param {string} rawScenario - The raw string loaded from a scenario file.
+   * @returns {{metaSection: string, instructionSection: string}}
+   * @throws {Error} If the required separator '### GUI INSTRUCTION ###' is missing or section is empty.
+   */
   parseScenarioContent(rawScenario) {
     const parts = rawScenario.split(/###\s*GUI INSTRUCTION\s*###/i);
     if (parts.length < 2) {
@@ -61,7 +91,12 @@ export const Utils = {
   },
 
   /**
-   * Attempts to extract the role name from the text or label.
+   * Attempts to determine the partner's role name using heuristics and manual overrides.
+   * Analyzes the 'Your Task' (Deine Aufgabe) section if no explicit label is provided.
+   *
+   * @param {string} instructionSection - The full briefing text.
+   * @param {string} [roleLabel] - An optional explicit role label from metadata.
+   * @returns {string} The normalized and formatted role name.
    */
   extractRoleName(instructionSection, roleLabel) {
     if (roleLabel) return this.formatRoleName(roleLabel);
@@ -93,13 +128,23 @@ export const Utils = {
     return this.formatRoleName(roleName);
   },
 
+  /**
+   * Standardizes role names to Title-case.
+   * @param {string} name - The raw name string.
+   * @returns {string}
+   */
   formatRoleName(name) {
     if (!name) return "";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   },
 
   /**
-   * Generates a clean text transcript from chat history.
+   * Generates a formatted plain-text transcript from the message history.
+   * Skips 'system' role messages.
+   *
+   * @param {Array<{role: string, content: string}>} history - The chat history array.
+   * @param {string} partnerRoleName - The display name used for assistant responses.
+   * @returns {string} The double-newline separated transcript string.
    */
   generateTranscript(history, partnerRoleName) {
     return history
@@ -112,25 +157,34 @@ export const Utils = {
   },
 
   /**
-   * Formats a date for filenames (YYYY-MM-DD)
+   * Formats the current system date for use in filenames.
+   * @returns {string} Date in YYYY-MM-DD format.
    */
   getFormattedDate() {
     return new Date().toISOString().slice(0, 10);
   },
 
   /**
-   * Erzeugt einen sicheren Dateinamen aus einem Titel
+   * Converts a string into a URL/filesystem-safe slug.
+   * Removes special characters and replaces spaces with underscores.
+   *
+   * @param {string} text - The input string (e.g., a scenario title).
+   * @returns {string} The sanitized string.
    */
   slugify(text) {
     if (!text) return "";
     return text
-      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "")
+      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "") // Keep alphanumeric, umlauts, and spaces
       .trim()
       .replace(/\s+/g, "_");
   },
 
   /**
-   * Bereitet Text für die Sprachausgabe vor (entfernt Markdown und Regieanweisungen)
+   * Prepares text for Text-to-Speech by removing visual formatting and stage directions.
+   * Injects artificial pauses (...) after punctuation for more natural delivery.
+   *
+   * @param {string} text - The raw chat or instruction text.
+   * @returns {string} Cleaned text optimized for speech synthesis.
    */
   cleanTextForSpeech(text) {
     return text
@@ -144,5 +198,22 @@ export const Utils = {
       .replace(/([.!?])\s+/g, "$1 ... ") // Kleine Extra-Pause nach Satzzeichen
       .replace(/\s+/g, " ") // Bereinigt überschüssige Leerzeichen
       .trim();
+  },
+
+  /**
+   * Triggers a browser download for a given string content.
+   * @param {string} content - The text content to save.
+   * @param {string} filename - The desired filename.
+   * @param {string} [type='text/plain;charset=utf-8'] - MIME type.
+   */
+  downloadFile(content, filename, type = "text/plain;charset=utf-8") {
+    const blob = new Blob([content], { type });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
   },
 };
