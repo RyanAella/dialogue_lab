@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--Tab Titel-->
-    <title>Lab für Sozioinformatik: Transformation Lab</title>
+    <title>Lab für Sozioinformatik: Gesprächstraining</title>
 
     <link rel="icon" href="https://fav.farm/💬" />
 
@@ -18,13 +18,64 @@
     />
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom "Modern Chat" Styles */
+      .chat-bubble-user {
+        border-radius: 22px;
+        border-top-right-radius: 4px;
+      }
+      .chat-bubble-partner {
+        border-radius: 22px;
+        border-top-left-radius: 4px;
+      }
+      .chat-bubble-portrait {
+        border-radius: 12px;
+      }
+      @keyframes pulse-soft {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(0.95);
+        }
+      }
+      .animate-pulse-soft {
+        animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      /* Prevent scrollbar flickering while maintaining layout */
+      .chat-main-container {
+        scrollbar-gutter: stable;
+      }
+      /* Better backdrop blur for glassmorphism effects */
+      .glass-effect {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      /* Avatar Stack Logik */
+      .avatar-stack {
+        display: grid;
+        grid-template-areas: "stack";
+        aspect-ratio: 3 / 4; /* Festes Porträt-Format (Oberkörper-Fokus) */
+        background-color: #f8fafc; /* Heller Hintergrund für leere Stellen */
+      }
+      .avatar-stack img {
+        grid-area: stack;
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Füllt den Rahmen aus */
+        object-position: top; /* Verankert den Kopf oben im Rahmen */
+      }
+    </style>
   </head>
 
   <body class="flex flex-col lg:flex-row h-[100dvh] bg-gray-50 overflow-hidden">
     <header
-      class="lg:hidden flex items-center justify-between bg-white border-b p-4 z-[40] w-full"
+      class="lg:hidden flex items-center justify-between bg-white/80 glass-effect border-b p-4 z-[40] w-full sticky top-0"
     >
-      <h1 class="text-lg font-bold text-slate-800">Transformation Lab</h1>
+      <h1 class="text-lg font-bold text-slate-800">Gesprächstraining</h1>
       <button
         id="mobile-menu-btn"
         class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -37,17 +88,32 @@
       class="fixed inset-y-0 left-0 z-[60] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
     >
       <div class="sidebar-section mb-6">
-        <label
-          id="scenario-label"
-          class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
-          >Wähle eine Übung:</label
-        >
-        <select
-          id="exercises"
-          class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="" selected disabled>Wähle eine Übung...</option>
-        </select>
+        <div id="scenario-section" class="mt-4 hidden">
+          <label
+            id="scenario-label"
+            class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
+            >Wähle ein Szenario:</label
+          >
+          <select
+            id="scenarios"
+            class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" selected disabled>Wähle ein Szenario...</option>
+          </select>
+        </div>
+        <div id="exercise-section" class="mt-4">
+          <label
+            id="exercise-label"
+            class="exercise-selection-headline block font-semibold mb-2 text-slate-700 text-sm mt-4"
+            >Wähle eine Übung:</label
+          >
+          <select
+            id="exercises"
+            class="exercise-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" selected disabled>Wähle eine Übung...</option>
+          </select>
+        </div>
       </div>
 
       <div class="sidebar-section mb-6 pt-6 border-t border-slate-100">
@@ -76,22 +142,22 @@
         class="sidebar-actions mt-auto space-y-3 pt-6 border-t border-slate-100"
       >
         <button
-          id="download-btn"
+          id="feedback-btn"
           disabled
-          class="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition hover:bg-blue-800"
+          class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-sm shadow-md opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition"
         >
-          <span>📥</span> <span>Auswertung erstellen</span>
+          <span>📊</span> Feedback erhalten
         </button>
         <button
           id="export-transcript-btn"
-          class="hidden w-full bg-emerald-600 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 transition hover:bg-emerald-700"
+          class="hidden w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 transition"
         >
           <span>📄</span> Protokoll herunterladen
         </button>
         <button
           id="reset-btn"
           disabled
-          class="w-full border-2 border-red-200 text-red-500 py-3 px-4 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition"
+          class="w-full border-2 border-red-50 text-red-500 py-3 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition"
         >
           <span>🔄</span> Neustart
         </button>
@@ -104,110 +170,158 @@
     ></div>
 
     <!-- Main Content Wrapper: Organisiert den scrollbaren Bereich und den festen Footer -->
-    <div class="flex-1 flex flex-col min-h-0">
-      <main
-        class="chat-main-container flex-1 flex flex-col p-3 md:p-6 lg:p-10 overflow-y-auto"
-      >
-        <h1 class="main-title text-2xl md:text-3xl font-bold text-slate-800">
-          Lab für Sozioinformatik: Transformation Lab
-        </h1>
-        <p
-          id="main-subtitle"
-          class="main-subtitle text-slate-500 mt-2 text-sm md:text-base"
-        >
-          Wähle eine Übung aus, um zu starten.
-        </p>
-
-        <div
-          class="mt-4 max-w-3xl sticky top-0 z-[20] py-2 bg-gray-50/95 backdrop-blur-sm"
-        >
-          <div
-            id="status-box"
-            class="status-box bg-slate-50 text-slate-500 p-2 md:p-3 rounded-xl border border-slate-200 text-[10px] md:text-xs font-medium flex items-center gap-2 w-fit"
-          >
-            <span class="w-2 h-2 rounded-full bg-slate-300"></span>
-            System bereit
-          </div>
-        </div>
-
-        <section
-          class="briefing-card mt-6 md:mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-6 max-w-3xl"
-        >
-          <div
-            class="briefing-click-area flex items-center justify-between cursor-pointer"
-            id="briefing-header"
-          >
-            <div class="briefing-title-group flex items-center gap-2">
-              <span class="briefing-icon text-xl md:text-2xl">📋</span>
-              <h2
-                class="briefing-headline text-lg md:text-xl font-semibold text-slate-800"
+    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <main class="chat-main-container flex-1 flex flex-col overflow-y-auto">
+        <div class="flex flex-col lg:flex-row flex-1 p-4 md:p-6 lg:p-10 gap-8">
+          <!-- Linke Spalte: Inhalt (Header, Briefing, Chat) -->
+          <div class="flex-1 flex flex-col min-w-0 max-w-3xl mx-auto lg:mx-0">
+            <div class="content-header">
+              <h1
+                class="main-title text-2xl md:text-3xl font-bold text-slate-800"
               >
-                Deine Aufgabenstellung & Übungs-Details
-              </h2>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                id="speak-briefing-btn"
-                class="hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5"
-                title="Briefing vorlesen"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                Lab für Sozioinformatik: Gesprächstraining
+              </h1>
+              <div class="mt-3">
+                <span
+                  id="mode-badge"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"
                 >
-                  <path
-                    fill-rule="evenodd"
-                    d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-              <span
-                id="chevron"
-                class="briefing-arrow text-slate-400 transition-transform"
-                >▼</span
+                  Modus: Übungen
+                </span>
+              </div>
+              <p id="main-subtitle" class="main-subtitle text-slate-500 mt-2">
+                Wähle ein Szenario aus, um zu starten.
+              </p>
+
+              <div
+                class="mt-4 sticky top-0 z-[20] py-2 bg-gray-50/95 backdrop-blur-sm"
               >
+                <div
+                  id="status-box"
+                  class="status-box bg-slate-50 text-slate-500 p-2 md:p-3 rounded-xl border border-slate-200 text-[10px] md:text-xs font-medium flex items-center gap-2 w-fit"
+                >
+                  <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                  System bereit
+                </div>
+              </div>
+            </div>
+
+            <section
+              class="briefing-card mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 transition-all duration-500"
+            >
+              <div
+                class="briefing-click-area flex items-center justify-between cursor-pointer"
+                id="briefing-header"
+              >
+                <div class="briefing-title-group flex items-center gap-4">
+                  <!-- Mobile Avatar: Nur auf kleinen Bildschirmen sichtbar -->
+                  <div
+                    id="mobile-portrait-container"
+                    class="lg:hidden w-14 h-16 avatar-stack bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200"
+                  >
+                    <img id="partner-head-mobile" src="" alt="" />
+                    <img id="partner-eyes-mobile" src="" alt="" />
+                    <img id="partner-mouth-mobile" src="" alt="" />
+                    <img id="partner-glasses-mobile" src="" alt="" />
+                    <img id="partner-hair-mobile" src="" alt="" />
+                    <img id="partner-headset-mobile" src="" alt="" />
+                    <img id="partner-clothes-mobile" src="" alt="" />
+                    <img id="partner-hands-mobile" src="" alt="" />
+                  </div>
+                  <h2
+                    class="briefing-headline text-xl font-semibold text-slate-800"
+                  >
+                    Deine Aufgabenstellung & Szenario-Details
+                  </h2>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    id="speak-briefing-btn"
+                    class="hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5"
+                    title="Briefing vorlesen"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  <span
+                    id="chevron"
+                    class="briefing-arrow text-slate-400 transition-transform"
+                    >▼</span
+                  >
+                </div>
+              </div>
+              <div
+                id="briefing-content"
+                class="briefing-body mt-4 space-y-4 text-slate-600 leading-relaxed"
+              ></div>
+            </section>
+
+            <div
+              id="chat-window"
+              class="chat-display flex-1 mt-8 pb-10 flex flex-col space-y-6 bg-gray-50/50 scroll-smooth"
+            >
+              <div
+                id="start-info"
+                class="system-message flex justify-center my-6 w-100 hidden"
+              >
+                <div
+                  class="bg-blue-50 border border-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-sm flex items-center gap-3 shadow-sm max-w-2xl"
+                >
+                  <span class="text-lg">✨</span>
+                  <p>
+                    <strong>Bereit für das Gespräch.</strong> Eröffnen Sie den
+                    Dialog, indem Sie unten eine Nachricht eingeben.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div
-            id="briefing-content"
-            class="briefing-body mt-4 space-y-4 text-slate-600 leading-relaxed"
-          ></div>
-        </section>
 
-        <div
-          id="chat-window"
-          class="chat-display flex flex-col flex-1 mt-8 space-y-6 bg-gray-50/50 scroll-smooth"
-        >
+          <!-- Rechte Spalte: Desktop Portrait (Beginnt nun auf Höhe des Briefings) -->
           <div
-            id="start-info"
-            class="system-message flex justify-center my-6 w-100 hidden"
+            id="desktop-portrait-container"
+            class="hidden lg:flex flex-col w-64 flex-shrink-0 sticky top-6 h-fit"
           >
             <div
-              class="bg-blue-50 border border-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-sm flex items-center gap-3 shadow-sm max-w-2xl"
+              class="avatar-stack bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
             >
-              <span class="text-lg">✨</span>
-              <p>
-                <strong>Bereit für das Gespräch.</strong> Eröffnen Sie den
-                Dialog, indem Sie unten eine Nachricht eingeben.
-              </p>
+              <img id="partner-head" src="" alt="" />
+              <img id="partner-eyes" src="" alt="" />
+              <img id="partner-mouth" src="" alt="" />
+              <img id="partner-glasses" src="" alt="" />
+              <img id="partner-hair" src="" alt="" />
+              <img id="partner-headset" src="" alt="" />
+              <img id="partner-clothes" src="" alt="" />
+              <img id="partner-hands" src="" alt="" />
             </div>
+            <p
+              id="partner-name-display"
+              class="text-center mt-3 font-bold text-slate-700"
+            ></p>
           </div>
         </div>
       </main>
 
       <footer
-        class="input-area pt-4 pb-6 md:pb-4 border-t border-slate-200 bg-white z-[30] flex-shrink-0"
+        class="input-area py-4 border-t border-slate-200 bg-white z-[30] flex-shrink-0"
       >
         <div class="input-container max-w-3xl mx-auto flex gap-2 px-4 w-full">
           <input
             type="text"
             id="user-input"
             disabled
-            class="user-text-input flex-1 p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-gray-100 cursor-not-allowed text-base md:text-sm"
-            placeholder="Wähle zuerst eine Übung aus..."
+            class="user-text-input flex-1 p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-gray-100 cursor-not-allowed text-base"
+            placeholder="Wähle zuerst ein Szenario aus..."
           />
           <button
             id="mic-btn"
@@ -239,6 +353,96 @@
           </button>
         </div>
       </footer>
+    </div>
+
+    <div
+      id="loading-overlay"
+      class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm hidden z-[100] flex flex-col items-center justify-center text-white"
+    >
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"
+      ></div>
+      <p class="text-xl font-semibold">Mentor analysiert das Gespräch...</p>
+      <p class="text-sm text-gray-300">Dies kann einen Moment dauern.</p>
+    </div>
+
+    <div
+      id="feedback-modal"
+      class="fixed inset-0 bg-black/50 hidden z-[110] flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[90vh]"
+      >
+        <div
+          class="flex justify-between items-center mb-4 border-b pb-2 flex-shrink-0"
+        >
+          <h2 class="text-2xl font-bold text-gray-800">📊 Mentor Feedback</h2>
+          <button
+            id="modal-close-feedback"
+            class="text-gray-500 hover:text-black text-xl"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div
+          id="feedback-text"
+          class="prose max-w-none whitespace-pre-wrap text-gray-700 overflow-y-auto flex-1 pr-2 mb-4"
+        ></div>
+
+        <div class="flex flex-wrap gap-3 mt-auto border-t pt-4 flex-shrink-0">
+          <button
+            id="modal-download-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            📥 Protokoll & Feedback herunterladen
+          </button>
+          <button
+            onclick="location.reload()"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+          >
+            🔄 Neues Gespräch beginnen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="reset-modal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl transform transition-all scale-95"
+      >
+        <div class="text-center">
+          <div
+            class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4"
+          >
+            <span class="text-red-600 text-xl">🔄</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">
+            Übung neu starten?
+          </h3>
+          <p class="text-sm text-gray-500 mb-6">
+            Bist du sicher? Dein aktueller Chatverlauf und das bisherige
+            Feedback gehen dabei verloren.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            id="modal-close-reset"
+            class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition"
+          >
+            Abbrechen
+          </button>
+          <button
+            onclick="location.reload()"
+            class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition shadow-lg shadow-red-200"
+          >
+            Ja, Neustart
+          </button>
+        </div>
+      </div>
     </div>
 
     <script src="src/js/app.js" type="module"></script>

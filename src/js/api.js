@@ -1,28 +1,47 @@
 import { Utils } from "./utils.js";
 
 /**
- * API communication and resource loading
+ * @module API
+ * Handles API communication, resource fetching, and localized caching
+ * for the application's prompts and scenario configurations.
  */
 
-// Simple cache for frequently accessed resources
+/**
+ * Simple in-memory cache for frequently accessed text resources.
+ * @type {Map<string, {content: string, timestamp: number}>}
+ */
 const CACHE = new Map();
+
+/**
+ * Cache duration in milliseconds (5 minutes).
+ * @type {number}
+ */
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * Controller used to abort pending chat API requests when a new one starts.
+ * @type {AbortController|null}
+ */
 let activeChatController = null;
 
 export const API = {
   /**
-   * Loads the content of a specific prompt file (system, partner, mentor, or trainer).
-   * @param {string} type - The subfolder name (e.g., 'system', 'partner', 'trainers').
-   * @param {string} promptName - The filename without extension.
-   * @returns {Promise<string>} The trimmed content of the prompt file.
+   * Generates a unique timestamp string to prevent browser caching of requests.
+   * @returns {string} A query parameter string like "t=123456789".
+   * @private
    */
   _getCacheBuster() {
     return `t=${Date.now()}`;
   },
 
   /**
-   * Centralized request handler for fetch requests
+   * Core fetch wrapper that implements cache busting and standardized error handling.
+   *
+   * @param {string} url - The target URL for the request.
+   * @param {RequestInit} [options={}] - Standard fetch options (method, headers, body, etc.).
+   * @returns {Promise<Response|null>} The fetch response or null if the request was aborted.
+   * @throws {Error} Throws an error for HTTP failures or network connectivity issues.
+   * @private
    */
   async _request(url, options = {}) {
     const separator = url.includes("?") ? "&" : "?";
@@ -49,12 +68,31 @@ export const API = {
   },
 
   /**
-   * Clears the cache - useful for development or when content updates
+   * Clears the internal in-memory cache.
+   * Useful for development or forcing a refresh of scenario data.
    */
   clearCache() {
     CACHE.clear();
   },
 
+  /**
+   * Fetches raw text content from a URL.
+   * @param {string} url - The target URL.
+   * @returns {Promise<string>}
+   */
+  async fetchText(url) {
+    const response = await this._request(url);
+    return response ? response.text() : "";
+  },
+
+  /**
+   * Loads the text content of a specific prompt file with caching support.
+   *
+   * @param {string} type - The subfolder within prompts (e.g., 'system', 'partner', 'mentor').
+   * @param {string} promptName - The filename without extension.
+   * @returns {Promise<string>} The trimmed text content of the prompt.
+   * @async
+   */
   async loadPromptContent(type, promptName) {
     if (!promptName) return "";
 
@@ -77,19 +115,20 @@ export const API = {
   },
 
   /**
-   * Loads a complete scenario including all associated prompts in parallel.
-   * @param {string} filePath - The path to the scenario .txt file.
-   * @returns {Promise<Object>} The parsed scenario configuration and loaded prompts.
+   * Orchestrates the loading of a scenario file and all its associated prompt files.
+   * Prompts are loaded in parallel for better performance.
+   *
+   * @param {string} filePath - Path to the .txt scenario file.
+   * @returns {Promise<Object>} Object containing scenario config and a 'prompts' map.
+   * @async
    */
   async fetchCompleteScenario(filePath) {
     const response = await this._request(filePath);
     const text = await response.text();
 
-    // Parse the raw text into metadata and briefing sections
     const { metaSection, instructionSection } =
       Utils.parseScenarioContent(text);
 
-    // Extract specific metadata values into a typed configuration object
     const config = {
       title: Utils.parseMetaValue(metaSection, "title"),
       roleLabel: Utils.parseMetaValue(metaSection, "role_label"),
@@ -98,12 +137,10 @@ export const API = {
       shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
-    // Map file keys to their respective prompt directories
     const promptMap = {
       trainer: { file: config.trainerPromptFile, dir: "trainers" },
     };
 
-    // Execute multiple fetch requests in parallel for optimized performance
     const prompts = {};
     // Load all defined prompts in parallel
     await Promise.all(
@@ -118,9 +155,11 @@ export const API = {
   },
 
   /**
-   * Fetches only the title from a scenario source file for dropdown population.
-   * @param {string} filePath - The path to the scenario .txt file.
+   * Fetches only the title from a scenario file's meta section.
+   *
+   * @param {string} filePath - Path to the .txt scenario file.
    * @returns {Promise<string|null>} The title string or null if not found.
+   * @async
    */
   async fetchScenarioTitle(filePath) {
     const response = await this._request(filePath).catch(() => null);
@@ -131,10 +170,12 @@ export const API = {
   },
 
   /**
-   * Sends a collection of messages to the chat API via a proxy.
-   * @param {Array} messages - The message history to send.
-   * @param {Object} config - Proxy and model configuration parameters.
-   * @returns {Promise<Object>} The API response data.
+   * Sends a message history to the AI proxy and retrieves the completion.
+   * Automatically aborts previous pending chat requests.
+   *
+   * @param {Array<Object>} messages - The chat history in OpenAI message format.
+   * @param {Object} config - Configuration including proxyUrl, model, and temperature.
+   * @returns {Promise<Object|null>} The JSON response from the API.
    */
   async callChatApi(messages, config) {
     const { proxyUrl, model, temperature } = config;

@@ -6,14 +6,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.19.0] - 2026-06-09
+
+### Added
+
+- **Service-Oriented Architecture**: Extracted core logic into standalone ES6 modules: `Avatar`, `Speech`, `Chat`, and `ScenarioService`.
+- **JSDoc Standardization**: Implemented comprehensive English JSDoc comments across all core utility and service modules for better maintainability and IDE support.
+- **Modular Avatar System**: Introduced `profiles.js` to manage character pools and multi-layered graphics (Base, Hair, Clothes, Hands, Glasses, Headset).
+- **Dynamic Character Randomization**: Implemented a two-tier randomization logic that first selects a character base from a pool and then randomizes individual traits for maximum variety.
+- **Skin Tone Consistency**: Added automatic skin tone detection from head assets (e.g., `_a.png`) to ensure matching hand graphics are selected.
+- **Accessory Layers**: Added support for optional layers including glasses and headsets, positioned correctly using the `head` layer as anchor.
+- **Portrait Focus Layout**: Implemented a 3:4 aspect ratio with `object-fit: cover` and `object-position: top` to focus on the character's upper body and face.
+- **In-Memory Caching**: Implemented a `Map`-based caching system in `api.js` with TTL logic to reduce redundant network requests for prompt files.
+
+### Changed
+
+- **Controller Refactoring**: Simplified `app.js` and `ui.js` by delegating business logic, state management, and multimedia handling to specialized services.
+- **Enhanced Utility Layer**: Added `downloadFile` helper and refined text-to-speech cleaning logic in `utils.js`.
+- **Documentation Overhaul**: Completely updated the `README.md` to reflect the new modular structure and define clear responsibilities for each module.
+- **Refactored Asset Management**: Moved character configurations to `profiles.js` and standardized layer naming (transition from `body` to `head`).
+- **Layered Chat Bubbles**: Updated the miniature avatars in the chat history to use the same layered rendering system as the main portrait for visual consistency.
+- **Fallback Mechanism**: Improved the role-to-profile mapping to use a robust fallback to a default pool if no specific role match is found.
+
+### Fixed
+
+- **Broken Image Fallback**: Implemented a transparent pixel fallback for missing or empty optional layers (like glasses or headsets) to prevent broken image icons.
+- **Z-Index Layering**: Corrected the rendering order to ensure hair correctly overlaps headsets and glasses where appropriate.
+- **Silent Abort**: Improved `api.js` to gracefully handle `AbortError` without triggering UI error states when requests are cancelled.
+
 ## [0.18.0] - 2026-05-15
 
 ### Added
 
-- **Sequential Exercise Flow**: Implemented a new progression logic where users work through all transformation statements one after another without interruption.
-- **Batch Evaluation Logic**: Introduced `finalizeExercise` to collect all user answers and request a single, comprehensive AI evaluation at the end of the session.
+- **Exercise Preparation**: Added state structure for tracking transformation answers and exercise progress.
 - **Functional Sidebar Reset**: The sidebar reset button is now fully functional, featuring a confirmation dialog and state cleanup.
-- **Conditional Export**: Added an "Export Transcript" button that only appears after the final evaluation is generated, keeping the UI focused during the exercise.
 
 ### Changed
 
@@ -21,11 +47,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Button Logic Refinement**: The "Create Evaluation" button now dynamically activates only after the first response is provided and can be used for early termination.
 - **Localization**: Translated all internal code comments in `app.js` and `ui.js` from German to English to align with standard development practices.
 - **State Reset**: Enhanced the `restartTransformationExercise` logic to restore the UI to its absolute initial state, including button visibility and instruction expansion.
-
-### Removed
-
-- **Redundant Footer Actions**: Removed the "Revision" and "Next Statement" buttons from the chat window as the flow is now automated and sequential.
-- **Immediate Feedback Loop**: Removed the per-message API call to reduce latency and allow users to focus on the transformation technique before receiving a critique.
 
 ### Fixed
 

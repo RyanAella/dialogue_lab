@@ -1,7 +1,7 @@
-> [!IMPORTANT]
-> **Edition-Hinweis:** Dies ist eine spezialisierte Version der Anwendung. Im Gegensatz zur Hauptversion konzentriert sich dieser Stand ausschließlich auf **Transformations-Übungen** (interaktive Umformulierungen) und enthält keinen Simulations-Modus.
-
 # Lab für Sozioinformatik: Transformation Lab
+
+> [!IMPORTANT]
+> **Edition-Hinweis:** Dies ist eine spezialisierte Version der Anwendung. Im Gegensatz zur Hauptversion konzentriert sich dieser Stand ausschließlich auf **Transformations-Übungen** (interaktive Umformulierungen) und enthält keinen Dialogsimulationen (Rollenspiele).
 
 ## 1. Das Projekt auf einen Blick
 
@@ -11,41 +11,58 @@ Das **Lab für Sozioinformatik: Transformation Lab** ist eine interaktive Web-An
 
 - **Gezielte Übungen (Transformation)**
   Hier liegt der Fokus auf der Technik. Trainiere das Umformulieren von Vorwürfen in konstruktive Botschaften (z. B. Ich-Botschaften oder Positive Unterstellungen). Die KI erstellt nach Abschluss der Übungsreihe oder auf Wunsch eine umfassende Gesamtauswertung deiner Formulierungen.
-- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung werden die Dialoge lebendig. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
-- **Abwechslungsreiches Training:** Die Übungssituationen werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
+- **Visuelle Immersion:**
+  Ein modulares **Avatar-System** generiert basierend auf Charakter-Pools dynamische Portraits. Durch das Layering von Kopf (mit automatischer Hautton-Erkennung), Kleidung, Haaren, Brillen und Headsets entstehen bei jedem Start abwechslungsreiche und passende Gesprächspartner.
+
+### Highlights für die User Experience
+
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
-- **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung.
+- **Visuelles Feedback:** Ein animierter **Typing Indicator** (Schreib-Indikator) signalisiert dem Nutzer sofort, wenn die KI eine Antwort generiert, was die gefühlte Wartezeit verkürzt.
+- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung und automatischen Pausen bei Satzzeichen werden die Dialoge lebendig. Ein globaler **Stop-Button** in der Sidebar erlaubt es, die Ausgabe jederzeit sofort abzubrechen. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive des ursprünglichen Briefings mit einem Klick als strukturierte Textdatei (`[Modus]_[Titel]_[Datum].txt`) speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
+- **Abwechslungsreiches Training:** Die Übungen im Transformations-Modus werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
 
 ## 2. Technische Architektur
 
-Die Anwendung nutzt ein statisches Frontend mit einem serverseitigen Proxy zum Schutz der API-Keys:
+Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy (für API-Key-Schutz):
 
-- **Frontend:** Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript).
-- **Backend-Proxy:** Ein serverseitiges Skript (z.B. PHP `chat.php`), das die API-Keys kapselt.
-- **Sicherheit (CORS):** Der Proxy akzeptiert nur Anfragen vom definierten **Origin** der Web-App (z.B. `https://ryanaella.github.io`).
+- **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
+- **Architektur**: Modulare Struktur nach dem **Separation of Concerns** Prinzip. Klare Trennung zwischen UI-Steuerung, API-Kommunikation und Hilfsfunktionen.
+- **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
+- **Modulares Grafik-System**: Die Darstellung der Partner erfolgt über einen "Avatar-Stack" (CSS Grid). Bilder werden zur Laufzeit kombiniert, um verschiedene Hauttöne, Accessoires und Animationen (Blinzeln, Mundbewegungen) darzustellen.
+- **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
 - **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
-- **KI-Modell:** OpenAI (Konfigurationswerte werden zentral in der `config.js` verwaltet).
+- **Robuste Kommunikation**: Implementierung von `AbortController` zur Vermeidung von Race-Conditions bei API-Anfragen.
 
 ## 3. Repository-Dateistruktur
 
-- `index.html`: UI / Layout.
-- `src/js/`:
-  - `config.js`: Zentrale Runtime-Konfiguration (Proxy-URL, Modell, Temperaturen).
-  - `utils.js`: Zentrale Hilfsfunktionen für Text-Parsing, Bereinigung der Sprachausgabe und Protokoll-Generierung.
-  - `api.js`: Abstraktionsschicht für den Datenaustausch, Cache-Management und paralleles Laden von Ressourcen.
-  - `ui.js`: Modularer UI-Manager für dynamisches Rendering, Event-Binding und Multimedia-Integration (TTS/STT).
-  - `app.js`: Zentrale Anwendungslogik (State-Management, Event-Handling, Modus-Steuerung) als Controller.
-- `src/data/`: `exercises.json` als zentrale Konfiguration.
-- `scenarios/`: Szenariodateien.
-- `prompts/`: Prompt-Dateien in Unterordnern `trainers/`.
+### Kern-Module (`src/js/`)
 
-Hinweis: Ein serverseitiges Proxy-Skript wie `chat.php` ist **nicht zwingend Teil dieses Repositories**. Es kann getrennt auf dem Server liegen, damit keine Secrets im Repo landen.
+| Modul             | Verantwortung                                                                              |
+| :---------------- | :----------------------------------------------------------------------------------------- |
+| **`app.js`**      | **Controller**: Orchestriert den Programmfluss und initialisiert die Services.             |
+| **`ui.js`**       | **View-Manager**: Verwaltet DOM-Elemente, Event-Listener und das Chat-Rendering.           |
+| **`avatar.js`**   | **Visuals**: Steuert das Multi-Layer-System, Animationen (Blinken) und Lippensynchronität. |
+| **`speech.js`**   | **Audio-Service**: Kapselt TTS (Sprachausgabe) und STT (Diktierfunktion).                  |
+| **`chat.js`**     | **State-Manager**: Hält die Gesprächshistorie und bereitet Transkripte vor.                |
+| **`scenario.js`** | **Data-Service**: Lädt Übungspools und verwaltet das aktive Szenario-State.                |
+| **`api.js`**      | **Network**: Handling der API-Anfragen mit integriertem Caching.                           |
+| **`utils.js`**    | **Helpers**: Statische Funktionen für Markdown-Parsing und Text-Bereinigung.               |
+| **`profiles.js`** | **Assets**: Konfiguration der Charakter-Pools und Grafik-Ebenen.                           |
+
+### Daten & Inhalte
+
+- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen.
+- `scenarios/`: Markdown-ähnliche Szenario-Beschreibungen und GUI-Instruktionen.
+- `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Szenarien und Konfiguration
 
+Dieser Abschnitt beschreibt, wie die Inhalte für die Simulationen strukturiert und konfiguriert werden. Die App trennt strikt zwischen Code und Inhalt, um eine einfache Wartung und Erweiterung zu ermöglichen.
+
 ### 4.1 Die `exercises.json`
 
-Diese Datei steuert, welche Transformation in der App zur Verfügung stehen.
+Diese Datei steuert alle verfügbaren Inhalte.
 
 ```json
 [
@@ -60,7 +77,7 @@ Diese Datei steuert, welche Transformation in der App zur Verfügung stehen.
 ]
 ```
 
-### 4.2 Szenarioformat (`*.txt`)
+### 4.2 Szenarioformat & Prompt-Mapping (`*.txt`)
 
 Jedes Szenario besteht aus einem **META-Block** (Referenzierung der Prompts) und der **GUI Instruction** (Briefing für den Nutzer).
 
@@ -95,19 +112,26 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
 - **Main-Branch:** Hauptversion unter der Root-URL.
-- **Simulation-Branch:** Spezialversion unter `/practice-edition/`.
+- **Feature-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
 
 ## 7. Neues Szenario hinzufügen
 
-1. Erstelle die Prompt-Dateien (`trainers`) unter `prompts/`.
-2. Erstelle eine neue Szenario-Datei unter `scenarios/transformations/`.
-3. Trage die neue ID und den Pfad in die `exercises.json` ein.
+1. **Prompts erstellen:** Drei Dateien in `prompts/system/`, `prompts/partner/` und `prompts/mentor/` anlegen.
+2. **Szenario-File:** Eine `.txt`-Datei in `scenarios/transformations/` erstellen. Im `### META ###`-Block auf die neuen Prompt-Dateinamen verweisen (ohne Endung).
+3. **Pool erweitern:** Die neue ID und den Pfad in `src/data/exercises.json` registrieren.
+4. **Avatar-Mapping:** Sicherstellen, dass der `role_label` in der META-Sektion einem Key in `profiles.js` entspricht, um den korrekten Charakter-Pool zu laden.
 
 ## 8. Inhalte pflegen
 
-1. Szenario-Dateien unter `scenarios/transformations/` bearbeiten (Inhalt und GUI Instruction).
-2. Prompt-Dateien in `prompts/` (trainers) anpassen.
-3. Falls neue Szenarien hinzugefügt werden, `exercises.json` aktualisieren.
+### Best Practices für Prompts
+
+- **Vermeide Meta-Talk:** Die KI-Partner sollten nie über "Phasen" oder "Prompts" sprechen, sondern immer in der Rolle bleiben.
+- **Einwand-Rotation:** Hinterlege im Partner-Prompt eine Liste mit 4-5 Einwänden, damit Gespräche variieren.
+- **Strukturierte Mentor-Ausgabe:** Nutze im Mentor-Prompt klare Trenner (z.B. `---`), damit die `utils.js` das Feedback sauber im Modal darstellen kann.
+
+### Grafiken & Assets
+
+Neue Avatare müssen im Ordner `src/assets/Character/` abgelegt werden. Achte auf das Suffix für Hauttöne (z.B. `head_v1_a.png` bis `head_v1_d.png`), damit das automatische Matching der Hände funktioniert.
 
 ---
 
@@ -115,10 +139,10 @@ _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht d
 
 ---
 
+# Socio-Informatics Lab: Transformation Lab
+
 > [!IMPORTANT]
 > **Edition Note:** This is a specialized version of the application. Unlike the main version, this build focuses exclusively on **Transformation Exercises** (interactive rephrasing) and does not include a Simulation Mode.
-
-# Socio-Informatics Lab: Transformation Lab
 
 ## 1. Project at a Glance
 
@@ -126,41 +150,60 @@ The **Socio-Informatics Lab: Transformation Lab** is an interactive web applicat
 
 ### Core Functions of This Edition
 
-- **Targeted Exercises (Transformation):** The focus here is on technique. Practice rephrasing accusations into constructive messages (e.g., I-statements or positive assumptions). The AI generates a comprehensive overall evaluation of your phrasing after the exercise series is completed or upon request.
-- **Natural Speech Feel:** Integrated **Text-to-Speech (TTS)** with optimized emphasis brings dialogues to life. (Tip: Voices sound particularly human when using Microsoft Edge!)
+- **Targeted Exercises (Transformation)**
+  The focus here is on technique. Practice rephrasing accusations into constructive messages (e.g., I-statements or positive assumptions). The AI generates a comprehensive overall evaluation of your phrasing after the exercise series is completed or upon request.
+- **Visual Immersion:**
+  A modular **Avatar System** generates dynamic portraits based on character pools. Through the layering of head (with automatic skin tone detection), clothing, hair, glasses, and headsets, varied and appropriate conversation partners are created at every start.
+
+### Highlights for the User Experience
+
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
-- **Varied Training:** Exercise situations are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
-- **Save Your Progress:** Use the **Protocol Export** to save the entire conversation history, including the briefing, as a structured text file with a single click—ideal for review and follow-up.
+- **Visual Feedback:** An animated **Typing Indicator** signals to the user immediately when the AI is generating a response, reducing perceived waiting time.
+- **Natural Speech Feel:** Integrated **Text-to-Speech (TTS)** with optimized emphasis and automatic pauses at punctuation marks brings dialogues to life. A global **Stop Button** in the sidebar allows users to immediately cancel the output at any time. (Tip: Voices sound particularly human when using Microsoft Edge!)
+- **Save Your Progress:** Use the **Protocol Export** to save the entire conversation history, including the initial briefing, as a structured text file (`[Mode]_[Title]_[Date].txt`) with a single click—ideal for review or documenting learning progress.
+- **Varied Training:** Exercise situations in Transformation Mode are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
 
 ## 2. Technical Architecture
 
 The application uses a static frontend with a server-side proxy to protect API keys:
 
-- **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript).
-- **Backend Proxy:** A server-side script (e.g., PHP `chat.php`) that encapsulates the API keys.
-- **Security (CORS):** The proxy only accepts requests from the defined **Origin** of the web app (e.g., `https://ryanaella.github.io`).
+- **Frontend**: Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g., hosted on **GitHub Pages**.
+- **Architecture**: Modular structure following the **Separation of Concerns** principle. Clear separation between UI control, API communication, and helper functions.
+- **Backend Proxy**: A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is necessary because API keys must never be present in the client-side code (JavaScript).
+- **Modular Graphics System**: The partners are represented via an "Avatar Stack" (CSS Grid). Images are combined at runtime to represent different skin tones, accessories, and animations (blinking, mouth movements).
+- **Security (CORS)**: The proxy should strictly limit `Access-Control-Allow-Origin` headers to your domain (e.g., `https://ryanaella.github.io`). Note: **Origin = Schema + Domain**, not the path.
 - **Interfaces:** Uses the native **Web Speech API** for audio input and output (local/browser-side processing).
-- **AI Model:** OpenAI (configuration values are managed centrally in `config.js`).
+- **Robust Communication**: Implementation of `AbortController` to avoid race conditions during API requests.
 
 ## 3. Repository File Structure
 
-- `index.html`: UI / Layout.
-- `src/js/`:
-  - `config.js`: Central runtime configuration (Proxy URL, model, temperatures).
-  - `utils.js`: Helper functions for text parsing, Markdown rendering, and role detection.
-  - `api.js`: Manages communication with the proxy and handles loading/parsing of scenario and prompt files.
-  - `ui.js`: Responsible for all DOM manipulations and visual representation of the interface.
-  - `app.js`: Central application logic (state management, event handling, mode control) acting as the controller.
-- `scenarios/`: Scenario and exercise files (`exercises.json` as central config, `*.txt` for scenario content).
-- `prompts/`: Prompt files located in the `trainers/` subfolder.
+### Core Modules (`src/js/`)
 
-> **Note:** A server-side proxy script like `chat.php` is **not necessarily part of this repository**. It can reside separately on the server to ensure no secrets are stored in the repo.
+| Module            | Responsibility                                                                     |
+| :---------------- | :--------------------------------------------------------------------------------- |
+| **`app.js`**      | **Controller**: Orchestrates the program flow and initializes the services.        |
+| **`ui.js`**       | **View Manager**: Manages DOM elements, event listeners, and chat rendering.       |
+| **`avatar.js`**   | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-sync. |
+| **`speech.js`**   | **Audio Service**: Encapsulates TTS (speech output) and STT (dictation function).  |
+| **`chat.js`**     | **State Manager**: Holds the conversation history and prepares transcripts.        |
+| **`scenario.js`** | **Data Service**: Loads exercise pools and manages the active scenario state.      |
+| **`api.js`**      | **Network**: Handling API requests with integrated caching.                        |
+| **`utils.js`**    | **Helpers**: Static functions for Markdown parsing and text cleaning.              |
+| **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                   |
+
+### Data & Content
+
+- `src/data/exercises.json`: Central catalog of all available simulations.
+- `scenarios/`: Markdown-like scenario descriptions and GUI instructions.
+- `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Scenarios and Configuration
 
+This section describes how the content for simulations is structured and configured. The app strictly separates code and content to allow for easy maintenance and expansion.
+
 ### 4.1 The `exercises.json`
 
-This file controls which transformations are available within the app.
+This file controls all available content.
 
 ```json
 [
