@@ -1,0 +1,25 @@
+### META ###
+title: Ich-Botschaft
+trainer_prompt: ich_botschaft_trainer
+short_instruction: Formuliere die Aussage konstruktiv um.
+
+### GUI INSTRUCTION ###
+**Konzept: Ich-Botschaften**
+In dieser Übung geht es darum, kritische oder vorwurfsvolle Aussagen so zu formulieren, dass sie als klare Selbstoffenbarung verständlich werden – ohne an Klarheit zu verlieren.
+
+Eine gute Ich-Botschaft sagt etwas über dich:
+• Was du wahrnimmst,
+• Was das bei dir auslöst,
+• Und was dir wichtig ist.
+
+Statt das Verhalten des Gegenübers zu bewerten, beschreibst du deine eigene Reaktion und dein Anliegen.
+
+**Deine Aufgabe:**
+Formuliere die vorgegebene Aussage als Ich-Botschaft so, dass:
+• Ein echtes inneres Erleben sichtbar wird (nicht nur „Ich habe das Gefühl, dass…“),
+• Die Situation konkret bleibt,
+• Und ein klarer Wunsch oder eine Erwartung formuliert ist.
+
+Die KI gibt dir zu jeder Umformulierung kurzes Feedback. Danach kannst du deine Nachricht überarbeiten oder zur nächsten Aussage weitergehen.
+
+**Ziel:** So zu sprechen, dass dein Gegenüber dich versteht, ohne sich angegriffen zu fühlen.
