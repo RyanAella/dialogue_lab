@@ -1,5 +1,5 @@
 import { Avatar } from "./avatar.js";
-import { Speech } from "./Speech.js";
+import { Speech } from "./speech.js";
 import { Utils } from "./utils.js";
 
 /**
