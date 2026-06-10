@@ -1,10 +1,37 @@
 /**
- * Definition der Charakter-Pools und deren Zuordnung zu Rollen
+ * @module Profiles
+ * Defines character asset pools and maps them to specific dialogue roles.
+ * This file manages the visual configurations for all AI partners, including
+ * layered image paths for heads, clothes, hair, and accessories.
  */
 
+/**
+ * Base directory for all character-related image assets.
+ * @constant {string}
+ */
 const BASE_PATH = "src/assets/Character/";
 
-// Gemeinsame Charakter-Sets (Bases), die von verschiedenen Rollen genutzt werden können
+/**
+ * @typedef {Object} CharacterProfile
+ * @property {string} gender - The gender of the character ('male' or 'female').
+ * @property {string} basePath - The base path for asset resolution.
+ * @property {string[]} heads - Array of paths for head/face base images.
+ * @property {string[]} clothes - Array of paths for clothing layers.
+ * @property {string[]} hair - Array of paths for hairstyle layers.
+ * @property {string[]} glasses - Array of paths for eyewear (or empty strings for none).
+ * @property {string[]} headset - Array of paths for headset/communication gear.
+ * @property {Object.<string, string[]>|string[]} hands - Hand images, either as a simple array or mapped by skin tone (a, b, c, d).
+ * @property {string[]} eyesOpen - Array of paths for open eye states.
+ * @property {string[]} eyesClosed - Array of paths for closed eye states (blinking).
+ * @property {string[]} mouthsClosed - Array of paths for neutral/closed mouth states.
+ * @property {string[]} mouthsOpen - Array of paths for open/speaking mouth states.
+ */
+
+/**
+ * Collection of female character configurations.
+ * These are used as base sets that can be shared across multiple roles.
+ * @type {CharacterProfile[]}
+ */
 const FEMALE_CHARACTERS = [
   {
     gender: "female",
@@ -178,6 +205,10 @@ const FEMALE_CHARACTERS = [
   // Hier weitere weibliche Charakter-Modelle hinzufügen
 ];
 
+/**
+ * Collection of male character configurations.
+ * @type {CharacterProfile[]}
+ */
 const MALE_CHARACTERS = [
   {
     gender: "male",
@@ -296,12 +327,16 @@ const MALE_CHARACTERS = [
   // Hier weitere männliche Charakter-Modelle hinzufügen
 ];
 
-// Kombinierter Pool für maximale Zufälligkeit
+/**
+ * Combined pool of all available characters for maximum randomization.
+ * @type {CharacterProfile[]}
+ */
 const ALL_CHARACTERS = [...FEMALE_CHARACTERS, ...MALE_CHARACTERS];
 
 /**
- * Exportiert die Profile-Map.
- * Der Key entspricht dem 'role_label' oder 'roleName' aus dem Szenario.
+ * Maps scenario role labels to specific character pools.
+ * The key corresponds to the 'role_label' or 'roleName' defined in the scenario text files.
+ * @type {Object.<string, CharacterProfile[]>}
  */
 export const CHARACTER_PROFILES = {
   // Rollen-Zuweisungen
@@ -317,8 +352,10 @@ export const CHARACTER_PROFILES = {
 };
 
 /**
- * Findet den passenden Profil-Pool für einen Key oder liefert den Default-Pool.
- * @param {string} key - Der Rollenname oder das Label.
+ * Retrieves the appropriate character profile pool based on a role key.
+ * Falls back to the global 'default' pool if the key is not found.
+ * @param {string} key - The role name or label to look up.
+ * @returns {CharacterProfile[]} An array of character profiles matching the role.
  */
 export const getProfilePool = (key) => {
   return CHARACTER_PROFILES[key] || CHARACTER_PROFILES["default"];
