@@ -411,36 +411,79 @@ async function handleSend() {
   });
 
   // Simulation Mode: Real-time conversation
-  const config = ScenarioService.getActive();
-  UI.updateInputUI(true, "Sende...");
-  UI.updateStatus("loading", "Antwortet...");
-  UI.showTypingIndicator(config.roleName);
+  const config = ScenarioService.getActive(); // This is needed for both modes
 
-  if (!Chat.hasSystemPrompt()) {
-    Chat.setSystemPrompt(
-      `${config.prompts.system}\n\n${config.prompts.partner}`,
-    );
-  }
-
-  try {
-    const data = await API.callChatApi(Chat.getHistory(), {
-      proxyUrl: APP_CONFIG.PROXY_URL,
-      model: APP_CONFIG.MODEL,
-      temperature: APP_CONFIG.CHAT_TEMPERATURE,
+  if (STATE.currentMode === "transformation") {
+    // 1. Save response
+    STATE.answers.push({
+      statement: STATE.activeStatements[STATE.exerciseIndex],
+      userResponse: userVal,
     });
-    if (!data) return;
-    UI.hideTypingIndicator();
-    const botResp = data.choices[0].message.content;
-    UI.appendMessage(botResp, "partner", { roleName: config.roleName });
-    Chat.add("assistant", botResp);
-    if (STATE.ttsEnabled) UI.speak(botResp, config.roleName);
-    UI.updateStatus("idle", "Bereit");
-  } catch (e) {
-    UI.hideTypingIndicator();
-    UI.updateStatus("error", e.message);
-  } finally {
-    UI.updateInputUI(false, `Nachricht an ${config.roleName}...`);
-    UI.elements.userInput.focus();
+
+    // 2. Increment index
+    STATE.exerciseIndex++;
+
+    // 3. Check if more statements are available
+    if (STATE.exerciseIndex < STATE.activeStatements.length) {
+      const nextStatement = STATE.activeStatements[STATE.exerciseIndex];
+      const taskText = `"${nextStatement}"\n\n${config.shortInstruction}`;
+
+      // Display next task in chat
+      Chat.add("assistant", taskText);
+      UI.appendMessage(taskText, "partner", {
+        roleName: config.roleName,
+        messageType: "task",
+        isIchMode: true,
+      });
+
+      if (STATE.ttsEnabled) UI.speak(taskText, config.roleName);
+      UI.updateStatus("idle", getTransformationProgressText());
+      UI.updateInputUI(false, "Deine Umformulierung...");
+    } else {
+      // End of exercise series
+      const endMsg =
+        "Alle Aussagen bearbeitet. Klicke jetzt auf 'Auswertung erstellen', um dein Feedback zu erhalten.";
+      UI.appendMessage(endMsg, "partner", {
+        roleName: config.roleName,
+        messageType: "task",
+        isIchMode: true,
+      });
+      UI.updateStatus("idle", "Übung abgeschlossen");
+      UI.updateInputUI(true, "Alle Aufgaben erledigt.");
+      UI.setExerciseActionsVisible(false);
+    }
+  } else {
+    // Roleplay Mode: Real-time conversation
+    UI.updateInputUI(true, "Sende...");
+    UI.updateStatus("loading", "Antwortet...");
+    UI.showTypingIndicator(config.roleName);
+
+    if (!Chat.hasSystemPrompt()) {
+      Chat.setSystemPrompt(
+        `${config.prompts.system}\n\n${config.prompts.partner}`,
+      );
+    }
+
+    try {
+      const data = await API.callChatApi(Chat.getHistory(), {
+        proxyUrl: APP_CONFIG.PROXY_URL,
+        model: APP_CONFIG.MODEL,
+        temperature: APP_CONFIG.CHAT_TEMPERATURE,
+      });
+      if (!data) return;
+      UI.hideTypingIndicator();
+      const botResp = data.choices[0].message.content;
+      UI.appendMessage(botResp, "partner", { roleName: config.roleName });
+      Chat.add("assistant", botResp);
+      if (STATE.ttsEnabled) UI.speak(botResp, config.roleName);
+      UI.updateStatus("idle", "Bereit");
+    } catch (e) {
+      UI.hideTypingIndicator();
+      UI.updateStatus("error", e.message);
+    } finally {
+      UI.updateInputUI(false, `Nachricht an ${config.roleName}...`);
+      UI.elements.userInput.focus();
+    }
   }
 }
 
