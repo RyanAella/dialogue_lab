@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.21.0] - 2026-06-12
+
+### Added
+
+- **Asset Preloading**: Implemented `preloadProfile` in `avatar.js` to cache critical character layers before the first render, eliminating the visual "flicker" effect when starting a new session.
+
+### Changed
+
+- **Unified Avatar Rendering**: Refactored the avatar stack from unique ID-based selection to a class-based system using `.js-avatar-layer` and `data-layer` attributes. This allows synchronous updates of both Desktop and Mobile views with a single function call.
+- **Service Optimization**: Simplified `Avatar.init` and `Avatar.update` logic in `avatar.js` to handle multiple DOM instances of the same layer simultaneously using `querySelectorAll`.
+- **UI Decoupling**: Removed redundant manual ID remapping for mobile avatar nodes in `ui.js`, significantly reducing boilerplate code and improving maintainability.
+
+### Fixed
+
+- **Flash of Incorrect Content**: Resolved an issue where a default character was briefly visible before the scenario-specific character loaded by implementing a strict reset-before-preload logic in `avatar.js`.
+- **Sync Issues**: Resolved a visual bug where switching between mobile and desktop views could lead to inconsistent avatar states.
+- **Asset Loading**: Improved the robustness of the avatar update loop to prevent broken image icons when optional layers are missing.
+
+---
+
 ## [0.20.0] - 2026-06-08
 
 ### Added
