@@ -22,8 +22,6 @@ export const Utils = {
    * @param {string} text - The raw text containing potential markdown patterns.
    */
   renderBoldMarkdownWithLineBreaks(container, text) {
-    if (!container) return;
-
     container.textContent = "";
     container.style.whiteSpace = "pre-wrap";
 
@@ -32,6 +30,7 @@ export const Utils = {
     parts.forEach((part, index) => {
       if (!part) return;
 
+      // Odd indexes are the content captured inside the markers
       if (index % 2 === 1) {
         const strong = document.createElement("strong");
         strong.textContent = part;
@@ -139,11 +138,9 @@ export const Utils = {
   },
 
   /**
-   * Randomly shuffles an array using the Fisher-Yates (Knuth) algorithm.
-   * Creates a shallow copy of the original array to prevent side effects.
-   *
-   * @param {Array} array - The array to be shuffled.
-   * @returns {Array} A new array with shuffled elements.
+   * Randomizes the order of elements in an array using the Fisher-Yates algorithm.
+   * @param {Array} array - The array to shuffle.
+   * @returns {Array} A new shuffled array.
    */
   shuffleArray(array) {
     const newArray = [...array];
@@ -166,20 +163,10 @@ export const Utils = {
     return history
       .filter((m) => m.role !== "system")
       .map((m) => {
-        let role = partnerRoleName;
-        if (m.role === "user") role = "Führungskraft";
-        if (m.role === "mentor") role = "Mentor";
+        const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
         return `${role}: ${m.content}`;
       })
       .join("\n\n");
-  },
-
-  /**
-   * Formats the current system date for use in filenames.
-   * @returns {string} Date in YYYY-MM-DD format.
-   */
-  getFormattedDate() {
-    return new Date().toISOString().slice(0, 10);
   },
 
   /**
@@ -198,6 +185,14 @@ export const Utils = {
   },
 
   /**
+   * Formats the current system date for use in filenames.
+   * @returns {string} Date in YYYY-MM-DD format.
+   */
+  getFormattedDate() {
+    return new Date().toISOString().slice(0, 10);
+  },
+
+  /**
    * Prepares text for Text-to-Speech by removing visual formatting and stage directions.
    * Injects artificial pauses (...) after punctuation for more natural delivery.
    *
@@ -206,15 +201,15 @@ export const Utils = {
    */
   cleanTextForSpeech(text) {
     return text
-      .replace(/\*\*|\*/g, "") // Entfernt fett/kursiv Markdown
-      .replace(/\(.*?\)/g, "") // Entfernt (Regieanweisungen)
-      .replace(/\[.*?\]/g, "") // Entfernt [Regieanweisungen]
-      .replace(/\n\n+/g, ". ... . ") // Ersetzt Absätze durch lange Pausen
-      .replace(/:\s*\n/g, ". ... . ") // Doppelpunkt am Ende durch Pause ersetzen
-      .replace(/:\s*/g, ", ... ") // Doppelpunkt im Satz durch kurze Pause ersetzen
-      .replace(/\n/g, ". ") // Einfache Umbrüche durch Punkt ersetzen
-      .replace(/([.!?])\s+/g, "$1 ... ") // Kleine Extra-Pause nach Satzzeichen
-      .replace(/\s+/g, " ") // Bereinigt überschüssige Leerzeichen
+      .replace(/\*\*|\*/g, "") // Remove bold/italic Markdown
+      .replace(/\(.*?\)/g, "") // Remove (stage directions)
+      .replace(/\[.*?\]/g, "") // Remove [stage directions]
+      .replace(/\n\n+/g, ". ... . ") // Replace paragraphs with long pauses
+      .replace(/:\s*\n/g, ". ... . ") // Replace trailing colon with pause
+      .replace(/:\s*/g, ", ... ") // Replace inline colon with short pause
+      .replace(/\n/g, ". ") // Replace simple line breaks with period
+      .replace(/([.!?])\s+/g, "$1 ... ") // Add tiny extra pause after punctuation
+      .replace(/\s+/g, " ") // Clean up excess whitespace
       .trim();
   },
 

@@ -35,15 +35,15 @@ const MESSAGE_STYLES = {
     cls: "bg-blue-600 text-white rounded-tr-none",
   },
   partner: {
-    // label is dynamic (passed as roleName)
+    label: "Partner",
     cls: "bg-white text-slate-800 border-slate-100 rounded-tl-none",
   },
   task: {
-    // label is dynamic (passed as roleName)
+    label: "Aufgabe",
     cls: "bg-sky-50 text-sky-900 border-sky-100 rounded-tl-none",
   },
   feedback: {
-    // label is dynamic (passed as roleName)
+    label: "Feedback",
     cls: "bg-indigo-50 text-indigo-900 border-indigo-100 rounded-tl-none",
   },
 };
@@ -65,15 +65,15 @@ export const UI = {
     blinkTimeout: null,
     mouthInterval: null,
     config: {
-      // Wird über initAvatar(profile) befüllt
+      // Populated via initAvatar(profile)
     },
     current: {
       body: 0,
       clothes: 0,
       hair: 0,
       hands: 0,
-      glasses: 0, // Neu: Brillen-Index
-      headset: 0, // Neu: Headset-Index
+      glasses: 0, // New: glasses index
+      headset: 0, // New: headset index
       eyes: 0,
       mouth: 0,
       skinTone: "a",
@@ -84,8 +84,8 @@ export const UI = {
    * Initializes the avatar character and randomizes its appearance.
    * @param {Object|Object[]} data - A single character profile or a pool of profiles.
    */
-  initAvatar(data) {
-    Avatar.setup(data);
+  async initAvatar(data) {
+    await Avatar.setup(data);
   },
 
   /**
@@ -133,16 +133,10 @@ export const UI = {
       this.elements[camelCaseId] = document.getElementById(id);
     });
     // Remap specific non-standard IDs
-    this.elements.scenarioSelect = this.elements.scenarios;
     this.elements.exerciseSelect = this.elements.exercises;
+    this.elements.scenarioSelect = this.elements.scenarios;
 
-    const mainNodes = {};
-    const mobileNodes = {};
-    Avatar.getLayers().forEach((layer) => {
-      mainNodes[layer] = document.getElementById(`partner-${layer}`);
-      mobileNodes[layer] = document.getElementById(`partner-${layer}-mobile`);
-    });
-    Avatar.init(mainNodes, mobileNodes);
+    Avatar.init();
   },
 
   /**
@@ -218,8 +212,6 @@ export const UI = {
    */
   showTypingIndicator(roleName) {
     this.hideTypingIndicator(); // Ensure no duplicates
-    Avatar.setTalking(true);
-
     const wrapper = document.createElement("div");
     wrapper.id = "typing-indicator";
     wrapper.className =
@@ -247,7 +239,6 @@ export const UI = {
    */
   hideTypingIndicator() {
     document.getElementById("typing-indicator")?.remove();
-    Avatar.setTalking(false);
   },
 
   /**
@@ -271,12 +262,13 @@ export const UI = {
     // Partner Avatar: Uses the layer system (avatar stack)
     if (Avatar.getConfig()) {
       avatar.className =
-        "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm";
+        "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm relative";
 
       Avatar.getLayers().forEach((layer) => {
-        const src = Avatar._getLayerSrc(layer);
+        const src = Avatar.getLayerSrc(layer);
         if (src) {
           const img = document.createElement("img");
+          img.className = "absolute inset-0 w-full h-full object-contain";
           img.src = src;
           avatar.appendChild(img);
         }
@@ -314,7 +306,7 @@ export const UI = {
 
     const styleKey = isIchMode && sender !== "user" ? messageType : sender;
     const config = MESSAGE_STYLES[styleKey] || MESSAGE_STYLES.partner;
-    const displayLabel = sender === "user" ? config.label : roleName;
+    const displayLabel = styleKey === "partner" ? roleName : config.label;
 
     // Create Label with Speech Button
     const nameLabel = document.createElement("div");
@@ -326,7 +318,7 @@ export const UI = {
     speakBtn.className =
       "hover:text-blue-600 transition-colors opacity-60 hover:opacity-100 p-0.5";
     speakBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H3a1 1 0 01-1-1V8a1 1 0 011-1h1.586l3.707-3.707a1 1 0 011.09-.217zM14.657 14.828a1 1 0 01-1.414-1.414 5 5 0 000-7.072 1 1 0 011.414-1.414 7 7 0 010 9.9z" clip-rule="evenodd" /></svg>`;
-    speakBtn.onclick = () => this.speak(text, displayLabel, speakBtn);
+    speakBtn.onclick = () => this.speak(text, config.label, speakBtn);
     nameLabel.appendChild(speakBtn);
 
     // Create Bubble
@@ -361,10 +353,7 @@ export const UI = {
   },
 
   /**
-   * Updates the text content and visual styling of the mode badge element.
-   * Differentiates between 'transformation' (Exercises) and default (Simulations) modes.
-   *
-   * @param {string} mode - The active application mode (e.g., 'transformation', 'roleplay').
+   * Sets the content and style of the current mode badge.
    * @returns {void}
    */
   setModeBadge(mode) {
@@ -374,10 +363,6 @@ export const UI = {
       modeBadge.textContent = "Modus: Übungen";
       modeBadge.className =
         "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200";
-    } else {
-      modeBadge.textContent = "Modus: Simulationen";
-      modeBadge.className =
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
     }
   },
 
@@ -409,20 +394,18 @@ export const UI = {
 
   /**
    * Main UI entry point. Binds elements, initializes avatar and voice systems.
-   * @param {Object} defaultProfile - The initial character profile to use.
    */
-  init(defaultProfile) {
+  async init(initialProfile = null) {
     // Bind all DOM elements to UI.elements before setting up logic
     this._bindElements();
 
-    // Init Avatar on load
-    if (defaultProfile) this.initAvatar(defaultProfile);
+    if (initialProfile) await this.initAvatar(initialProfile);
 
     if (this.elements.speakBriefingBtn) {
       this.elements.speakBriefingBtn.onclick = (e) => {
         e.stopPropagation();
         this.speak(
-          this.elements.briefingContent.innerText, // Briefing content
+          this.elements.briefingContent.innerText,
           "Briefing",
           e.currentTarget,
         );
@@ -609,7 +592,7 @@ export const updateSubtitleText = () => {
   const base = "Wähle ein Szenario aus, um zu starten.";
   sub.innerHTML =
     window.innerWidth < 1024
-      ? `${base} <br><span class="text-xs text-blue-600">Szenario wechseln? Klicke oben rechts auf ☰</span>`
+      ? `${base} <br><span class="text-xs text-blue-600">Übung wechseln? Klicke oben rechts auf ☰</span>`
       : base;
 };
 

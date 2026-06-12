@@ -33,7 +33,7 @@ const LAYERS = [
  */
 export const Avatar = {
   /** @type {Object} References to DOM image elements for main and mobile views */
-  _nodes: { main: {}, mobile: {} },
+  _nodes: {},
 
   /**
    * Internal state and current randomization indices.
@@ -45,7 +45,7 @@ export const Avatar = {
     mouthInterval: null, // Reference for the mouth movement interval
     config: null, // The currently active character profile configuration
     current: {
-      body: 0,
+      head: 0,
       clothes: 0,
       hair: 0,
       hands: 0,
@@ -58,39 +58,77 @@ export const Avatar = {
   },
 
   /**
+   * Preloads critical assets for a profile to prevent flickering during rendering.
+   * @param {Object} profile - The character profile configuration.
+   * @returns {Promise<void>} Resolves when essential layers are loaded.
+   */
+  async preloadProfile(profile) {
+    if (!profile) return;
+
+    const essentialPaths = [
+      ...(profile.heads || []),
+      ...(profile.clothes || []),
+      ...(profile.hair || []),
+      ...(profile.eyesOpen || []),
+      ...(profile.mouthsClosed || []),
+    ].map((p) => profile.basePath + p);
+
+    const promises = essentialPaths.slice(0, 15).map((src) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve; // Continue even if one fails
+        img.src = src;
+      });
+    });
+
+    return Promise.all(promises);
+  },
+
+  /**
    * Initalizes the component with DOM node references.
    * @param {Object} mainNodes - Map of layer names to <img> elements in the main view.
    * @param {Object} mobileNodes - Map of layer names to <img> elements in the mobile view.
    */
-  init(mainNodes, mobileNodes) {
-    this._nodes.main = mainNodes;
-    this._nodes.mobile = mobileNodes;
+  init() {
+    LAYERS.forEach((layer) => {
+      this._nodes[layer] = document.querySelectorAll(
+        `.js-avatar-layer[data-layer="${layer}"]`,
+      );
+    });
   },
 
   /**
    * Selects a profile and randomizes individual trait indices (hair, clothes, etc.).
    * Automatically triggers initial rendering and animation loops.
    * @param {Object|Array} data - A single character profile object or an array of profiles to pick from.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  setup(data) {
+  async setup(data) {
     if (!data) return;
     const profile = Array.isArray(data)
       ? data[Math.floor(Math.random() * data.length)]
       : data;
+
+    // Vorherigen Charakter sofort ausblenden, um Flackern zu vermeiden
+    this._state.config = null;
+    this.update();
+
+    // Optional: Preload before first update to avoid flickering
+    await this.preloadProfile(profile);
     this._state.config = profile;
 
     const rand = (list) => Math.floor(Math.random() * (list?.length || 1));
     const s = this._state;
     const c = s.config;
 
-    s.current.body = rand(c.heads);
+    s.current.head = rand(c.heads);
     s.current.clothes = rand(c.clothes);
     s.current.hair = rand(c.hair);
     s.current.glasses = rand(c.glasses);
     s.current.headset = rand(c.headset);
 
-    const headPath = c.heads?.[s.current.body] || "";
+    const headPath = c.heads?.[s.current.head] || "";
     const colorMatch = headPath.match(/_([a-d])\.png$/i);
     s.current.skinTone = colorMatch ? colorMatch[1].toLowerCase() : "a";
 
@@ -107,20 +145,19 @@ export const Avatar = {
 
   /**
    * Resolves the full URL for a specific layer based on current state and animation frame.
-   * @param {string} layerName - Name of the layer (e.g., 'hair', 'eyes').
+   * @param {string} layerName - Name of the layer (e.g., 'body', 'hair', 'eyes').
    * @param {boolean} [eyesClosed=false] - If true, resolves to the closed eyes graphic.
    * @param {boolean} [mouthOpen=false] - If true, resolves to the open mouth graphic.
    * @returns {string} The relative path to the image asset, or an empty string if not found.
-   * @private
    */
-  _getLayerSrc(layerName, eyesClosed = false, mouthOpen = false) {
+  getLayerSrc(layerName, eyesClosed = false, mouthOpen = false) {
     const s = this._state;
     if (!s.config) return "";
 
     let file = "";
     switch (layerName) {
       case "body":
-        file = s.config.heads[s.current.body];
+        file = s.config.heads[s.current.head];
         break;
       case "clothes":
         file = s.config.clothes[s.current.clothes];
@@ -163,9 +200,14 @@ export const Avatar = {
   update(eyesClosed = false, mouthOpen = false) {
     LAYERS.forEach((layer) => {
       const src =
-        this._getLayerSrc(layer, eyesClosed, mouthOpen) || TRANSPARENT_PIXEL;
-      if (this._nodes.main[layer]) this._nodes.main[layer].src = src;
-      if (this._nodes.mobile[layer]) this._nodes.mobile[layer].src = src;
+        this.getLayerSrc(layer, eyesClosed, mouthOpen) || TRANSPARENT_PIXEL;
+      const elements = this._nodes[layer];
+
+      if (elements) {
+        elements.forEach((img) => {
+          img.src = src;
+        });
+      }
     });
   },
 
