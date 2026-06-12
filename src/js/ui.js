@@ -57,8 +57,8 @@ export const UI = {
    * Initializes the avatar character and randomizes its appearance.
    * @param {Object|Object[]} data - A single character profile or a pool of profiles.
    */
-  initAvatar(data) {
-    Avatar.setup(data);
+  async initAvatar(data) {
+    await Avatar.setup(data);
   },
 
   /**
@@ -104,13 +104,7 @@ export const UI = {
     // Remap specific non-standard IDs
     this.elements.scenarioSelect = this.elements.scenarios;
 
-    const mainNodes = {};
-    const mobileNodes = {};
-    Avatar.getLayers().forEach((layer) => {
-      mainNodes[layer] = document.getElementById(`partner-${layer}`);
-      mobileNodes[layer] = document.getElementById(`partner-${layer}-mobile`);
-    });
-    Avatar.init(mainNodes, mobileNodes);
+    Avatar.init();
   },
 
   /**
@@ -237,7 +231,7 @@ export const UI = {
         "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm";
 
       Avatar.getLayers().forEach((layer) => {
-        const src = Avatar._getLayerSrc(layer);
+        const src = Avatar.getLayerSrc(layer);
         if (src) {
           const img = document.createElement("img");
           img.src = src;
@@ -365,12 +359,12 @@ export const UI = {
    * Main UI entry point. Binds elements, initializes avatar and voice systems.
    * @param {Object} defaultProfile - The initial character profile to use.
    */
-  init(defaultProfile) {
+  async init(defaultProfile) {
     // Bind all DOM elements to UI.elements before setting up logic
     this._bindElements();
 
     // Init Avatar on load
-    if (defaultProfile) this.initAvatar(defaultProfile);
+    if (defaultProfile) await this.initAvatar(defaultProfile);
 
     if (this.elements.speakBriefingBtn) {
       this.elements.speakBriefingBtn.onclick = (e) => {

@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.21.0] - 2026-06-12
+
+### Added
+
+- **Asset Preloading**: Implemented `preloadProfile` in `avatar.js` to cache critical character layers before the first render, eliminating the visual "flicker" effect.
+- **Slugify Utility**: Added a `slugify` helper in `utils.js` to ensure URL-safe and filesystem-compatible filenames for transcript exports.
+
+### Changed
+
+- **Unified Avatar Rendering**: Refactored the avatar stack to a class-based system using `.js-avatar-layer` and `data-layer` attributes, allowing synchronous updates of Desktop and Mobile views.
+- **Default Mode**: Set "Simulation" (Roleplay) as the default starting mode for better user onboarding.
+- **Asynchronous Bootstrapping**: Refactored `UI.init` and `Avatar.setup` to be fully asynchronous, ensuring assets and DOM elements are ready before interaction.
+
+### Fixed
+
+- **Ghosting Effect**: Reduced visibility of previous characters during scenario transitions by implementing a reset-before-preload sequence in `Avatar.setup`.
+- **Initialization Syntax**: Fixed broken initialization logic in `app.js` that prevented the application from starting correctly.
+- **Sync Issues**: Fixed inconsistent avatar states between mobile and desktop portraits.
+
+---
+
 ## [0.20.0] - 2026-06-08
 
 ### Added

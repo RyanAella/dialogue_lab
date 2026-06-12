@@ -169,7 +169,7 @@ async function loadContent(exerciseId) {
     // Passendes Character-Profil finden und initialisieren
     const profileKey = config.roleLabel || config.roleName;
     const profilePool = getProfilePool(profileKey);
-    UI.initAvatar(profilePool);
+    await UI.initAvatar(profilePool);
 
     // Roleplay specific UI updates
     UI.elements.startInfo.classList.remove("hidden");
@@ -193,7 +193,6 @@ async function loadContent(exerciseId) {
 }
 
 /**
- * Generates and triggers a browser download for the current chat transcript.
  * Formats the filename based on the current mode, scenario title, and date.
  */
 function downloadCurrentTranscript() {
@@ -232,7 +231,6 @@ function downloadCurrentTranscript() {
 }
 
 /**
- * Handles the user message submission.
  * Updates the UI, adds to history, and triggers the AI partner response.
  *
  * @async
@@ -258,6 +256,7 @@ async function handleSend() {
 
   // Simulation Mode: Real-time conversation
   const config = ScenarioService.getActive();
+  if (!config) return;
   UI.updateInputUI(true, "Sende...");
   UI.updateStatus("loading", "Antwortet...");
   UI.showTypingIndicator(config.roleName);
@@ -299,7 +298,7 @@ async function handleFeedback() {
   if (Chat.getMessageCount() === 0) return;
 
   const config = ScenarioService.getActive();
-  UI.elements.loadingOverlay.classList.remove("hidden");
+  UI.elements.loadingOverlay?.classList.remove("hidden");
   UI.updateStatus("loading", "Mentor analysiert...");
   const transcript = Chat.getTranscript(config.roleName);
 
@@ -341,7 +340,7 @@ async function handleFeedback() {
  */
 async function startApp() {
   await loadExercises();
-  UI.init(getProfilePool("default"));
+  await UI.init();
   setupEventListeners();
   await initializeCurrentMode();
 }
@@ -361,7 +360,7 @@ function setupEventListeners() {
     (e) => e.key === "Enter" && handleSend(),
   );
 
-  UI.elements.feedbackBtn.addEventListener("click", handleFeedback);
+  UI.elements.feedbackBtn?.addEventListener("click", handleFeedback);
   UI.elements.exportTranscriptBtn?.addEventListener(
     "click",
     downloadCurrentTranscript,
