@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.19.1] - 2026-06-12
+
+### Fixed
+
+- **Transformation Mode Flow**: Resolved an issue where the AI would incorrectly provide a conversational response or "solve" the task. The system now automatically advances to the next statement immediately after user submission.
+
+### Changed
+
+- **Code Documentation**: Finished translating all remaining internal source code comments, CSS logic descriptions, and HTML metadata from German to English for project-wide consistency.
+- **UX Optimization**: Refined input field behavior in Transformation mode to remain enabled between exercises, allowing for a faster and more intuitive workflow.
+
+---
+
 ## [0.19.0] - 2026-06-09
 
 ### Added

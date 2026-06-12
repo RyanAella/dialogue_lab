@@ -65,15 +65,15 @@ export const UI = {
     blinkTimeout: null,
     mouthInterval: null,
     config: {
-      // Wird über initAvatar(profile) befüllt
+      // Populated via initAvatar(profile)
     },
     current: {
       body: 0,
       clothes: 0,
       hair: 0,
       hands: 0,
-      glasses: 0, // Neu: Brillen-Index
-      headset: 0, // Neu: Headset-Index
+      glasses: 0, // New: glasses index
+      headset: 0, // New: headset index
       eyes: 0,
       mouth: 0,
       skinTone: "a",
