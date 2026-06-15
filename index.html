@@ -217,16 +217,56 @@
                   <!-- Mobile Avatar: Only visible on small screens -->
                   <div
                     id="mobile-portrait-container"
-                    class="lg:hidden w-14 h-16 avatar-stack bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200"
+                    class="lg:hidden w-14 h-16 avatar-stack bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 js-avatar-container"
                   >
-                    <img id="partner-head-mobile" src="" alt="" />
-                    <img id="partner-eyes-mobile" src="" alt="" />
-                    <img id="partner-mouth-mobile" src="" alt="" />
-                    <img id="partner-glasses-mobile" src="" alt="" />
-                    <img id="partner-hair-mobile" src="" alt="" />
-                    <img id="partner-headset-mobile" src="" alt="" />
-                    <img id="partner-clothes-mobile" src="" alt="" />
-                    <img id="partner-hands-mobile" src="" alt="" />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="body"
+                      src=""
+                      alt=""
+                    />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="eyes"
+                      src=""
+                      alt=""
+                    />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="mouth"
+                      src=""
+                      alt=""
+                    />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="glasses"
+                      src=""
+                      alt=""
+                    />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="hair"
+                      src=""
+                      alt=""
+                    />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="headset"
+                      src=""
+                      alt=""
+                    />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="clothes"
+                      src=""
+                      alt=""
+                    />
+                    <img
+                      class="js-avatar-layer"
+                      data-layer="hands"
+                      src=""
+                      alt=""
+                    />
                   </div>
                   <h2
                     class="briefing-headline text-xl font-semibold text-slate-800"
@@ -293,16 +333,16 @@
             class="hidden lg:flex flex-col w-64 flex-shrink-0 sticky top-6 h-fit"
           >
             <div
-              class="avatar-stack bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
+              class="avatar-stack bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden js-avatar-container"
             >
-              <img id="partner-head" src="" alt="" />
-              <img id="partner-eyes" src="" alt="" />
-              <img id="partner-mouth" src="" alt="" />
-              <img id="partner-glasses" src="" alt="" />
-              <img id="partner-hair" src="" alt="" />
-              <img id="partner-headset" src="" alt="" />
-              <img id="partner-clothes" src="" alt="" />
-              <img id="partner-hands" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="body" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="eyes" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="mouth" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="glasses" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="hair" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="headset" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="clothes" src="" alt="" />
+              <img class="js-avatar-layer" data-layer="hands" src="" alt="" />
             </div>
             <p
               id="partner-name-display"

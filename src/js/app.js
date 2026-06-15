@@ -298,7 +298,7 @@ async function loadContent(exerciseId) {
     // Passendes Character-Profil finden und initialisieren
     const profileKey = config.roleLabel || config.roleName;
     const profilePool = getProfilePool(profileKey);
-    UI.initAvatar(profilePool);
+    await UI.initAvatar(profilePool);
 
     if (isTransform) {
       STATE.activeStatements = ScenarioService.getStatements(true);
@@ -412,6 +412,7 @@ async function handleSend() {
 
   // Simulation Mode: Real-time conversation
   const config = ScenarioService.getActive(); // This is needed for both modes
+  if (!config) return;
 
   if (STATE.currentMode === "transformation") {
     // 1. Save response
