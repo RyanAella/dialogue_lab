@@ -28,6 +28,16 @@ const BASE_PATH = "src/assets/Character/";
  */
 
 /**
+ * Shared head assets for female characters to reduce redundancy.
+ */
+const SHARED_FEMALE_HEADS = [
+  "HeadImages/Head_1/Head_1_a.png",
+  "HeadImages/Head_1/Head_1_b.png",
+  "HeadImages/Head_1/Head_1_c.png",
+  "HeadImages/Head_1/Head_1_d.png",
+];
+
+/**
  * Collection of female character configurations.
  * These are used as base sets that can be shared across multiple roles.
  * @type {CharacterProfile[]}
@@ -55,55 +65,7 @@ const FEMALE_CHARACTERS = [
   {
     gender: "female",
     basePath: BASE_PATH,
-    heads: [
-      "HeadImages/Head_1/Head_1_a.png",
-      "HeadImages/Head_1/Head_1_b.png",
-      "HeadImages/Head_1/Head_1_c.png",
-      "HeadImages/Head_2/Head_2_a.png",
-      "HeadImages/Head_2/Head_2_b.png",
-      "HeadImages/Head_2/Head_2_c.png",
-    ],
-    clothes: [
-      "ClothesImages/Mutter/Mutter_Clothes_1.png",
-      "ClothesImages/Mutter/Mutter_Clothes_2.png",
-      "ClothesImages/Mutter/Mutter_Clothes_3.png",
-      "ClothesImages/Mutter/Mutter_Clothes_4.png",
-    ],
-    hair: [
-      "HairImages/Mutter/Mutter_Hair_1.png",
-      "HairImages/Mutter/Mutter_Hair_2.png",
-      "HairImages/Mutter/Mutter_Hair_3.png",
-      "HairImages/Mutter/Mutter_Hair_4.png",
-    ],
-    glasses: [""],
-    headset: [""],
-    hands: {
-      a: ["HandsImages/Mutter/Mutter_Hands_2_a.png"],
-      b: [
-        "HandsImages/Mutter/Mutter_Hands_1_b.png",
-        "HandsImages/Mutter/Mutter_Hands_4_b.png",
-      ],
-      c: ["HandsImages/Mutter/Mutter_Hands_3_c.png"],
-      d: [""],
-    },
-    eyesOpen: ["EyesImages/Eyes_Open.png"],
-    eyesClosed: ["EyesImages/Eyes_Closed.png"],
-    mouthsClosed: ["FaceImages/Smiling/Fine_Smiling.png"],
-    mouthsOpen: ["FaceImages/Smiling/Fine_Smiling_Speaking.png"],
-  },
-  {
-    gender: "female",
-    basePath: BASE_PATH,
-    heads: [
-      "HeadImages/Head_1/Head_1_a.png",
-      "HeadImages/Head_1/Head_1_b.png",
-      "HeadImages/Head_1/Head_1_c.png",
-      "HeadImages/Head_1/Head_1_d.png",
-      "HeadImages/Head_2/Head_2_a.png",
-      "HeadImages/Head_2/Head_2_b.png",
-      "HeadImages/Head_2/Head_2_c.png",
-      "HeadImages/Head_2/Head_2_d.png",
-    ],
+    heads: SHARED_FEMALE_HEADS,
     clothes: [
       "ClothesImages/Honorar/Honorar_Clothes_1.png",
       "ClothesImages/Honorar/Honorar_Clothes_2.png",
@@ -131,16 +93,7 @@ const FEMALE_CHARACTERS = [
   {
     gender: "female",
     basePath: BASE_PATH,
-    heads: [
-      "HeadImages/Head_1/Head_1_a.png",
-      "HeadImages/Head_1/Head_1_b.png",
-      "HeadImages/Head_1/Head_1_c.png",
-      "HeadImages/Head_1/Head_1_d.png",
-      "HeadImages/Head_2/Head_2_a.png",
-      "HeadImages/Head_2/Head_2_b.png",
-      "HeadImages/Head_2/Head_2_c.png",
-      "HeadImages/Head_2/Head_2_d.png",
-    ],
+    heads: SHARED_FEMALE_HEADS,
     clothes: [
       "ClothesImages/Notarin/Notarin_Clothes_1.png",
       "ClothesImages/Notarin/Notarin_Clothes_2.png",
@@ -168,16 +121,7 @@ const FEMALE_CHARACTERS = [
   {
     gender: "female",
     basePath: BASE_PATH,
-    heads: [
-      "HeadImages/Head_1/Head_1_a.png",
-      "HeadImages/Head_1/Head_1_b.png",
-      "HeadImages/Head_1/Head_1_c.png",
-      "HeadImages/Head_1/Head_1_d.png",
-      "HeadImages/Head_2/Head_2_a.png",
-      "HeadImages/Head_2/Head_2_b.png",
-      "HeadImages/Head_2/Head_2_c.png",
-      "HeadImages/Head_2/Head_2_d.png",
-    ],
+    heads: SHARED_FEMALE_HEADS,
     clothes: [
       "ClothesImages/Presse/Presse_Clothes_1.png",
       "ClothesImages/Presse/Presse_Clothes_2.png",
@@ -206,6 +150,20 @@ const FEMALE_CHARACTERS = [
 ];
 
 /**
+ * Shared head assets for male characters to reduce redundancy.
+ */
+const SHARED_MALE_HEADS = [
+  "HeadImages/Head_1/Head_1_a.png",
+  "HeadImages/Head_1/Head_1_b.png",
+  "HeadImages/Head_1/Head_1_c.png",
+  "HeadImages/Head_1/Head_1_d.png",
+  "HeadImages/Head_2/Head_2_a.png",
+  "HeadImages/Head_2/Head_2_b.png",
+  "HeadImages/Head_2/Head_2_c.png",
+  "HeadImages/Head_2/Head_2_d.png",
+];
+
+/**
  * Collection of male character configurations.
  * @type {CharacterProfile[]}
  */
@@ -213,16 +171,7 @@ const MALE_CHARACTERS = [
   {
     gender: "male",
     basePath: BASE_PATH,
-    heads: [
-      "HeadImages/Head_1/Head_1_a.png",
-      "HeadImages/Head_1/Head_1_b.png",
-      "HeadImages/Head_1/Head_1_c.png",
-      "HeadImages/Head_1/Head_1_d.png",
-      "HeadImages/Head_2/Head_2_a.png",
-      "HeadImages/Head_2/Head_2_b.png",
-      "HeadImages/Head_2/Head_2_c.png",
-      "HeadImages/Head_2/Head_2_d.png",
-    ],
+    heads: SHARED_MALE_HEADS,
     clothes: [
       "ClothesImages/Vater/Vater_Clothes_1.png",
       "ClothesImages/Vater/Vater_Clothes_2.png",
@@ -251,16 +200,7 @@ const MALE_CHARACTERS = [
   {
     gender: "male",
     basePath: BASE_PATH,
-    heads: [
-      "HeadImages/Head_1/Head_1_a.png",
-      "HeadImages/Head_1/Head_1_b.png",
-      "HeadImages/Head_1/Head_1_c.png",
-      "HeadImages/Head_1/Head_1_d.png",
-      "HeadImages/Head_2/Head_2_a.png",
-      "HeadImages/Head_2/Head_2_b.png",
-      "HeadImages/Head_2/Head_2_c.png",
-      "HeadImages/Head_2/Head_2_d.png",
-    ],
+    heads: SHARED_MALE_HEADS,
     clothes: [
       "ClothesImages/Investor/Investor_Clothes_1.png",
       "ClothesImages/Investor/Investor_Clothes_2.png",
@@ -289,16 +229,7 @@ const MALE_CHARACTERS = [
   {
     gender: "male",
     basePath: BASE_PATH,
-    heads: [
-      "HeadImages/Head_1/Head_1_a.png",
-      "HeadImages/Head_1/Head_1_b.png",
-      "HeadImages/Head_1/Head_1_c.png",
-      "HeadImages/Head_1/Head_1_d.png",
-      "HeadImages/Head_2/Head_2_a.png",
-      "HeadImages/Head_2/Head_2_b.png",
-      "HeadImages/Head_2/Head_2_c.png",
-      "HeadImages/Head_2/Head_2_d.png",
-    ],
+    heads: SHARED_MALE_HEADS,
     clothes: [
       "ClothesImages/Bank/Bank_Clothes_1.png",
       "ClothesImages/Bank/Bank_Clothes_2.png",
