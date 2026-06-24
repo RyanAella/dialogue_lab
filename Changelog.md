@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.20.0] - 2026-06-24
+
+### Changed
+
+- **Asset Allocation Optimization**: Centralized head image references in `profiles.js` into shared constants (`SHARED_FEMALE_HEADS`, `SHARED_MALE_HEADS`) to eliminate redundancy and simplify maintenance.
+
+### Removed
+
+- **"Mother" Character Profile**: Removed the "Mutter" character and its specific assets from the female character pool.
+
 ## [0.19.1] - 2026-06-12
 
 ### Fixed
