@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.22.0] - 2026-06-24
+
+### Changed
+- **Asset Allocation Optimization**: Centralized head image references into shared constants to eliminate redundancy and simplify maintenance across character profiles.
+
+### Removed
+- **"Mother" Character Profile**: Removed the "Mother" character and associated assets from the available character pool.
+
 ## [0.21.0] - 2026-06-12
 
 ### Added
