@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.23.1] - 2026-06-26
+
+### Fixed
+
+- **CI/CD Deployment**: Fixed 404 errors on sub-version deployments by disabling the `clean` option in GitHub Actions, allowing multiple branch previews to coexist.
+
 ## [0.23.0] - 2026-06-26
 
 ### Changed
