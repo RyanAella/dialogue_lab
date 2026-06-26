@@ -551,7 +551,7 @@ window.closeResetModal = () => {
  * Provides a hint for mobile users on how to access the menu.
  * @returns {void}
  */
-export const updateSubtitleText = () => {
+export let updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
   if (!sub) return;
   const base = "Wähle ein Szenario aus, um zu starten.";
