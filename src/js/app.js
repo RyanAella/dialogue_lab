@@ -579,7 +579,7 @@ function setupEventListeners() {
 
   UI.elements.briefingHeader.addEventListener("click", () => {
     const h = UI.elements.briefingContent.classList.toggle("hidden");
-    UI.elements.chevron.style.transform = h ? "rotate(90deg)" : "rotate(0deg)";
+    UI.elements.chevron.style.transform = h ? "rotate(-90deg)" : "rotate(0deg)";
   });
 
   UI.elements.mobileMenuBtn?.addEventListener("click", () =>

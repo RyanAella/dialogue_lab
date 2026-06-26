@@ -354,7 +354,7 @@ export const UI = {
 
     // Collapse briefing and hide initial info
     if (briefingContent) briefingContent.classList.add("hidden");
-    if (chevron) chevron.style.transform = "rotate(90deg)";
+    if (chevron) chevron.style.transform = "rotate(-90deg)";
     if (startInfo) startInfo.classList.add("hidden");
   },
 
@@ -515,7 +515,7 @@ export const UI = {
     const { briefingContent, chevron } = this.elements;
     briefingContent?.classList.toggle("hidden", !expanded);
     if (chevron)
-      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(90deg)";
+      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(-90deg)";
   },
 
   /**
@@ -592,7 +592,7 @@ window.closeResetModal = () => {
  * Provides a hint for mobile users on how to access the menu.
  * @returns {void}
  */
-export const updateSubtitleText = () => {
+export let updateSubtitleText = () => {
   const sub = document.getElementById("main-subtitle");
   if (!sub) return;
   const base = "Wähle eine Übung aus, um zu starten.";
