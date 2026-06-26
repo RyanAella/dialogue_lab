@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.21.2] - 2026-06-26
+
+### Fixed
+- **CI/CD Deployment**: Added `.nojekyll` to the deployment artifact to ensure GitHub Pages correctly serves all static assets without Jekyll interference.
+
 ## [0.21.1] - 2026-06-26
 
 ### Fixed
