@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.23.0] - 2026-06-26
+
+### Changed
+- **Briefing Toggle UX**: Repositioned the chevron icon to the left of the header text for improved discoverability and alignment with common UI patterns.
+- **Chevron Animation Logic**: Standardized and synchronized rotation to -90 degrees across `app.js` and `ui.js`, ensuring a smooth, direct 90-degree animation when collapsing the section.
+
 ## [0.22.0] - 2026-06-24
 
 ### Changed
