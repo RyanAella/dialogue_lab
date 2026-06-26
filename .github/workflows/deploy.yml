@@ -24,13 +24,12 @@ jobs:
       - name: Create Public Artifact Folder
         # Gather all static files and directories needed for the production build
         run: |
-          mkdir -p public/src/js public/src/data
+          mkdir -p public
           cp index.html public/
-          cp src/js/*.js public/src/js/
-          cp -r src/assets public/src/
-          cp src/data/* public/src/data/ || true
+          cp -r src public/
           cp -r scenarios public/
           cp -r prompts public/
+          touch public/.nojekyll
 
       - name: Determine Branch Subpath
         # Logic: deploy 'main' to root, other branches to subfolders named after the branch
@@ -50,3 +49,4 @@ jobs:
           folder: public # The folder containing our artifacts
           target-folder: ${{ steps.subpath.outputs.SUB_PATH }} # Deployment destination path
           branch: gh-pages # The branch
+          clean: false # Prevent deleting other branch deployments
