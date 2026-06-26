@@ -116,10 +116,10 @@ Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
 ## 7. Neues Szenario hinzufügen
 
-1. **Prompts erstellen:** Drei Dateien in `prompts/system/`, `prompts/partner/` und `prompts/mentor/` anlegen.
-2. **Szenario-File:** Eine `.txt`-Datei in `scenarios/transformations/` erstellen. Im `### META ###`-Block auf die neuen Prompt-Dateinamen verweisen (ohne Endung).
-3. **Pool erweitern:** Die neue ID und den Pfad in `src/data/exercises.json` registrieren.
-4. **Avatar-Mapping:** Sicherstellen, dass der `role_label` in der META-Sektion einem Key in `profiles.js` entspricht, um den korrekten Charakter-Pool zu laden.
+1. **Trainer-Prompt:** Eine Datei in `prompts/trainers/` anlegen (für das KI-Feedback).
+2. **Inhalts-Dateien:** In `scenarios/transformations/` eine Datei für die Instruktionen (`instructions.txt`) und eine für die Aussagen-Liste (`statements.txt`) erstellen.
+3. **Pool erweitern:** Die neue Übung in `src/data/exercises.json` registrieren und dabei die Pfade zu `sourceFile` (Aussagen) und `instructionFile` (Briefing) angeben.
+4. **Avatar-Mapping:** Optional den `role_label` in der META-Sektion der Instruktions-Datei anpassen, um einen spezifischen Pool aus `profiles.js` zu laden.
 
 ## 8. Inhalte pflegen
 
@@ -257,9 +257,10 @@ Every push to a branch triggers an automated deployment:
 
 ## 7. Adding a New Scenario
 
-1. Create the prompt files (`trainers`) under `prompts/`.
-2. Create a new scenario file under `scenarios/transformations/`.
-3. Add the new ID and file path to `exercises.json`.
+1. **Trainer Prompt:** Create a feedback prompt file in `prompts/trainers/`.
+2. **Content Files:** Create the instruction (briefing) and statements (sentences) `.txt` files in `scenarios/transformations/`.
+3. **Register:** Add the new ID and respective file paths (`sourceFile` and `instructionFile`) to `src/data/exercises.json`.
+4. **Avatar Mapping:** Ensure the `role_label` in the metadata matches a key in `profiles.js` to load the correct character pool.
 
 ## 8. Content Maintenance
 

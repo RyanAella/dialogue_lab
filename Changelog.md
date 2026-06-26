@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.21.1] - 2026-06-26
+
+### Fixed
+- **Documentation**: Corrected step 7 in `README.md` to accurately reflect the process for adding transformation exercises (Instruction/Source/Trainer files) instead of simulation scenarios.
+
 ## [0.21.0] - 2026-06-26
 
 ### Changed
