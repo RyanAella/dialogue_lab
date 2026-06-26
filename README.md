@@ -136,10 +136,12 @@ Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
 ## 7. Neues Szenario hinzufügen
 
-1. **Prompts erstellen:** Drei Dateien in `prompts/system/`, `prompts/partner/` und `prompts/mentor/` anlegen.
-2. **Szenario-File:** Eine `.txt`-Datei in `scenarios/simulations/` erstellen. Im `### META ###`-Block auf die neuen Prompt-Dateinamen verweisen (ohne Endung).
-3. **Pool erweitern:** Die neue ID und den Pfad in `src/data/exercises.json` registrieren.
-4. **Avatar-Mapping:** Sicherstellen, dass der `role_label` in der META-Sektion einem Key in `profiles.js` entspricht, um den korrekten Charakter-Pool zu laden.
+1. **Inhaltstyp wählen:** Entscheide, ob es eine **Simulation** (freies Gespräch) oder eine **Transformation** (Übung) ist.
+2. **Prompts anlegen:** 
+   - Für Simulationen: Prompts in `prompts/system/`, `partner/` und `mentor/` erstellen.
+   - Für Transformationen: Einen Feedback-Prompt in `prompts/trainers/` erstellen.
+3. **Dateien & Register:** Erstelle die `.txt`-Dateien in `scenarios/` und registriere die ID in `src/data/exercises.json`. Nutze für Transformationen die Keys `sourceFile` (Aussagen) und `instructionFile` (Briefing).
+4. **Avatar-Mapping:** Setze den `role_label` im META-Block der Szenario-Datei auf einen gültigen Key aus `profiles.js` (z.B. `Mitarbeiterin`), um das richtige Charakter-Set zu laden.
 
 ## 8. Inhalte pflegen
 
@@ -298,10 +300,12 @@ Every push to a branch triggers an automated deployment:
 
 ## 7. Adding a New Scenario
 
-1.  **Create Prompts:** Add three files to `prompts/system/`, `prompts/partner/`, and `prompts/mentor/`.
-2.  **Scenario File:** Create a `.txt` file in `scenarios/simulations/`. Reference the new prompt filenames in the `### META ###` block (without extensions).
-3.  **Register Exercise:** Add the new ID and path to `src/data/exercises.json`.
-4.  **Avatar Mapping:** Ensure the `role_label` in the META section matches a key in `profiles.js` to load the correct character pool.
+1. **Choose Type:** Determine if it's a **Simulation** (free dialogue) or a **Transformation** (exercise).
+2. **Create Prompts:** 
+   - For Simulations: Add prompts to `prompts/system/`, `partner/`, and `mentor/`.
+   - For Transformations: Add a feedback prompt to `prompts/trainers/`.
+3. **Files & Registration:** Create the `.txt` files in `scenarios/` and register the new ID in `src/data/exercises.json`. For transformations, use the keys `sourceFile` (statements) and `instructionFile` (briefing).
+4. **Avatar Mapping:** Set the `role_label` in the META block of your scenario file to match a key in `profiles.js` (e.g., `Mitarbeiterin`) to load the correct character set.
 
 ## 8. Content Maintenance
 
