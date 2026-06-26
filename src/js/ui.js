@@ -348,7 +348,7 @@ export const UI = {
 
     // Collapse briefing and hide initial info
     if (briefingContent) briefingContent.classList.add("hidden");
-    if (chevron) chevron.style.transform = "rotate(270deg)";
+    if (chevron) chevron.style.transform = "rotate(-90deg)";
     if (startInfo) startInfo.classList.add("hidden");
   },
 
@@ -509,7 +509,7 @@ export const UI = {
     const { briefingContent, chevron } = this.elements;
     briefingContent?.classList.toggle("hidden", !expanded);
     if (chevron)
-      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(270deg)";
+      chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(-90deg)";
   },
 
   /**
