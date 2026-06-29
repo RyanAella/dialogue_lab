@@ -276,7 +276,7 @@ export const CHARACTER_PROFILES = {
   Mitarbeiter: MALE_CHARACTERS,
   Kollege: MALE_CHARACTERS,
   Teammitglied: MALE_CHARACTERS,
-  Trainer: ALL_CHARACTERS,
+  Coach: ALL_CHARACTERS,
 
   // Fallback
   default: ALL_CHARACTERS,

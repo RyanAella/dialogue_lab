@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.24.0] - 2026-06-27
+
+### Changed
+
+- **Role Refactoring**: Renamed the "Trainer" role to "Coach" across the application logic and character profile mappings to better align with the coaching context.
+
+---
+
 ## [0.23.1] - 2026-06-26
 
 ### Fixed
