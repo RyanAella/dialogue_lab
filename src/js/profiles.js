@@ -270,13 +270,12 @@ const ALL_CHARACTERS = [...FEMALE_CHARACTERS, ...MALE_CHARACTERS];
  * @type {Object.<string, CharacterProfile[]>}
  */
 export const CHARACTER_PROFILES = {
-  // Rollen-Zuweisungen
   Mitarbeiterin: FEMALE_CHARACTERS,
   Kollegin: FEMALE_CHARACTERS,
   Mitarbeiter: MALE_CHARACTERS,
   Kollege: MALE_CHARACTERS,
-  Teammitglied: MALE_CHARACTERS,
-  Trainer: ALL_CHARACTERS,
+  Teammitglied: ALL_CHARACTERS,
+  Coach: ALL_CHARACTERS,
 
   // Fallback
   default: ALL_CHARACTERS,

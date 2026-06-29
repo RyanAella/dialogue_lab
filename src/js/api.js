@@ -135,7 +135,7 @@ export const API = {
       system: { file: config.systemFile, dir: "system" },
       partner: { file: config.partnerFile, dir: "partner" },
       mentor: { file: config.mentorFile, dir: "mentor" },
-      trainer: { file: config.trainerPromptFile, dir: "trainers" },
+      trainer: { file: config.trainerPromptFile, dir: "trainer" },
     };
 
     const prompts = {};
