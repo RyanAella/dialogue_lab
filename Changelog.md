@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.22.0] - 2024-06-27
+
+### Changed
+- **Role Refactoring**: Renamed the "Trainer" role to "Coach" throughout the application logic and profile mappings to better align with the professional coaching context.
+- **Prompt Directory Standardization**: Renamed the transformation prompt directory from `/prompts/trainers/` to `/prompts/trainer/` for better naming consistency.
+
+---
+
 ## [0.21.2] - 2026-06-26
 
 ### Fixed
