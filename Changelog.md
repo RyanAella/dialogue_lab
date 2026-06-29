@@ -6,13 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.24.0] - 2026-06-27
+
+### Changed
+- **Role Refactoring**: Renamed the default role for transformation exercises from "Trainer" to "Coach" to better align with the coaching context.
+- **Prompt Directory Standardization**: Renamed the directory for transformation prompts from `/prompts/trainers/` to `/prompts/trainer/` for consistent naming conventions.
+
 ## [0.23.1] - 2026-06-26
 
 ### Fixed
 - **Documentation**: Corrected step 7 in `README.md` to accurately reflect the setup process for both Simulation and Transformation exercise types.
 - **CI/CD Deployment**: Fixed 404 errors on sub-version deployments by disabling the `clean` option in GitHub Actions, allowing multiple branch previews to coexist.
-
----
 
 ## [0.23.0] - 2026-06-26
 

@@ -79,7 +79,7 @@ export const ScenarioService = {
       id: exercise.id,
       type: exercise.type,
       roleName: isTransform
-        ? data.roleLabel || "Trainer"
+        ? data.roleLabel || "Coach"
         : Utils.extractRoleName(data.instructionSection, data.roleLabel),
       shortInstruction: data.shortInstruction || "Bearbeite die Aussage.",
     };
