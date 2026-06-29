@@ -138,7 +138,7 @@ export const API = {
     };
 
     const promptMap = {
-      trainer: { file: config.trainerPromptFile, dir: "trainers" },
+      trainer: { file: config.trainerPromptFile, dir: "trainer" },
     };
 
     const prompts = {};
