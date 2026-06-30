@@ -6,7 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.24.0] - 2026-06-27
+## [0.24.1] - 2026-06-30
+
+### Fixed
+
+- **UI-Fehler**: Behebung eines `TypeError` in `ui.js`, da die Methode `setAvatarTalking` aufgerufen wurde, ohne im Objekt definiert zu sein.
+
+---
+
+## [0.24.0] - 2026-06-29
 
 ### Changed
 
@@ -20,11 +28,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **CI/CD Deployment**: Fixed 404 errors on sub-version deployments by disabling the `clean` option in GitHub Actions, allowing multiple branch previews to coexist.
 
+---
+
 ## [0.23.0] - 2026-06-26
 
 ### Changed
 - **UI/UX Enhancement**: Repositioned the briefing toggle (chevron) to the left of the header text to improve discoverability.
 - **Chevron Animation Logic**: Standardized and synchronized rotation to -90 degrees across `app.js` and `ui.js` to ensure a smooth, direct 90-degree animation when collapsing.
+
+---
 
 ## [0.22.0] - 2026-06-24
 
@@ -35,6 +47,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Removed
 
 - **"Mother" Character Profile**: Removed the "Mutter" character and its specific assets from the female character pool.
+
+---
 
 ## [0.21.0] - 2026-06-12
 
@@ -73,6 +87,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - **State Management Consistency**: Resolved potential race conditions and synchronization issues by centralizing chat history and scenario state.
+
+---
 
 ## [0.19.0] - 2026-05-26
 
@@ -387,6 +403,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Automated Role Detection:** Improved the logic to automatically extract the conversation partner's role from scenario descriptions for a more personalized UI.
 
+---
+
 ## [0.2.0] - 2026-03-31
 
 ### Added
@@ -399,6 +417,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved focus management: The input field automatically regains focus after sending a message.
 - Optimized Mobile UX: The sidebar now closes automatically once a scenario is selected.
 - Refined role detection logic: Better handling of German grammar patterns (e.g., converting dative plural forms like "Mitarbeitenden").
+
+---
 
 ## [0.1.0] - 2026-03-30
 
