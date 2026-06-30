@@ -204,7 +204,16 @@ export const UI = {
    */
   hideTypingIndicator() {
     document.getElementById("typing-indicator")?.remove();
-    Avatar.setTalking(false);
+    this.setAvatarTalking(false);
+  },
+
+  /**
+   * Steuert die Animation des Avatars (Mundbewegung und optionaler Puls-Effekt).
+   * @param {boolean} isTalking - Ob der Avatar gerade "spricht" oder denkt.
+   */
+  setAvatarTalking(isTalking) {
+    // Mund-Animation im Avatar-Modul umschalten
+    Avatar.setTalking(isTalking);
   },
 
   /**
