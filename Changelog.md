@@ -6,11 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.24.0] - 2026-06-27
+## [0.24.1] - 2026-06-30
+
+### Fixed
+- **UI-Fehler**: Behebung eines `TypeError` in `ui.js`, da die Methode `setAvatarTalking` aufgerufen wurde, ohne definiert zu sein. Die Mundbewegung des Avatars wird nun korrekt mit dem Tipp-Indikator synchronisiert.
+
+---
+
+## [0.24.0] - 2026-06-29
 
 ### Changed
 - **Role Refactoring**: Renamed the default role for transformation exercises from "Trainer" to "Coach" to better align with the coaching context.
 - **Prompt Directory Standardization**: Renamed the directory for transformation prompts from `/prompts/trainers/` to `/prompts/trainer/` for consistent naming conventions.
+
+---
 
 ## [0.23.1] - 2026-06-26
 
@@ -18,11 +27,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Documentation**: Corrected step 7 in `README.md` to accurately reflect the setup process for both Simulation and Transformation exercise types.
 - **CI/CD Deployment**: Fixed 404 errors on sub-version deployments by disabling the `clean` option in GitHub Actions, allowing multiple branch previews to coexist.
 
+---
+
 ## [0.23.0] - 2026-06-26
 
 ### Changed
 - **Briefing Toggle UX**: Repositioned the chevron icon to the left of the header text for improved discoverability and alignment with common UI patterns.
 - **Chevron Animation Logic**: Standardized and synchronized rotation to -90 degrees across `app.js` and `ui.js`, ensuring a smooth, direct 90-degree animation when collapsing the section.
+
+---
 
 ## [0.22.0] - 2026-06-24
 
@@ -31,6 +44,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - **"Mother" Character Profile**: Removed the "Mother" character and associated assets from the available character pool.
+
+---
 
 ## [0.21.0] - 2026-06-12
 
@@ -64,6 +79,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Controller Refactoring**: Simplified `app.js` and `ui.js` by delegating business logic, state management, and multimedia handling to specialized services.
 - **Enhanced Utility Layer**: Added `downloadFile` helper and refined text-to-speech cleaning logic in `utils.js`.
 - **Documentation Overhaul**: Completely updated the `README.md` to reflect the new modular structure and define clear responsibilities for each module.
+
+---
 
 ## [0.19.0] - 2026-05-20
 
@@ -449,6 +466,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Automated Role Detection:** Improved the logic to automatically extract the conversation partner's role from scenario descriptions for a more personalized UI.
 
+---
+
 ## [0.2.0] - 2026-03-31
 
 ### Added
@@ -461,6 +480,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved focus management: The input field automatically regains focus after sending a message.
 - Optimized Mobile UX: The sidebar now closes automatically once a scenario is selected.
 - Refined role detection logic: Better handling of German grammar patterns (e.g., converting dative plural forms like "Mitarbeitenden").
+
+---
 
 ## [0.1.0] - 2026-03-30
 

@@ -232,6 +232,8 @@ export const UI = {
     this.elements.chatWindow
       .closest("main")
       ?.scrollTo(0, this.elements.chatWindow.scrollHeight);
+
+    this.setAvatarTalking(true);
   },
 
   /**
@@ -239,6 +241,15 @@ export const UI = {
    */
   hideTypingIndicator() {
     document.getElementById("typing-indicator")?.remove();
+    this.setAvatarTalking(false);
+  },
+
+  /**
+   * Steuert die Mund-Animation des Avatars.
+   * @param {boolean} isTalking - Ob der Avatar die Sprechanimation zeigen soll.
+   */
+  setAvatarTalking(isTalking) {
+    Avatar.setTalking(isTalking);
   },
 
   /**
