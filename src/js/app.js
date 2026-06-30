@@ -465,16 +465,15 @@ async function handleSend() {
         temperature: APP_CONFIG.CHAT_TEMPERATURE,
       });
       if (!data) return;
-      UI.hideTypingIndicator();
       const botResp = data.choices[0].message.content;
       UI.appendMessage(botResp, "partner", { roleName: config.roleName });
       Chat.add("assistant", botResp);
       if (STATE.ttsEnabled) UI.speak(botResp, config.roleName);
       UI.updateStatus("idle", "Bereit");
     } catch (e) {
-      UI.hideTypingIndicator();
       UI.updateStatus("error", e.message);
     } finally {
+      UI.hideTypingIndicator();
       UI.updateInputUI(false, `Nachricht an ${config.roleName}...`);
       UI.elements.userInput.focus();
     }
