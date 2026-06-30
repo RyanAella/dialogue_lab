@@ -71,7 +71,8 @@ export const ScenarioService = {
       ? exercise.config.instructionFile
       : exercise.config.scenarioFile;
 
-    const data = await API.fetchCompleteScenario(filePath);
+    // We pass the type (TRANSFORMATION or SIMULATION) to the API
+    const data = await API.fetchCompleteScenario(filePath, exercise.type);
 
     // Compute additional metadata for the active session
     this._active = {

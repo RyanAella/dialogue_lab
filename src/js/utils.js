@@ -152,6 +152,21 @@ export const Utils = {
   },
 
   /**
+   * Converts a string into a URL/filesystem-safe slug.
+   * Removes special characters and replaces spaces with underscores.
+   *
+   * @param {string} text - The input string (e.g., a scenario title).
+   * @returns {string} The sanitized string.
+   */
+  slugify(text) {
+    if (!text) return "";
+    return text
+        .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "") // Keep alphanumeric, umlauts, and spaces
+        .trim()
+        .replace(/\s+/g, "_");
+  },
+
+  /**
    * Generates a formatted plain-text transcript from the message history.
    * Skips 'system' role messages.
    *

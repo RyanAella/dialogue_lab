@@ -110,7 +110,7 @@ export const Avatar = {
       ? data[Math.floor(Math.random() * data.length)]
       : data;
 
-    // Vorherigen Charakter sofort ausblenden, um Flackern zu vermeiden
+    // Hide previous character immediately to prevent flickering
     this._state.config = null;
     this.update();
 

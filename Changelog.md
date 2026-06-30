@@ -6,7 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.22.0] - 2024-06-27
+## [0.23.0] - 2024-06-30
+
+### Fixed
+- **API Error Diagnosis**: Improved error handling in `api.js` to display detailed server error messages.
+- **Mode-specific Prompt Selection**: Evaluation (feedback) now explicitly selects the correct prompt (Trainer vs. Mentor) based on the mode, instead of relying on API fallbacks.
+- **Download Function**: Fixed a `TypeError` by implementing the missing `slugify` helper function in `utils.js`.
+- **Protocol Completeness**: AI feedback is now correctly stored in the global state and appended to the end of the file during transcript download.
+
+### Changed
+- **Mode-based Loading**: The API now checks the exercise type (`TRANSFORMATION` vs. `SIMULATION`) when loading a scenario to load the required prompts specifically and efficiently from the correct directories.
+- **Transcript Export**: Expanded export logic to include a section for "Feedback & Evaluation".
+
+---
+
+## [0.22.0] - 2024-06-29
 
 ### Changed
 - **Role Refactoring**: Renamed the "Trainer" role to "Coach" throughout the application logic and profile mappings to better align with the professional coaching context.
