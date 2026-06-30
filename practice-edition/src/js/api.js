@@ -44,14 +44,27 @@ export const API = {
    * @private
    */
   async _request(url, options = {}) {
+    // Log the request for debugging purposes
+    if (options.body) {
+        console.log(`API Request to ${url}:`, JSON.parse(options.body));
+    }
+
     const separator = url.includes("?") ? "&" : "?";
     const finalUrl = `${url}${separator}${this._getCacheBuster()}`;
 
     try {
       const response = await fetch(finalUrl, options);
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `HTTP Error: ${response.status}`);
+        // Try to get detailed error info from the response body
+        const errorText = await response.text();
+        let errorMessage = `HTTP Error: ${response.status}`;
+        try {
+            const errData = JSON.parse(errorText);
+            errorMessage = errData.error || errData.message || errorMessage;
+        } catch (e) {
+            errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       return response;
     } catch (error) {
@@ -119,10 +132,11 @@ export const API = {
    * Prompts are loaded in parallel for better performance.
    *
    * @param {string} filePath - Path to the .txt scenario file.
+   * @param {string} type - The exercise type (e.g., 'SIMULATION' or 'TRANSFORMATION').
    * @returns {Promise<Object>} Object containing scenario config and a 'prompts' map.
    * @async
    */
-  async fetchCompleteScenario(filePath) {
+  async fetchCompleteScenario(filePath, type) {
     const response = await this._request(filePath);
     const text = await response.text();
 
@@ -133,12 +147,20 @@ export const API = {
       title: Utils.parseMetaValue(metaSection, "title"),
       roleLabel: Utils.parseMetaValue(metaSection, "role_label"),
       trainerPromptFile: Utils.parseMetaValue(metaSection, "trainer_prompt"),
+      systemPromptFile: Utils.parseMetaValue(metaSection, "system_prompt"),
+      partnerPromptFile: Utils.parseMetaValue(metaSection, "partner_prompt"),
+      mentorPromptFile: Utils.parseMetaValue(metaSection, "mentor_prompt"),
       instructionSection,
       shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
+    // The API only loads what is explicitly defined in the metadata.
+    // No more "magic" fallbacks at this level.
     const promptMap = {
       trainer: { file: config.trainerPromptFile, dir: "trainer" },
+      system: { file: config.systemPromptFile, dir: "system" },
+      partner: { file: config.partnerPromptFile, dir: "partner" },
+      mentor: { file: config.mentorPromptFile, dir: "mentor" }
     };
 
     const prompts = {};

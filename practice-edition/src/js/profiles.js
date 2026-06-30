@@ -146,7 +146,7 @@ const FEMALE_CHARACTERS = [
     mouthsClosed: ["FaceImages/Smiling/Fine_Smiling.png"],
     mouthsOpen: ["FaceImages/Smiling/Fine_Smiling_Speaking.png"],
   },
-  // Hier weitere weibliche Charakter-Modelle hinzufügen
+  // Add more female character models here
 ];
 
 /**
@@ -255,7 +255,7 @@ const MALE_CHARACTERS = [
     mouthsClosed: ["FaceImages/Smiling/Strong_Smiling.png"],
     mouthsOpen: ["FaceImages/Smiling/Strong_Smiling_Speaking.png"],
   },
-  // Hier weitere männliche Charakter-Modelle hinzufügen
+  // Add more male character models here
 ];
 
 /**
@@ -270,7 +270,7 @@ const ALL_CHARACTERS = [...FEMALE_CHARACTERS, ...MALE_CHARACTERS];
  * @type {Object.<string, CharacterProfile[]>}
  */
 export const CHARACTER_PROFILES = {
-  // Rollen-Zuweisungen
+  // Role assignments
   Mitarbeiterin: FEMALE_CHARACTERS,
   Kollegin: FEMALE_CHARACTERS,
   Mitarbeiter: MALE_CHARACTERS,

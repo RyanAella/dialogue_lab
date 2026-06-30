@@ -28,6 +28,7 @@ const STATE = {
   exerciseIndex: 0,
   activeStatements: [],
   ttsEnabled: false,
+  lastFeedback: null,
 };
 
 /**
@@ -42,6 +43,7 @@ function resetAppForMode(mode) {
   Chat.clear();
   STATE.exerciseIndex = 0;
   STATE.answers = [];
+  STATE.lastFeedback = null;
 
   UI.elements.chatWindow.innerHTML = "";
   UI.elements.chatWindow.closest("main")?.scrollTo(0, 0);
@@ -110,6 +112,7 @@ function restartTransformationExercise() {
 
   Chat.clear();
   STATE.answers = [];
+  STATE.lastFeedback = null;
   UI.elements.chatWindow.innerHTML = "";
   UI.setExerciseActionsVisible(false);
 
@@ -200,7 +203,7 @@ async function switchToTransformationMode(
     // Ensure the dropdown shows the correct selection
     UI.elements.exerciseSelect.value = targetId;
 
-    // Exercise Dropdown Event Listener wird die Übung laden
+    // Exercise Dropdown Event Listener will load the exercise
     UI.elements.exerciseSelect.dispatchEvent(new Event("change"));
   } else {
     UI.updateStatus("idle", "Keine Transformations-Übungen verfügbar.");
@@ -358,6 +361,12 @@ function downloadCurrentTranscript() {
   const header = `### BRIEFING ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n### PROTOKOLL ###\n\n`;
   const chatContent = Chat.getTranscript(config.roleName);
 
+  let fileContent = header + chatContent;
+
+  if (STATE.lastFeedback) {
+    fileContent += `\n\n${"=".repeat(50)}\n\n### FEEDBACK & AUSWERTUNG ###\n\n${STATE.lastFeedback}`;
+  }
+
   const date = Utils.getFormattedDate();
   let filenameParts = [];
 
@@ -382,7 +391,7 @@ function downloadCurrentTranscript() {
   filenameParts.push(date);
 
   const filename = filenameParts.join("_") + ".txt";
-  Utils.downloadFile(header + chatContent, filename);
+  Utils.downloadFile(fileContent, filename);
 }
 
 /**
@@ -497,6 +506,21 @@ async function handleFeedback() {
   if (Chat.getMessageCount() === 0) return;
 
   const config = ScenarioService.getActive();
+  if (!config || !config.prompts) return;
+
+  // Explicit selection of the prompt based on the exercise type:
+  // - TRANSFORMATION: Uses the 'trainer' prompt for evaluation (or 'mentor' if available).
+  // - SIMULATION: Mandatorily uses the 'mentor' prompt.
+  const evalPrompt = config.type === "TRANSFORMATION" 
+    ? (config.prompts.mentor || config.prompts.trainer)
+    : config.prompts.mentor;
+
+  if (!evalPrompt) {
+    UI.updateStatus("error", "Analyse-Instruktionen fehlen.");
+    console.error("Feedback failed: No appropriate prompt found for evaluation.", config);
+    return;
+  }
+
   UI.elements.loadingOverlay?.classList.remove("hidden");
   UI.updateStatus("loading", "Mentor analysiert...");
   const transcript = Chat.getTranscript(config.roleName);
@@ -504,7 +528,7 @@ async function handleFeedback() {
   try {
     const data = await API.callChatApi(
       [
-        { role: "system", content: config.prompts.mentor },
+        { role: "system", content: evalPrompt },
         { role: "user", content: `Transcript:\n${transcript}` },
       ],
       {
@@ -513,7 +537,8 @@ async function handleFeedback() {
         temperature: APP_CONFIG.MENTOR_TEMPERATURE,
       },
     );
-    UI.showFeedbackModal(data.choices[0].message.content);
+    STATE.lastFeedback = data.choices[0].message.content;
+    UI.showFeedbackModal(STATE.lastFeedback);
     if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Mentor");
 
     // Optional: Also show the download button in the sidebar after mentor feedback
