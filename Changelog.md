@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.24.2] - 2026-07-01
+
+### Fixed
+- **API Error Handling**: Resolved the `[object Object]` error by implementing robust stringification of error objects in the `handleFeedback` catch block.
+- **Mode-Specific Prompts**: Fixed logic where transformation mode failed due to missing `mentor` prompts; the system now correctly switches to `trainer` prompts and includes safety fallbacks.
+- **Feedback UI**: Ensured AI analysis is correctly stored in `STATE` and displayed immediately in the feedback modal.
+
+---
+
 ## [0.24.1] - 2026-06-30
 
 ### Fixed
