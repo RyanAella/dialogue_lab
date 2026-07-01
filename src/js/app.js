@@ -28,6 +28,7 @@ const STATE = {
   exerciseIndex: 0,
   activeStatements: [],
   ttsEnabled: false,
+  lastFeedback: null,
 };
 
 /**
@@ -43,6 +44,7 @@ function resetAppForMode(mode) {
   Chat.clear();
   STATE.exerciseIndex = 0;
   STATE.answers = [];
+  STATE.lastFeedback = null;
 
   UI.elements.chatWindow.innerHTML = "";
   UI.elements.chatWindow.closest("main")?.scrollTo(0, 0);
@@ -111,6 +113,7 @@ function restartTransformationExercise() {
 
   Chat.clear();
   STATE.answers = [];
+  STATE.lastFeedback = null;
   UI.elements.chatWindow.innerHTML = "";
   UI.setExerciseActionsVisible(false);
 
@@ -282,6 +285,7 @@ async function loadContent(exerciseId) {
   UI.setBriefingLoading(true);
   UI.elements.chatWindow.innerHTML = "";
   Chat.clear();
+  STATE.lastFeedback = null;
 
   try {
     const config = await ScenarioService.loadScenario(exerciseId);
@@ -354,6 +358,12 @@ function downloadCurrentTranscript() {
   const header = `### BRIEFING ###\n\n${briefing}\n\n${"=".repeat(50)}\n\n### PROTOKOLL ###\n\n`;
   const chatContent = Chat.getTranscript(config.roleName);
 
+  let fileContent = header + chatContent;
+
+  if (STATE.lastFeedback) {
+    fileContent += `\n\n${"=".repeat(50)}\n\n### FEEDBACK ###\n\n${STATE.lastFeedback}`
+  }
+
   const date = Utils.getFormattedDate();
   let filenameParts = [];
 
@@ -378,7 +388,7 @@ function downloadCurrentTranscript() {
   filenameParts.push(date);
 
   const filename = filenameParts.join("_") + ".txt";
-  Utils.downloadFile(header + chatContent, filename);
+  Utils.downloadFile(fileContent, filename);
 }
 
 /**
@@ -489,14 +499,30 @@ async function handleFeedback() {
   if (Chat.getMessageCount() === 0) return;
 
   const config = ScenarioService.getActive();
+  if (!config || !config.prompts) return;
+
+  // Determine the appropriate prompt based on the mode:
+  // - TRANSFORMATION: Prefers 'trainer', falls back to 'mentor'.
+  // - SIMULATION: Uses 'mentor'.
+  const isTransform = config.type === "TRANSFORMATION";
+  const evalPrompt = isTransform 
+    ? (config.prompts.trainer || config.prompts.mentor) 
+    : config.prompts.mentor;
+
+  // Fallback in case no specific prompt is defined in the configuration
+  const finalPrompt = evalPrompt || (isTransform 
+    ? "You are an experienced communication trainer. Critically analyze the user's rephrasings and provide constructive feedback." 
+    : "You are a mentor. Analyze the conversation transcript and provide helpful feedback.");
+
   UI.elements.loadingOverlay?.classList.remove("hidden");
-  UI.updateStatus("loading", "Mentor analysiert...");
+  UI.updateStatus("loading", isTransform ? "Trainer analysiert..." : "Mentor analysiert...");
+  
   const transcript = Chat.getTranscript(config.roleName);
 
   try {
     const data = await API.callChatApi(
       [
-        { role: "system", content: config.prompts.mentor },
+        { role: "system", content: finalPrompt },
         { role: "user", content: `Transcript:\n${transcript}` },
       ],
       {
@@ -505,19 +531,32 @@ async function handleFeedback() {
         temperature: APP_CONFIG.MENTOR_TEMPERATURE,
       },
     );
-    if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Mentor");
 
-    // Optional: Also show the download button in the sidebar after mentor feedback
-    UI.elements.feedbackBtn.classList.add("hidden");
+    if (!data) throw new Error("Keine Antwort von der KI erhalten.");
+
+    const feedback = data.choices[0].message.content;
+    STATE.lastFeedback = feedback;
+
+    // Display feedback in the UI modal
+    UI.showFeedbackModal(feedback);
+
+    if (STATE.ttsEnabled) {
+      UI.speak(feedback, isTransform ? "Coach" : "Mentor");
+    }
+
+    // Hide the feedback button and show the export button after analysis
+    UI.elements.feedbackBtn?.classList.add("hidden");
     if (UI.elements.exportTranscriptBtn) {
       UI.elements.exportTranscriptBtn.classList.remove("hidden");
     }
 
     UI.updateStatus("idle", "Fertig");
   } catch (e) {
-    UI.updateStatus("error", "Fehler: " + e.message);
+    console.error("Feedback request failed:", e);
+    const errorText = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
+    UI.updateStatus("error", "Fehler: " + errorText);
   } finally {
-    UI.elements.loadingOverlay.classList.add("hidden");
+    UI.elements.loadingOverlay?.classList.add("hidden");
   }
 }
 
