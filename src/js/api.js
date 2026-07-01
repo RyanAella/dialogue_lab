@@ -50,8 +50,12 @@ export const API = {
     try {
       const response = await fetch(finalUrl, options);
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `HTTP Error: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData
+          ? (errorData.error || errorData.message || JSON.stringify(errorData))
+          : `HTTP Error: ${response.status} ${response.statusText}`;
+
+        throw new Error(errorMessage);
       }
       return response;
     } catch (error) {
@@ -62,7 +66,7 @@ export const API = {
         userMessage =
           "Network error or CORS block. Check backend configuration.";
       }
-      console.error(`Request failed [${url}]:`, error);
+      console.error(`Request failed [${url}]:`, error.message, error);
       throw new Error(userMessage);
     }
   },
