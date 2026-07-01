@@ -619,6 +619,15 @@ function setupEventListeners() {
     downloadCurrentTranscript,
   );
 
+  // Event Listener für die "X" (Schließen) Buttons der Modals
+  UI.elements.modalCloseFeedback?.addEventListener("click", closeFeedbackModal);
+
+  UI.elements.modalCloseReset?.addEventListener("click", () => {
+    if (UI.elements.resetModal) {
+      UI.elements.resetModal.classList.add("hidden");
+    }
+  });
+
   // Sidebar Reset Button logic
   UI.elements.resetBtn?.addEventListener("click", () => {
     UI.openResetModal();
@@ -681,3 +690,34 @@ async function initializeCurrentMode() {
 document.addEventListener("DOMContentLoaded", () => {
   startApp();
 });
+
+/**
+ * Schließt das Feedback-Modal und startet die Übung/Simulation neu,
+ * ohne die Seite neu zu laden (behält den Modus bei).
+ */
+function closeFeedbackModal() {
+  // Fallback auf direct DOM access, falls UI.elements binding fehlt
+  const modal = UI.elements.feedbackModal || document.getElementById("feedback-modal");
+  if (modal) modal.classList.add("hidden");
+  
+  confirmReset();
+}
+
+/**
+ * Führt den eigentlichen Reset basierend auf dem aktuellen Modus aus.
+ */
+function confirmReset() {
+  // Fallback auf direct DOM access, falls UI.elements binding fehlt
+  const modal = UI.elements.resetModal || document.getElementById("reset-modal");
+  if (modal) modal.classList.add("hidden");
+
+  if (STATE.currentMode === "transformation") {
+    restartTransformationExercise();
+  } else {
+    switchToRoleplayMode();
+  }
+}
+
+// Funktionen global verfügbar machen für onclick-Attribute in index.html
+window.closeFeedbackModal = closeFeedbackModal;
+window.confirmReset = confirmReset;
