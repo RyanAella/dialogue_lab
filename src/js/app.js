@@ -58,8 +58,8 @@ function resetAppForMode(mode) {
     UI.elements.feedbackBtn.disabled = true;
     UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
     UI.elements.feedbackBtn.innerHTML = isTransform
-      ? "<span>📊</span> Auswertung erstellen"
-      : "<span>📊</span> Feedback erhalten";
+      ? "<span>📊</span> Coach-Analyse erstellen"
+      : "<span>📊</span> Coach-Feedback erhalten";
   }
 
   if (UI.elements.exportTranscriptBtn)
@@ -120,7 +120,7 @@ function restartTransformationExercise() {
   UI.elements.feedbackBtn.classList.remove("hidden");
   UI.elements.feedbackBtn.disabled = true;
   UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
-  UI.elements.feedbackBtn.innerHTML = "<span>📊</span> Auswertung erstellen";
+  UI.elements.feedbackBtn.innerHTML = "<span>📊</span> Coach-Analyse erstellen";
 
   if (UI.elements.exportTranscriptBtn) {
     UI.elements.exportTranscriptBtn.classList.add("hidden");
@@ -288,6 +288,7 @@ async function loadContent(exerciseId) {
   UI.setBriefingLoading(true);
   UI.elements.chatWindow.innerHTML = "";
   Chat.clear();
+  STATE.lastFeedback = null;
 
   try {
     const config = await ScenarioService.loadScenario(exerciseId);
@@ -364,7 +365,7 @@ function downloadCurrentTranscript() {
   let fileContent = header + chatContent;
 
   if (STATE.lastFeedback) {
-    fileContent += `\n\n${"=".repeat(50)}\n\n### FEEDBACK & AUSWERTUNG ###\n\n${STATE.lastFeedback}`;
+    fileContent += `\n\n${"=".repeat(50)}\n\n### COACH-ANALYSE ###\n\n${STATE.lastFeedback}`;
   }
 
   const date = Utils.getFormattedDate();
@@ -452,7 +453,7 @@ async function handleSend() {
     } else {
       // End of exercise series
       const endMsg =
-        "Alle Aussagen bearbeitet. Klicke jetzt auf 'Auswertung erstellen', um dein Feedback zu erhalten.";
+        "Alle Aussagen bearbeitet. Klicke jetzt auf 'Coach-Analyse erstellen', um dein Feedback zu erhalten.";
       UI.appendMessage(endMsg, "partner", {
         roleName: config.roleName,
         messageType: "task",
@@ -509,20 +510,20 @@ async function handleFeedback() {
   if (!config || !config.prompts) return;
 
   // Explicit selection of the prompt based on the exercise type:
-  // - TRANSFORMATION: Uses the 'trainer' prompt for evaluation (or 'mentor' if available).
+  // - TRANSFORMATION: Uses the 'trainer' prompt for evaluation (or 'coach/mentor' if available).
   // - SIMULATION: Mandatorily uses the 'mentor' prompt.
   const evalPrompt = config.type === "TRANSFORMATION" 
     ? (config.prompts.mentor || config.prompts.trainer)
     : config.prompts.mentor;
 
   if (!evalPrompt) {
-    UI.updateStatus("error", "Analyse-Instruktionen fehlen.");
+    UI.updateStatus("error", "Coach-Instruktionen fehlen.");
     console.error("Feedback failed: No appropriate prompt found for evaluation.", config);
     return;
   }
 
   UI.elements.loadingOverlay?.classList.remove("hidden");
-  UI.updateStatus("loading", "Mentor analysiert...");
+  UI.updateStatus("loading", "Coach analysiert...");
   const transcript = Chat.getTranscript(config.roleName);
 
   try {
@@ -534,14 +535,14 @@ async function handleFeedback() {
       {
         proxyUrl: APP_CONFIG.PROXY_URL,
         model: APP_CONFIG.MODEL,
-        temperature: APP_CONFIG.MENTOR_TEMPERATURE,
+        temperature: APP_CONFIG.COACH_TEMPERATURE,
       },
     );
     STATE.lastFeedback = data.choices[0].message.content;
     UI.showFeedbackModal(STATE.lastFeedback);
-    if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Mentor");
+    if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Coach");
 
-    // Optional: Also show the download button in the sidebar after mentor feedback
+    // Optional: Also show the download button in the sidebar after coach feedback
     UI.elements.feedbackBtn.classList.add("hidden");
     if (UI.elements.exportTranscriptBtn) {
       UI.elements.exportTranscriptBtn.classList.remove("hidden");
@@ -597,6 +598,13 @@ function setupEventListeners() {
     downloadCurrentTranscript,
   );
 
+  // Feedback Modal Close logic (X-Button and potential Close-Buttons)
+  if (UI.elements.modalCloseFeedback) {
+    UI.elements.modalCloseFeedback.addEventListener("click", () => {
+      closeFeedbackModal();
+    });
+  }
+
   // Sidebar Reset Button logic
   UI.elements.resetBtn?.addEventListener("click", () => {
     UI.openResetModal();
@@ -643,6 +651,18 @@ function setupEventListeners() {
     });
   }
 }
+
+/**
+ * Global helper for closing the feedback modal.
+ * Triggers a full page reload, matching the "New Conversation" button behavior.
+ * @returns {void}
+ */
+function closeFeedbackModal() {
+  location.reload();
+}
+
+// Expose to window for inline HTML onclick attributes
+window.closeFeedbackModal = closeFeedbackModal;
 
 /**
  * Determines and activates the initial mode based on UI state.

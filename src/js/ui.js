@@ -43,7 +43,7 @@ const MESSAGE_STYLES = {
     cls: "bg-sky-50 text-sky-900 border-sky-100 rounded-tl-none",
   },
   feedback: {
-    label: "Feedback",
+    label: "Coach-Analyse",
     cls: "bg-indigo-50 text-indigo-900 border-indigo-100 rounded-tl-none",
   },
 };
@@ -125,6 +125,7 @@ export const UI = {
       "mic-btn",
       "loading-overlay",
       "feedback-modal",
+      "modal-close-feedback",
       "reset-modal",
       "partner-name-display",
     ];
@@ -565,16 +566,6 @@ export const UI = {
       content.classList.add("scale-100", "opacity-100");
     }, 10);
   },
-};
-
-/**
- * Global helper for closing the feedback modal.
- * Bound to window for HTML onclick compatibility.
- * @returns {void}
- */
-window.closeFeedbackModal = () => {
-  UI.elements.feedbackModal.classList.add("hidden");
-  document.body.style.overflow = "auto";
 };
 
 /**

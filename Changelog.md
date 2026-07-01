@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.24.0] - 2024-07-01
+
+### Changed
+- **Rebranding to "Coach"**: Completed the transition by replacing remaining "Mentor" references overlooked in v0.22.0 and updating internal code identifiers (e.g., "Coach-Analyse") for full project consistency.
+- **Feedback Modal Behavior**: Closing the feedback modal via the "X" button now triggers a full page reload (location.reload()), ensuring consistency with the "New Conversation" button.
+- **Configuration Cleanup**: Renamed `MENTOR_TEMPERATURE` to `COACH_TEMPERATURE` within `config.js` for architectural consistency.
+
+### Fixed
+- **Close Button Synchronization**: Synchronized the feedback modal's close button ID between `index.html`, `ui.js`, and `app.js` (`modal-close-feedback`), ensuring the "X" button correctly triggers the close and progression logic.
+
+---
+
 ## [0.23.0] - 2024-06-30
 
 ### Fixed

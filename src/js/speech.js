@@ -134,12 +134,12 @@ export const Speech = {
     if (voice) utterance.voice = voice;
 
     const isHQ = voice?.name.toLowerCase().includes("neural");
-    const isMentor =
-      roleName?.toLowerCase().includes("mentor") ||
+    const isCoach =
+      roleName?.toLowerCase().includes("coach") ||
       roleName?.toLowerCase().includes("feedback");
 
-    utterance.rate = isMentor ? (isHQ ? 0.88 : 0.85) : isHQ ? 0.95 : 0.9;
-    utterance.pitch = isMentor ? 0.95 : isFemale ? 1.05 : 0.98;
+    utterance.rate = isCoach ? (isHQ ? 0.88 : 0.85) : isHQ ? 0.95 : 0.9;
+    utterance.pitch = isCoach ? 0.95 : isFemale ? 1.05 : 0.98;
     utterance.volume = 0.9;
 
     if (btnElement) {
