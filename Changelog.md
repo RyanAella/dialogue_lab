@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
----
+ ---
+
+## [0.25.0] - 2026-07-01
+
+### Changed
+- **Persona Refinement**: Finalized the conceptual shift from "Trainer" to "Coach" across all logic, fallback prompts, and UI components.
+- **UI Localization**: Unified all interface labels, status messages, and AI instructions to German for a consistent user experience.
+- **Dynamic UI Features**: Implemented mode-aware titles for the analysis process ("Coach-Analyse" vs. "Mentor-Feedback").
+- **Speech Synthesis Optimization**: Updated the voice engine to apply specialized instructional parameters (pitch and rate) to the new Coach persona.
+
+### Fixed
+- **Safety Fallbacks**: Added default evaluation prompts to `config.js` to prevent API crashes when scenario files are missing specific prompt metadata.
+- **DOM Binding**: Added new IDs (`loading-title`, `feedback-modal-title`) to `index.html` and registered them in `ui.js` to enable targeted title updates.
+
+ ---
 
 ## [0.24.2] - 2026-07-01
 
