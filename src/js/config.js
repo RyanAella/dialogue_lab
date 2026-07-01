@@ -20,4 +20,8 @@ export const APP_CONFIG = {
   MENTOR_TEMPERATURE: 0.3,
   ICH_BOTSCHAFT_TEMPERATURE: 0.4,
   EXERCISES_FILE: "src/data/exercises.json",
+  FALLBACK_PROMPTS: {
+    transformation: "Du bist ein erfahrener Kommunikations-Coach. Analysiere die Umformulierungen des Nutzers kritisch und gib konstruktives Feedback.",
+    simulation: "Du bist ein Mentor. Analysiere das Gesprächsprotokoll und gib hilfreiches Feedback."
+  }
 };

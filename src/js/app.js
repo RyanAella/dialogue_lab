@@ -502,22 +502,25 @@ async function handleFeedback() {
   if (!config || !config.prompts) return;
 
   // Determine the appropriate prompt based on the mode:
-  // - TRANSFORMATION: Prefers 'trainer', falls back to 'mentor'.
-  // - SIMULATION: Uses 'mentor'.
+  // Simulation: mentor prompt | Transformation: trainer prompt
   const isTransform = config.type === "TRANSFORMATION";
-  const evalPrompt = isTransform 
-    ? (config.prompts.trainer || config.prompts.mentor) 
-    : config.prompts.mentor;
+  const evalPrompt = isTransform ? config.prompts.trainer : config.prompts.mentor;
 
   // Fallback in case no specific prompt is defined in the configuration
-  const finalPrompt = evalPrompt || (isTransform 
-    ? "You are an experienced communication trainer. Critically analyze the user's rephrasings and provide constructive feedback." 
-    : "You are a mentor. Analyze the conversation transcript and provide helpful feedback.");
+  const finalPrompt = evalPrompt || (isTransform
+    ? APP_CONFIG.FALLBACK_PROMPTS.transformation
+    : APP_CONFIG.FALLBACK_PROMPTS.simulation);
 
+  if (UI.elements.loadingTitle) {
+    UI.elements.loadingTitle.textContent = isTransform 
+      ? "Coach analysiert das Gespräch..."
+      : "Mentor analysiert das Gespräch...";
+  }
   UI.elements.loadingOverlay?.classList.remove("hidden");
-  UI.updateStatus("loading", isTransform ? "Trainer analysiert..." : "Mentor analysiert...");
+  UI.updateStatus("loading", isTransform ? "Coach analysiert..." : "Mentor analysiert...");
   
-  const transcript = Chat.getTranscript(config.roleName);
+  // Das Transkript enthält nur die User/Assistant Nachrichten, kein System-Prompt.
+  const transcript = Chat.getTranscript(config.roleName); 
 
   try {
     const data = await API.callChatApi(
@@ -536,6 +539,13 @@ async function handleFeedback() {
 
     const feedback = data.choices[0].message.content;
     STATE.lastFeedback = feedback;
+
+    // Update the modal title based on the mode
+    if (UI.elements.feedbackModalTitle) {
+      UI.elements.feedbackModalTitle.innerHTML = isTransform
+        ? "<span>📊</span> Coach-Analyse"
+        : "<span>📊</span> Mentor-Feedback";
+    }
 
     // Display feedback in the UI modal
     UI.showFeedbackModal(feedback);

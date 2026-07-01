@@ -124,7 +124,9 @@ export const UI = {
       "stop-speech-btn",
       "mic-btn",
       "loading-overlay",
+      "loading-title",
       "feedback-modal",
+      "feedback-modal-title",
       "reset-modal",
       "partner-name-display",
     ];

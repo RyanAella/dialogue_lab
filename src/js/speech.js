@@ -1,4 +1,5 @@
 import { Utils } from "./utils.js";
+import { APP_CONFIG } from "./config.js";
 
 /**
  * Keywords used to filter and select the most appropriate system voices.
@@ -136,7 +137,8 @@ export const Speech = {
     const isHQ = voice?.name.toLowerCase().includes("neural");
     const isMentor =
       roleName?.toLowerCase().includes("mentor") ||
-      roleName?.toLowerCase().includes("feedback");
+    roleName?.toLowerCase().includes("feedback") ||
+      roleName?.toLowerCase().includes("coach");
 
     utterance.rate = isMentor ? (isHQ ? 0.88 : 0.85) : isHQ ? 0.95 : 0.9;
     utterance.pitch = isMentor ? 0.95 : isFemale ? 1.05 : 0.98;
@@ -158,7 +160,7 @@ export const Speech = {
           "opacity-100",
         );
         avatar?.setTalking(false);
-        if (onStatus) setTimeout(() => onStatus("default", "Ready"), 3000);
+        if (onStatus) setTimeout(() => onStatus("default", "Bereit"), 3000);
       };
       utterance.onerror = utterance.onend;
     }
