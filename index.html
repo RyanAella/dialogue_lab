@@ -429,6 +429,7 @@
           <h2 id="feedback-modal-title" class="text-2xl font-bold text-gray-800">📊 Mentor-Feedback</h2>
           <button
             id="modal-close-feedback"
+            onclick="closeFeedbackModal()"
             class="text-gray-500 hover:text-black text-xl"
           >
             &times;
@@ -448,7 +449,7 @@
             📥 Protokoll & Feedback herunterladen
           </button>
           <button
-            onclick="location.reload()"
+            onclick="closeFeedbackModal()"
             class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
           >
             🔄 Neues Gespräch beginnen
@@ -481,12 +482,13 @@
         <div class="flex gap-3">
           <button
             id="modal-close-reset"
+            onclick="document.getElementById('reset-modal').classList.add('hidden')"
             class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition"
           >
             Abbrechen
           </button>
           <button
-            onclick="location.reload()"
+            onclick="confirmReset()"
             class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition shadow-lg shadow-red-200"
           >
             Ja, Neustart
