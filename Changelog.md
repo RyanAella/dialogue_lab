@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  ---
 
+## [0.25.1] - 2026-07-02
+
+### Fixed
+- **Session Continuity**: Fixed "New Conversation" and "Restart" actions to correctly preserve the active application mode (Simulation vs. Transformation) by replacing hard page reloads with dynamic state resets.
+- **Modal Interaction**: Resolved issues with "X" (close) buttons in both the Feedback and Reset modals by implementing robust global handlers and direct HTML event triggers.
+
+ ---
+
 ## [0.25.0] - 2026-07-01
 
 ### Changed
