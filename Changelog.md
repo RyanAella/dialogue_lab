@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  ---
 
+## [0.27.0] - 2026-07-03
+
+### Added
+- **Type Safety & IntelliSense**: Introduced JSDoc `@typedef` for `AvatarConfig` in `avatar.js` to eliminate "unresolved variable" warnings and improve autocompletion.
+
+### Changed
+- **Defensive Programming**: Implemented Optional Chaining (`?.`) when accessing `UI.elements` throughout `app.js` to prevent runtime errors if DOM elements are missing.
+- **API Robustness**: Secured API response processing (`data.choices[0]`) using deep optional chaining against malformed or empty returns.
+
+### Fixed
+- **Type Mismatches**: Resolved IDE warnings in `avatar.js` regarding nullable types and in `speech.js` regarding incorrect boolean return values and string comparisons.
+- **Asset Handling**: Added existence checks for optional avatar layers (glasses, headsets) to avoid errors with incomplete character profiles.
+
+ ---
+
 ## [0.26.0] - 2026-07-03
 
 ### Added

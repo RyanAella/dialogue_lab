@@ -27,12 +27,27 @@ const LAYERS = [
 ];
 
 /**
+ * @typedef {Object} AvatarConfig
+ * @property {string} basePath
+ * @property {string[]} heads
+ * @property {string[]} clothes
+ * @property {string[]} hair
+ * @property {string[]} eyesOpen
+ * @property {string[]} mouthsClosed
+ * @property {string[]} [eyesClosed]
+ * @property {string[]} [mouthsOpen]
+ * @property {string[]} [glasses]
+ * @property {string[]} [headset]
+ * @property {Record<string, string[]>|string[]} hands
+ */
+
+/**
  * The Avatar component manages the visual representation of the AI partner.
  * It handles the selection of character profiles, randomization of traits,
  * and coordinated animations for blinking and speaking.
  */
 export const Avatar = {
-  /** @type {Object} References to DOM image elements for main and mobile views */
+  /** @type {Record<string, NodeListOf<HTMLImageElement>>} References to DOM image elements */
   _nodes: {},
 
   /**
@@ -43,7 +58,8 @@ export const Avatar = {
     isTalking: false, // Whether the talking animation is active
     blinkTimeout: null, // Reference for the blinking loop timeout
     mouthInterval: null, // Reference for the mouth movement interval
-    config: null, // The currently active character profile configuration
+    /** @type {AvatarConfig | null} */
+    config: null,
     current: {
       head: 0,
       clothes: 0,
@@ -59,21 +75,22 @@ export const Avatar = {
 
   /**
    * Preloads critical assets for a profile to prevent flickering during rendering.
-   * @param {Object} profile - The character profile configuration.
+   * @param {AvatarConfig} profile - The character profile configuration.
    * @returns {Promise<void>} Resolves when essential layers are loaded.
    */
   async preloadProfile(profile) {
     if (!profile) return;
 
-    const essentialPaths = [
+    /** @type {string[]} */
+    const paths = [
       ...(profile.heads || []),
       ...(profile.clothes || []),
       ...(profile.hair || []),
       ...(profile.eyesOpen || []),
       ...(profile.mouthsClosed || []),
-    ].map((p) => profile.basePath + p);
+    ].map((p) => String(profile.basePath + p));
 
-    const promises = essentialPaths.slice(0, 15).map((src) => {
+    const promises = paths.slice(0, 15).map((src) => {
       return new Promise((resolve) => {
         const img = new Image();
         img.onload = resolve;
@@ -81,8 +98,8 @@ export const Avatar = {
         img.src = src;
       });
     });
-
-    return Promise.all(promises);
+    
+    await Promise.all(promises);
   },
 
   /**
@@ -99,32 +116,34 @@ export const Avatar = {
   /**
    * Selects a profile and randomizes individual trait indices (hair, clothes, etc.).
    * Automatically triggers initial rendering and animation loops.
-   * @param {Object|Array} data - A single character profile object or an array of profiles to pick from.
+   * @param {AvatarConfig|AvatarConfig[]} data - A single character profile object or an array of profiles to pick from.
    * @returns {Promise<void>}
    */
   async setup(data) {
     if (!data) return;
+
+    /** @type {AvatarConfig} */
     const profile = Array.isArray(data)
       ? data[Math.floor(Math.random() * data.length)]
       : data;
 
-    // Vorherigen Charakter sofort ausblenden, um Flackern zu vermeiden
-    this._state.config = null;
+    // Reset config to null (cast to any or use explicit nullability to satisfy IDE)
+    this._state.config = /** @type {AvatarConfig | null} */ (null);
     this.update();
 
     // Optional: Preload before first update to avoid flickering
     await this.preloadProfile(profile);
     this._state.config = profile;
 
-    const rand = (list) => Math.floor(Math.random() * (list?.length || 1));
+    const rand = (/** @type {string[]|undefined} */ list) => Math.floor(Math.random() * (list?.length || 1));
     const s = this._state;
-    const c = s.config;
+    const c = profile; // Use the local profile variable for better type inference
 
     s.current.head = rand(c.heads);
     s.current.clothes = rand(c.clothes);
     s.current.hair = rand(c.hair);
-    s.current.glasses = rand(c.glasses);
-    s.current.headset = rand(c.headset);
+    s.current.glasses = c.glasses ? rand(c.glasses) : 0;
+    s.current.headset = c.headset ? rand(c.headset) : 0;
 
     const headPath = c.heads?.[s.current.head] || "";
     const colorMatch = headPath.match(/_([a-d])\.png$/i);
@@ -132,7 +151,7 @@ export const Avatar = {
 
     const handPool = Array.isArray(c.hands)
       ? c.hands
-      : c.hands[s.current.skinTone] || [""];
+      : (c.hands ? c.hands[s.current.skinTone] : [""]);
     s.current.hands = rand(handPool);
     s.current.eyes = rand(c.eyesOpen);
     s.current.mouth = rand(c.mouthsClosed);
@@ -155,33 +174,34 @@ export const Avatar = {
     let file = "";
     switch (layerName) {
       case "body":
-        file = s.config.heads[s.current.head];
+        file = s.config.heads?.[s.current.head];
         break;
       case "clothes":
-        file = s.config.clothes[s.current.clothes];
+        file = s.config.clothes?.[s.current.clothes];
         break;
       case "hair":
-        file = s.config.hair[s.current.hair];
+        file = s.config.hair?.[s.current.hair];
         break;
       case "glasses":
-        file = s.config.glasses[s.current.glasses];
+        file = s.config.glasses?.[s.current.glasses];
         break;
       case "headset":
         file = s.config.headset?.[s.current.headset];
         break;
       case "hands":
+        /** @type {string[]} */
         const pool = Array.isArray(s.config.hands)
           ? s.config.hands
-          : s.config.hands[s.current.skinTone];
-        file = pool[s.current.hands];
+          : (s.config.hands ? s.config.hands[s.current.skinTone] : []);
+        file = pool?.[s.current.hands];
         break;
       case "eyes":
-        file = (eyesClosed ? s.config.eyesClosed : s.config.eyesOpen)[
+        file = (eyesClosed ? s.config.eyesClosed : s.config.eyesOpen)?.[
           s.current.eyes
         ];
         break;
       case "mouth":
-        file = (mouthOpen ? s.config.mouthsOpen : s.config.mouthsClosed)[
+        file = (mouthOpen ? s.config.mouthsOpen : s.config.mouthsClosed)?.[
           s.current.mouth
         ];
         break;
@@ -264,7 +284,7 @@ export const Avatar = {
 
   /**
    * Returns the active character profile configuration.
-   * @returns {Object|null}
+   * @returns {AvatarConfig|null}
    */
   getConfig() {
     return this._state.config;

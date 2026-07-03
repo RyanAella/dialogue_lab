@@ -567,7 +567,7 @@ async function handleFeedback() {
     const errorText = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
     UI.updateStatus("error", "Fehler: " + errorText);
   } finally {
-    UI.elements.loadingOverlay?.classList.add("hidden");
+    UI.elements.loadingOverlay.classList.add("hidden");
   }
 }
 

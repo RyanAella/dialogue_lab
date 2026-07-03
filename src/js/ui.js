@@ -151,10 +151,7 @@ export const UI = {
   updateSidebarVisibility(mode) {
     const isTransformation = mode === "transformation";
     this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
-    this.elements.exerciseSection?.classList.toggle(
-      "hidden",
-      !isTransformation,
-    );
+    this.elements.exerciseSection?.classList.toggle("hidden", !isTransformation);
   },
 
   /**
