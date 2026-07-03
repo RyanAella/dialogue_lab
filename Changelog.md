@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  ---
 
+## [0.26.0] - 2026-07-03
+
+### Added
+- **Persona Adherence Logic**: Implementation of a generic behavioral instruction (`roleAdherence`) that prevents the AI from proactively taking over the conversation or breaking character.
+
+### Changed
+- **Rebranding Finalization**: Renamed remaining technical identifiers (e.g., `MENTOR_TEMPERATURE` to `COACH_TEMPERATURE`) for full consistency with the "Coach" concept.
+- **Simulation Persistence**: The currently selected scenario is now preserved during resets or mode changes, instead of jumping back to the first list entry.
+- **Error Flow**: Optimized error handling in `api.js` and `app.js` by removing locally caught exceptions ("throw caught locally").
+
+### Fixed
+- **Async Integrity**: Fixed numerous "ignored promises" warnings in `app.js`. Core functions such as `startApp`, `confirmReset`, and `loadContent` are now correctly awaited within event listeners and modals.
+- **DOM Binding**: Corrected event listeners for modal buttons (`modal-close-feedback`, `modal-close-reset`), which were non-functional due to missing registration in `ui.js`.
+- **Session Continuity**: Replaced `location.reload()` with a dedicated reset logic to bring the application to a clean initial state without a hard browser refresh.
+- **Code Cleanup**: Removed orphaned and unresolved variables (`_avatar`, `_avatarNodes`) from the UI module, which had been redundant since the modularization of the avatar logic.
+
+ ---
+
 ## [0.25.1] - 2026-07-02
 
 ### Fixed

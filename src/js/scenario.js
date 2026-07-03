@@ -104,15 +104,6 @@ export const ScenarioService = {
   getActive() {
     return this._active;
   },
-
-  /**
-   * Returns the entire exercise pool.
-   * @returns {Array<Object>}
-   */
-  getAll() {
-    return this._exercises;
-  },
-
   /**
    * Returns the statements for the active transformation exercise.
    * @param {boolean} [shuffled=false] - Whether to return a shuffled copy.
@@ -122,13 +113,5 @@ export const ScenarioService = {
     return shuffled
       ? Utils.shuffleArray(this._statements)
       : [...this._statements];
-  },
-
-  /**
-   * Resets the active scenario state.
-   */
-  clearActive() {
-    this._active = null;
-    this._statements = [];
   },
 };

@@ -1,5 +1,4 @@
 import { Utils } from "./utils.js";
-import { APP_CONFIG } from "./config.js";
 
 /**
  * Keywords used to filter and select the most appropriate system voices.
