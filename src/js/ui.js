@@ -127,6 +127,8 @@ export const UI = {
       "loading-title",
       "feedback-modal",
       "feedback-modal-title",
+      "modal-close-feedback",
+      "modal-close-reset",
       "reset-modal",
       "partner-name-display",
     ];

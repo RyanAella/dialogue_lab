@@ -1,10 +1,10 @@
-import { API } from "./api.js";
-import { Chat } from "./chat.js";
-import { APP_CONFIG } from "./config.js";
-import { getProfilePool } from "./profiles.js";
-import { ScenarioService } from "./scenario.js";
-import { UI } from "./ui.js";
-import { Utils } from "./utils.js";
+import {API} from "./api.js";
+import {Chat} from "./chat.js";
+import {APP_CONFIG} from "./config.js";
+import {getProfilePool} from "./profiles.js";
+import {ScenarioService} from "./scenario.js";
+import {UI} from "./ui.js";
+import {Utils} from "./utils.js";
 
 /**
  * @module App
@@ -20,7 +20,7 @@ import { Utils } from "./utils.js";
  * @property {string} currentMode - The active operation mode ('roleplay' or 'transformation').
  * @property {number} exerciseIndex - The current progression index within an exercise.
  * @property {string[]} activeStatements - The pool of statements for the current transformation exercise.
- * @property {boolean} ttsEnabled - Flag for global text-to-speech auto-play.
+ * @property {boolean} ttsEnabled - Flag for global text-to-speech autoplay.
  */
 const STATE = {
   answers: [],
@@ -154,6 +154,9 @@ function restartTransformationExercise() {
  * @async
  */
 async function switchToRoleplayMode() {
+  const active = ScenarioService.getActive();
+  const previousId = (active && active.type === "SIMULATION") ? active.id : null;
+
   resetAppForMode("roleplay");
   UI.updateInputUI(true, "Wähle ein Szenario...");
 
@@ -161,15 +164,9 @@ async function switchToRoleplayMode() {
 
   const simulationExercises = ScenarioService.getExercisesByType("SIMULATION");
   if (simulationExercises.length > 0) {
-    // If no scenario is currently selected, or the selected one is not a simulation, select the first simulation
-    if (
-      !UI.elements.scenarioSelect.value ||
-      !simulationExercises.some(
-        (ex) => ex.id === UI.elements.scenarioSelect.value,
-      )
-    ) {
-      UI.elements.scenarioSelect.value = simulationExercises[0].id;
-    }
+    // Behalte das vorherige Szenario bei, falls es existiert, sonst nimm das erste
+    const exists = simulationExercises.some(ex => ex.id === previousId);
+    UI.elements.scenarioSelect.value = exists ? previousId : simulationExercises[0].id;
     UI.elements.scenarioSelect.dispatchEvent(new Event("change"));
   } else {
     UI.updateStatus("idle", "Keine Rollenspiel-Szenarien verfügbar.");
@@ -198,9 +195,8 @@ async function switchToTransformationMode(
   const transformationExercises =
     ScenarioService.getExercisesByType("TRANSFORMATION");
   if (transformationExercises.length > 0) {
-    const targetId = exerciseId || transformationExercises[0].id;
     // Ensure the dropdown shows the correct selection
-    UI.elements.exerciseSelect.value = targetId;
+    UI.elements.exerciseSelect.value = exerciseId || transformationExercises[0].id;
     UI.elements.exerciseSelect.dispatchEvent(new Event("change"));
   } else {
     UI.updateStatus("idle", "Keine Transformations-Übungen verfügbar.");
@@ -463,8 +459,11 @@ async function handleSend() {
     UI.showTypingIndicator(config.roleName);
 
     if (!Chat.hasSystemPrompt()) {
+      // General guideline on staying in character: Prevents the AI from taking over the conversation
+      const roleAdherence = "Verhalte dich konsequent gemäß deiner Rollenbeschreibung. Überlasse die Gesprächsführung und die Initiative dem Benutzer.";
+
       Chat.setSystemPrompt(
-        `${config.prompts.system}\n\n${config.prompts.partner}`,
+        `${roleAdherence}\n\n${config.prompts.system}\n\n${config.prompts.partner}`,
       );
     }
 
@@ -531,36 +530,38 @@ async function handleFeedback() {
       {
         proxyUrl: APP_CONFIG.PROXY_URL,
         model: APP_CONFIG.MODEL,
-        temperature: APP_CONFIG.MENTOR_TEMPERATURE,
+        temperature: APP_CONFIG.COACH_TEMPERATURE,
       },
     );
 
-    if (!data) throw new Error("Keine Antwort von der KI erhalten.");
+    if (data) {
+      const feedback = data.choices[0].message.content;
+      STATE.lastFeedback = feedback;
 
-    const feedback = data.choices[0].message.content;
-    STATE.lastFeedback = feedback;
+      // Update the modal title based on the mode
+      if (UI.elements.feedbackModalTitle) {
+        UI.elements.feedbackModalTitle.innerHTML = isTransform
+          ? "<span>📊</span> Coach-Analyse"
+          : "<span>📊</span> Mentor-Feedback";
+      }
 
-    // Update the modal title based on the mode
-    if (UI.elements.feedbackModalTitle) {
-      UI.elements.feedbackModalTitle.innerHTML = isTransform
-        ? "<span>📊</span> Coach-Analyse"
-        : "<span>📊</span> Mentor-Feedback";
+      // Display feedback in the UI modal
+      UI.showFeedbackModal(feedback);
+
+      if (STATE.ttsEnabled) {
+        UI.speak(feedback, isTransform ? "Coach" : "Mentor");
+      }
+
+      // Hide the feedback button and show the export button after analysis
+      UI.elements.feedbackBtn?.classList.add("hidden");
+      if (UI.elements.exportTranscriptBtn) {
+        UI.elements.exportTranscriptBtn.classList.remove("hidden");
+      }
+
+      UI.updateStatus("idle", "Fertig");
+    } else {
+      UI.updateStatus("error", "Fehler: Keine Antwort von der KI erhalten.");
     }
-
-    // Display feedback in the UI modal
-    UI.showFeedbackModal(feedback);
-
-    if (STATE.ttsEnabled) {
-      UI.speak(feedback, isTransform ? "Coach" : "Mentor");
-    }
-
-    // Hide the feedback button and show the export button after analysis
-    UI.elements.feedbackBtn?.classList.add("hidden");
-    if (UI.elements.exportTranscriptBtn) {
-      UI.elements.exportTranscriptBtn.classList.remove("hidden");
-    }
-
-    UI.updateStatus("idle", "Fertig");
   } catch (e) {
     console.error("Feedback request failed:", e);
     const errorText = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
@@ -588,19 +589,19 @@ async function startApp() {
  * changing scenarios, and toggling application settings.
  */
 function setupEventListeners() {
-  UI.elements.modeSelect?.addEventListener("change", (e) => {
+  UI.elements.modeSelect?.addEventListener("change", async (e) => {
     if (e.target.value === "transformation") {
-      switchToTransformationMode();
+      await switchToTransformationMode();
     } else {
-      switchToRoleplayMode();
+      await switchToRoleplayMode();
     }
   });
 
-  UI.elements.scenarioSelect.addEventListener("change", (e) =>
-    loadContent(e.target.value),
+  UI.elements.scenarioSelect.addEventListener("change", async (e) =>
+    await loadContent(e.target.value),
   );
-  UI.elements.exerciseSelect?.addEventListener("change", (e) =>
-    loadContent(e.target.value),
+  UI.elements.exerciseSelect?.addEventListener("change", async (e) =>
+    await loadContent(e.target.value),
   );
 
   UI.elements.sendBtn.addEventListener("click", handleSend);
@@ -687,26 +688,31 @@ async function initializeCurrentMode() {
 }
 
 // Initialization on DOM ready
-document.addEventListener("DOMContentLoaded", () => {
-  startApp();
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await startApp();
+  } catch (error) {
+    console.error("Critical initialization error:", error);
+    UI.updateStatus("error", "Die Anwendung konnte nicht korrekt initialisiert werden.");
+  }
 });
 
 /**
- * Schließt das Feedback-Modal und startet die Übung/Simulation neu,
- * ohne die Seite neu zu laden (behält den Modus bei).
+ * Schließt das Feedback-Modal und triggert einen Reset des aktuellen Inhalts,
+ * ohne die gesamte Seite neu zu laden.
  */
-function closeFeedbackModal() {
-  // Fallback auf direct DOM access, falls UI.elements binding fehlt
-  const modal = UI.elements.feedbackModal || document.getElementById("feedback-modal");
+async function closeFeedbackModal() {
+  const modal = UI.elements.feedbackModal;
   if (modal) modal.classList.add("hidden");
+  document.body.style.overflow = "auto";
   
-  confirmReset();
+  await confirmReset();
 }
 
 /**
  * Führt den eigentlichen Reset basierend auf dem aktuellen Modus aus.
  */
-function confirmReset() {
+async function confirmReset() {
   // Fallback auf direct DOM access, falls UI.elements binding fehlt
   const modal = UI.elements.resetModal || document.getElementById("reset-modal");
   if (modal) modal.classList.add("hidden");
@@ -714,7 +720,7 @@ function confirmReset() {
   if (STATE.currentMode === "transformation") {
     restartTransformationExercise();
   } else {
-    switchToRoleplayMode();
+    await switchToRoleplayMode();
   }
 }
 

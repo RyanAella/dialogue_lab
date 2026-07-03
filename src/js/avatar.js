@@ -86,9 +86,7 @@ export const Avatar = {
   },
 
   /**
-   * Initalizes the component with DOM node references.
-   * @param {Object} mainNodes - Map of layer names to <img> elements in the main view.
-   * @param {Object} mobileNodes - Map of layer names to <img> elements in the mobile view.
+   * Initializes the component with DOM node references.
    */
   init() {
     LAYERS.forEach((layer) => {
@@ -270,14 +268,5 @@ export const Avatar = {
    */
   getConfig() {
     return this._state.config;
-  },
-
-  /**
-   * Returns the current randomization state (indices for each trait).
-   * Useful for syncing state with message bubbles or exports.
-   * @returns {Object}
-   */
-  getCurrent() {
-    return this._state.current;
   },
 };
