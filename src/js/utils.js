@@ -1,6 +1,6 @@
 /**
  * @module Utils
- * Provides stateless helper functions for text processing, markdown rendering,
+ * Provides stateless helper functions for text processing, Markdown rendering,
  * scenario parsing, and file management.
  */
 
@@ -19,13 +19,13 @@ export const Utils = {
    * Uses 'pre-wrap' white-space styling for layout consistency.
    *
    * @param {HTMLElement} container - The target DOM element to clear and populate.
-   * @param {string} text - The raw text containing potential markdown patterns.
+   * @param {string} text - The raw text containing potential Markdown patterns.
    */
   renderBoldMarkdownWithLineBreaks(container, text) {
     container.textContent = "";
     container.style.whiteSpace = "pre-wrap";
 
-    // Very small markdown subset: **bold**
+    // Very small Markdown subset: **bold**
     const parts = String(text).split(/\*\*(.*?)\*\*/g);
     parts.forEach((part, index) => {
       if (!part) return;

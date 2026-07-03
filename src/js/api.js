@@ -47,17 +47,9 @@ export const API = {
     const separator = url.includes("?") ? "&" : "?";
     const finalUrl = `${url}${separator}${this._getCacheBuster()}`;
 
+    let response;
     try {
-      const response = await fetch(finalUrl, options);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData
-          ? (errorData.error || errorData.message || JSON.stringify(errorData))
-          : `HTTP Error: ${response.status} ${response.statusText}`;
-
-        throw new Error(errorMessage);
-      }
-      return response;
+      response = await fetch(finalUrl, options);
     } catch (error) {
       if (error.name === "AbortError") return null;
 
@@ -69,14 +61,18 @@ export const API = {
       console.error(`Request failed [${url}]:`, error.message, error);
       throw new Error(userMessage);
     }
-  },
 
-  /**
-   * Clears the internal in-memory cache.
-   * Useful for development or forcing a refresh of scenario data.
-   */
-  clearCache() {
-    CACHE.clear();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMessage = errorData
+        ? (errorData.error || errorData.message || JSON.stringify(errorData))
+        : `HTTP Error: ${response.status} ${response.statusText}`;
+
+      console.error(`Request failed [${url}]:`, errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    return response;
   },
 
   /**
