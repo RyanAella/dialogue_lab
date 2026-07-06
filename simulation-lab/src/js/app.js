@@ -262,8 +262,12 @@ async function handleSend() {
   UI.showTypingIndicator(config.roleName);
 
   if (!Chat.hasSystemPrompt()) {
+    // General guideline on staying in character: Prevents the AI from taking over the conversation
+    const roleAdherence = "Verhalte dich konsequent gemäß deiner Rollenbeschreibung. Überlasse die Gesprächsführung und die Initiative dem Benutzer.";
+
+    const initialTopicGuidance = "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.";
     Chat.setSystemPrompt(
-      `${config.prompts.system}\n\n${config.prompts.partner}`,
+        `${roleAdherence}\n\n${config.prompts.system}\n\n${initialTopicGuidance}\n\n${config.prompts.partner}`,
     );
   }
 
