@@ -6,11 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.25.0] - 2026-07-04
+
+### Added
+
+- **Persona Adherence Logic**: Implementation of a generic behavioral instruction (`roleAdherence`) that prevents the AI from proactively taking over the conversation or breaking character.
+
+---
+
 ## [0.24.1] - 2026-06-30
 
 ### Fixed
 
-- **UI-Fehler**: Behebung eines `TypeError` in `ui.js`, da die Methode `setAvatarTalking` aufgerufen wurde, ohne im Objekt definiert zu sein.
+- **UI Error**: Resolved a `TypeError` in `ui.js` caused by calling the `setAvatarTalking` method before it was defined in the object.
 
 ---
 
