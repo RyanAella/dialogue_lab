@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  ---
 
+## [0.27.1] - 2026-07-04
+
+### Changed
+- **Persona Adherence Logic**: Refined the `roleAdherence` instructions to more strictly prevent the AI from proactively ending the conversation, assuming the user's role, or breaking character.
+
+ ---
+
 ## [0.27.0] - 2026-07-03
 
 ### Added
