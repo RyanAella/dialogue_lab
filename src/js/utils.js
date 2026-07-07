@@ -1,6 +1,6 @@
 /**
  * @module Utils
- * Provides stateless helper functions for text processing, markdown rendering,
+ * Provides stateless helper functions for text processing, Markdown rendering,
  * scenario parsing, and file management.
  */
 
@@ -19,19 +19,18 @@ export const Utils = {
    * Uses 'pre-wrap' white-space styling for layout consistency.
    *
    * @param {HTMLElement} container - The target DOM element to clear and populate.
-   * @param {string} text - The raw text containing potential markdown patterns.
+   * @param {string} text - The raw text containing potential Markdown patterns.
    */
   renderBoldMarkdownWithLineBreaks(container, text) {
-    if (!container) return;
-
     container.textContent = "";
     container.style.whiteSpace = "pre-wrap";
 
-    // Very small markdown subset: **bold**
+    // Very small Markdown subset: **bold**
     const parts = String(text).split(/\*\*(.*?)\*\*/g);
     parts.forEach((part, index) => {
       if (!part) return;
 
+      // Odd indexes are the content captured inside the markers
       if (index % 2 === 1) {
         const strong = document.createElement("strong");
         strong.textContent = part;
@@ -157,14 +156,6 @@ export const Utils = {
   },
 
   /**
-   * Formats the current system date for use in filenames.
-   * @returns {string} Date in YYYY-MM-DD format.
-   */
-  getFormattedDate() {
-    return new Date().toISOString().slice(0, 10);
-  },
-
-  /**
    * Converts a string into a URL/filesystem-safe slug.
    * Removes special characters and replaces spaces with underscores.
    *
@@ -180,6 +171,14 @@ export const Utils = {
   },
 
   /**
+   * Formats the current system date for use in filenames.
+   * @returns {string} Date in YYYY-MM-DD format.
+   */
+  getFormattedDate() {
+    return new Date().toISOString().slice(0, 10);
+  },
+
+  /**
    * Prepares text for Text-to-Speech by removing visual formatting and stage directions.
    * Injects artificial pauses (...) after punctuation for more natural delivery.
    *
@@ -188,15 +187,15 @@ export const Utils = {
    */
   cleanTextForSpeech(text) {
     return text
-      .replace(/\*\*|\*/g, "") // Entfernt fett/kursiv Markdown
-      .replace(/\(.*?\)/g, "") // Entfernt (Regieanweisungen)
-      .replace(/\[.*?\]/g, "") // Entfernt [Regieanweisungen]
-      .replace(/\n\n+/g, ". ... . ") // Ersetzt Absätze durch lange Pausen
-      .replace(/:\s*\n/g, ". ... . ") // Doppelpunkt am Ende durch Pause ersetzen
-      .replace(/:\s*/g, ", ... ") // Doppelpunkt im Satz durch kurze Pause ersetzen
-      .replace(/\n/g, ". ") // Einfache Umbrüche durch Punkt ersetzen
-      .replace(/([.!?])\s+/g, "$1 ... ") // Kleine Extra-Pause nach Satzzeichen
-      .replace(/\s+/g, " ") // Bereinigt überschüssige Leerzeichen
+      .replace(/\*\*|\*/g, "") // Removes bold/italic Markdown
+      .replace(/\(.*?\)/g, "") // Removes (stage directions)
+      .replace(/\[.*?\]/g, "") // Removes [stage directions]
+      .replace(/\n\n+/g, ". ... . ") // Replaces paragraphs with long pauses
+      .replace(/:\s*\n/g, ". ... . ") // Replaces colon at the end with a pause
+      .replace(/:\s*/g, ", ... ") // Replaces colon in a sentence with a short pause
+      .replace(/\n/g, ". ") // Replaces simple line breaks with a period
+      .replace(/([.!?])\s+/g, "$1 ... ") // Adds a small extra pause after punctuation
+      .replace(/\s+/g, " ") // Cleans up excess whitespace
       .trim();
   },
 

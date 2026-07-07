@@ -16,7 +16,10 @@ const STATUS_CONFIGS = {
     cls: "bg-blue-50 text-blue-700 border-blue-200",
     dot: "bg-blue-500 animate-ping",
   },
-  error: { cls: "bg-red-50 text-red-700 border-red-200", dot: "bg-red-500" },
+  error: {
+    cls: "bg-red-50 text-red-700 border-red-200",
+    dot: "bg-red-500"
+  },
   default: {
     cls: "bg-slate-50 text-slate-600 border-slate-200",
     dot: "bg-green-500",
@@ -52,6 +55,30 @@ export const UI = {
    * @type {Object.<string, HTMLElement>}
    */
   elements: {},
+
+  /** Cached references to avatar image layers to avoid repeated DOM lookups */
+  _avatarNodes: { main: {}, mobile: {} },
+
+  /** Avatar Animation State */
+  _avatar: {
+    isTalking: false,
+    blinkTimeout: null,
+    mouthInterval: null,
+    config: {
+      // Populated via initAvatar(profile)
+    },
+    current: {
+      body: 0,
+      clothes: 0,
+      hair: 0,
+      hands: 0,
+      glasses: 0, // New: glasses index
+      headset: 0, // New: headset index
+      eyes: 0,
+      mouth: 0,
+      skinTone: "a",
+    },
+  },
 
   /**
    * Initializes the avatar character and randomizes its appearance.
@@ -114,6 +141,7 @@ export const UI = {
    */
   updateSidebarVisibility(mode) {
     const isTransformation = mode === "transformation";
+    this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
   },
 
   /**
@@ -197,6 +225,8 @@ export const UI = {
     this.elements.chatWindow
       .closest("main")
       ?.scrollTo(0, this.elements.chatWindow.scrollHeight);
+
+    this.setAvatarTalking(true);
   },
 
   /**
@@ -212,7 +242,6 @@ export const UI = {
    * @param {boolean} isTalking - Ob der Avatar gerade "spricht" oder denkt.
    */
   setAvatarTalking(isTalking) {
-    // Mund-Animation im Avatar-Modul umschalten
     Avatar.setTalking(isTalking);
   },
 
@@ -243,6 +272,7 @@ export const UI = {
         const src = Avatar.getLayerSrc(layer);
         if (src) {
           const img = document.createElement("img");
+          img.className = "absolute inset-0 w-full h-full object-contain";
           img.src = src;
           avatar.appendChild(img);
         }
@@ -305,15 +335,6 @@ export const UI = {
     container.appendChild(msgBubble);
     return container;
   },
-
-  /**
-   * Shows or hides additional exercise action buttons.
-   * @param {boolean} visible
-   */
-  setExerciseActionsVisible(visible) {
-    this.elements.exerciseActions?.classList.toggle("hidden", !visible);
-  },
-
   /**
    * Handles UI transitions when a user starts an interaction (collapses briefing).
    */
@@ -366,14 +387,12 @@ export const UI = {
 
   /**
    * Main UI entry point. Binds elements, initializes avatar and voice systems.
-   * @param {Object} defaultProfile - The initial character profile to use.
    */
-  async init(defaultProfile) {
+  async init(initialProfile = null) {
     // Bind all DOM elements to UI.elements before setting up logic
     this._bindElements();
 
-    // Init Avatar on load
-    if (defaultProfile) await this.initAvatar(defaultProfile);
+    if (initialProfile) await this.initAvatar(initialProfile);
 
     if (this.elements.speakBriefingBtn) {
       this.elements.speakBriefingBtn.onclick = (e) => {
@@ -389,7 +408,7 @@ export const UI = {
     // Stop button in the sidebar
     if (this.elements.stopSpeechBtn) {
       this.elements.stopSpeechBtn.onclick = () => {
-        Speech.stop();
+        window.speechSynthesis.cancel();
         if (this.elements.autoSpeakToggle) {
           this.elements.autoSpeakToggle.checked = false;
           // Trigger event so that app.js sets STATE.ttsEnabled to false

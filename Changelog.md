@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.26.0] - 2026-07-10
+
+### Improved
+- **Code Quality & Type Safety**: Added comprehensive JSDoc annotations across all ES6 modules to resolve IDE warnings and improve type-checking accuracy.
+- **Refactored DOM Binding**: Standardized the `_bindElements` logic in `ui.js` to automatically map kebab-case IDs to camelCase properties, reducing boilerplate and potential reference errors.
+- **Robust State Initialization**: Refined the initialization of `Avatar` and `Speech` states, including explicit type casting for null-state resets to satisfy strict linting rules.
+- **Cleaned Architecture**: Performed a general cleanup of internal module communication, ensuring a more consistent data flow between `ScenarioService`, `API`, and `UI`.
+- **Enhanced Error Handling**: Standardized error reporting in `api.js` to provide more descriptive logs for network failures and aborted requests.
+
+### Fixed
+- **Linting Warnings**: Resolved various "possibly null" or "undefined" warnings by implementing safer object checks and standardized JSDoc `@typedef` definitions.
+- **Resource Tracking**: Fixed potential memory leaks in `speech.js` by ensuring `_lastSpokenText` and synthesis references are properly cleared during resets.
+- **Consistency Fixes**: Aligned internal variable naming conventions across `app.js` and `ui.js` to match the new modular structure.
+
+---
+
 ## [0.25.0] - 2026-07-04
 
 ### Added

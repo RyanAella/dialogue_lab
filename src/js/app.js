@@ -27,7 +27,7 @@ const STATE = {
  * @returns {void}
  */
 function resetAppForMode(mode) {
-  STATE.currentMode = "roleplay";
+  STATE.currentMode = mode;
   Chat.clear();
   UI.elements.chatWindow.innerHTML = "";
   UI.elements.chatWindow.closest("main")?.scrollTo(0, 0);
@@ -166,7 +166,7 @@ async function loadContent(exerciseId) {
       UI.elements.partnerNameDisplay.textContent = config.roleName;
     }
 
-    // Passendes Character-Profil finden und initialisieren
+    // Find and initialize matching character profile
     const profileKey = config.roleLabel || config.roleName;
     const profilePool = getProfilePool(profileKey);
     await UI.initAvatar(profilePool);
@@ -432,8 +432,38 @@ async function initializeCurrentMode() {
   await switchToRoleplayMode();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  window.updateSubtitleText();
-  startApp();
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await startApp();
+  } catch (error) {
+    console.error("Critical initialization error:", error);
+    UI.updateStatus("error", "Die Anwendung konnte nicht korrekt initialisiert werden.");
+  }
 });
-window.addEventListener("resize", window.updateSubtitleText);
+
+/**
+ * Closes the feedback modal and triggers a reset of the current content,
+ * without reloading the entire page.
+ */
+async function closeFeedbackModal() {
+  const modal = UI.elements.feedbackModal;
+  if (modal) modal.classList.add("hidden");
+  document.body.style.overflow = "auto";
+
+  await confirmReset();
+}
+
+/**
+ * Performs the actual reset based on the current mode.
+ */
+async function confirmReset() {
+  // Fallback to direct DOM access if UI.elements binding is missing
+  const modal = UI.elements.resetModal || document.getElementById("reset-modal");
+  if (modal) modal.classList.add("hidden");
+
+  await switchToRoleplayMode();
+}
+
+// Make functions globally available for onclick attributes in index.html
+window.closeFeedbackModal = closeFeedbackModal;
+window.confirmReset = confirmReset;
