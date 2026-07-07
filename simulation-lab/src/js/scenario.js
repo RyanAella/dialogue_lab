@@ -59,7 +59,9 @@ export const ScenarioService = {
     const exercise = this._exercises.find((ex) => ex.id === id);
     if (!exercise) throw new Error(`Exercise ${id} not found`);
 
-    const data = await API.fetchCompleteScenario(exercise.config.scenarioFile);
+    const filePath = exercise.config.scenarioFile;
+
+    const data = await API.fetchCompleteScenario(filePath);
 
     // Compute additional metadata for the active session
     this._active = {
@@ -77,13 +79,5 @@ export const ScenarioService = {
    */
   getActive() {
     return this._active;
-  },
-
-  /**
-   * Returns the entire exercise pool.
-   * @returns {Array<Object>}
-   */
-  getAll() {
-    return this._exercises;
   },
 };

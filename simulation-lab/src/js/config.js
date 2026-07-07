@@ -19,4 +19,7 @@ export const APP_CONFIG = {
   CHAT_TEMPERATURE: 0.7,
   MENTOR_TEMPERATURE: 0.3,
   EXERCISES_FILE: "src/data/exercises.json",
+  FALLBACK_PROMPTS: {
+    simulation: "Du bist ein Mentor. Analysiere das Gesprächsprotokoll und gib hilfreiches Feedback."
+  }
 };
