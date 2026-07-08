@@ -270,7 +270,6 @@ const ALL_CHARACTERS = [...FEMALE_CHARACTERS, ...MALE_CHARACTERS];
  * @type {Object.<string, CharacterProfile[]>}
  */
 export const CHARACTER_PROFILES = {
-  // Role assignments
   Mitarbeiterin: FEMALE_CHARACTERS,
   Kollegin: FEMALE_CHARACTERS,
   Mitarbeiter: MALE_CHARACTERS,

@@ -84,8 +84,8 @@ export const UI = {
    * Initializes the avatar character and randomizes its appearance.
    * @param {Object|Object[]} data - A single character profile or a pool of profiles.
    */
-  initAvatar(data) {
-    Avatar.setup(data);
+  async initAvatar(data) {
+    await Avatar.setup(data);
   },
 
   /**
@@ -135,15 +135,8 @@ export const UI = {
     });
     // Remap specific non-standard IDs
     this.elements.exerciseSelect = this.elements.exercises;
-    this.elements.scenarioSelect = this.elements.scenarios;
 
-    const mainNodes = {};
-    const mobileNodes = {};
-    Avatar.getLayers().forEach((layer) => {
-      mainNodes[layer] = document.getElementById(`partner-${layer}`);
-      mobileNodes[layer] = document.getElementById(`partner-${layer}-mobile`);
-    });
-    Avatar.init(mainNodes, mobileNodes);
+    Avatar.init();
   },
 
   /**
@@ -154,10 +147,7 @@ export const UI = {
   updateSidebarVisibility(mode) {
     const isTransformation = mode === "transformation";
     this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
-    this.elements.exerciseSection?.classList.toggle(
-      "hidden",
-      !isTransformation,
-    );
+    this.elements.exerciseSection?.classList.toggle("hidden", !isTransformation);
   },
 
   /**
@@ -239,6 +229,8 @@ export const UI = {
     this.elements.chatWindow
       .closest("main")
       ?.scrollTo(0, this.elements.chatWindow.scrollHeight);
+
+    this.setAvatarTalking(true);
   },
 
   /**
@@ -246,6 +238,15 @@ export const UI = {
    */
   hideTypingIndicator() {
     document.getElementById("typing-indicator")?.remove();
+    this.setAvatarTalking(false);
+  },
+
+  /**
+   * Steuert die Mund-Animation des Avatars.
+   * @param {boolean} isTalking - Ob der Avatar die Sprechanimation zeigen soll.
+   */
+  setAvatarTalking(isTalking) {
+    Avatar.setTalking(isTalking);
   },
 
   /**
@@ -402,11 +403,11 @@ export const UI = {
   /**
    * Main UI entry point. Binds elements, initializes avatar and voice systems.
    */
-  init(initialProfile = null) {
+  async init(initialProfile = null) {
     // Bind all DOM elements to UI.elements before setting up logic
     this._bindElements();
 
-    if (initialProfile) this.initAvatar(initialProfile);
+    if (initialProfile) await this.initAvatar(initialProfile);
 
     if (this.elements.speakBriefingBtn) {
       this.elements.speakBriefingBtn.onclick = (e) => {
@@ -566,6 +567,16 @@ export const UI = {
       content.classList.add("scale-100", "opacity-100");
     }, 10);
   },
+};
+
+/**
+ * Global helper for closing the feedback modal.
+ * Bound to window for HTML onclick compatibility.
+ * @returns {void}
+ */
+window.closeFeedbackModal = () => {
+  UI.elements.feedbackModal.classList.add("hidden");
+  document.body.style.overflow = "auto";
 };
 
 /**

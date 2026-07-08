@@ -77,13 +77,4 @@ export const Chat = {
   getTranscript(partnerName) {
     return Utils.generateTranscript(this._history, partnerName);
   },
-
-  /**
-   * Returns a filtered version of the history excluding the system prompt.
-   * Primarily used for UI rendering or simplified data exports.
-   * @returns {Array<{role: string, content: string}>}
-   */
-  getCleanHistory() {
-    return this._history.filter((m) => m.role !== "system");
-  },
 };

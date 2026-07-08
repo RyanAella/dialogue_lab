@@ -1,6 +1,6 @@
 /**
  * @module Utils
- * Provides stateless helper functions for text processing, markdown rendering,
+ * Provides stateless helper functions for text processing, Markdown rendering,
  * scenario parsing, and file management.
  */
 
@@ -19,13 +19,13 @@ export const Utils = {
    * Uses 'pre-wrap' white-space styling for layout consistency.
    *
    * @param {HTMLElement} container - The target DOM element to clear and populate.
-   * @param {string} text - The raw text containing potential markdown patterns.
+   * @param {string} text - The raw text containing potential Markdown patterns.
    */
   renderBoldMarkdownWithLineBreaks(container, text) {
     container.textContent = "";
     container.style.whiteSpace = "pre-wrap";
 
-    // Very small markdown subset: **bold**
+    // Very small Markdown subset: **bold**
     const parts = String(text).split(/\*\*(.*?)\*\*/g);
     parts.forEach((part, index) => {
       if (!part) return;
@@ -152,6 +152,24 @@ export const Utils = {
   },
 
   /**
+   * Generates a formatted plain-text transcript from the message history.
+   * Skips 'system' role messages.
+   *
+   * @param {Array<{role: string, content: string}>} history - The chat history array.
+   * @param {string} partnerRoleName - The display name used for assistant responses.
+   * @returns {string} The double-newline separated transcript string.
+   */
+  generateTranscript(history, partnerRoleName) {
+    return history
+        .filter((m) => m.role !== "system")
+        .map((m) => {
+          const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
+          return `${role}: ${m.content}`;
+        })
+        .join("\n\n");
+  },
+
+  /**
    * Converts a string into a URL/filesystem-safe slug.
    * Removes special characters and replaces spaces with underscores.
    *
@@ -164,24 +182,6 @@ export const Utils = {
         .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "") // Keep alphanumeric, umlauts, and spaces
         .trim()
         .replace(/\s+/g, "_");
-  },
-
-  /**
-   * Generates a formatted plain-text transcript from the message history.
-   * Skips 'system' role messages.
-   *
-   * @param {Array<{role: string, content: string}>} history - The chat history array.
-   * @param {string} partnerRoleName - The display name used for assistant responses.
-   * @returns {string} The double-newline separated transcript string.
-   */
-  generateTranscript(history, partnerRoleName) {
-    return history
-      .filter((m) => m.role !== "system")
-      .map((m) => {
-        const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
-        return `${role}: ${m.content}`;
-      })
-      .join("\n\n");
   },
 
   /**

@@ -19,4 +19,7 @@ export const APP_CONFIG = {
   CHAT_TEMPERATURE: 0.7,
   COACH_TEMPERATURE: 0.3,
   EXERCISES_FILE: "src/data/exercises.json",
+  FALLBACK_PROMPTS: {
+    transformation: "Du bist ein erfahrener Kommunikations-Coach. Analysiere die Umformulierungen des Nutzers kritisch und gib konstruktives Feedback.",
+  }
 };

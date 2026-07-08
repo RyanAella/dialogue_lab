@@ -58,8 +58,8 @@ function resetAppForMode(mode) {
     UI.elements.feedbackBtn.disabled = true;
     UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
     UI.elements.feedbackBtn.innerHTML = isTransform
-      ? "<span>📊</span> Coach-Analyse erstellen"
-      : "<span>📊</span> Coach-Feedback erhalten";
+      ? "<span>📊</span> Auswertung erstellen"
+      : "<span>📊</span> Feedback erhalten";
   }
 
   if (UI.elements.exportTranscriptBtn)
@@ -120,7 +120,7 @@ function restartTransformationExercise() {
   UI.elements.feedbackBtn.classList.remove("hidden");
   UI.elements.feedbackBtn.disabled = true;
   UI.elements.feedbackBtn.classList.add("opacity-50", "cursor-not-allowed");
-  UI.elements.feedbackBtn.innerHTML = "<span>📊</span> Coach-Analyse erstellen";
+  UI.elements.feedbackBtn.innerHTML = "<span>📊</span> Analyse erstellen";
 
   if (UI.elements.exportTranscriptBtn) {
     UI.elements.exportTranscriptBtn.classList.add("hidden");
@@ -147,39 +147,6 @@ function restartTransformationExercise() {
 }
 
 /**
- * Configures the application for Roleplay mode.
- * Populates scenario dropdowns and activates the default or previously selected simulation.
- *
- * @async
- */
-async function switchToRoleplayMode() {
-  resetAppForMode("roleplay");
-  UI.updateInputUI(true, "Wähle ein Szenario...");
-
-  await initScenarioDropdown();
-
-  const simulationExercises = ScenarioService.getExercisesByType("SIMULATION");
-  if (simulationExercises.length > 0) {
-    // If no scenario is currently selected, or the selected one is not a simulation, select the first simulation
-    if (
-      !UI.elements.scenarioSelect.value ||
-      !simulationExercises.some(
-        (ex) => ex.id === UI.elements.scenarioSelect.value,
-      )
-    ) {
-      UI.elements.scenarioSelect.value = simulationExercises[0].id;
-    }
-    UI.elements.scenarioSelect.dispatchEvent(new Event("change"));
-  } else {
-    UI.updateStatus("idle", "Keine Rollenspiel-Szenarien verfügbar.");
-  }
-
-  document.getElementById("main-subtitle").textContent =
-    "Lies das Briefing und starte das Gespräch mit einer Nachricht.";
-  UI.updateStatus("idle", "Simulationen aktiv");
-}
-
-/**
  * Configures the application for Transformation mode.
  * Populates exercise dropdowns and loads the specified or default exercise.
  *
@@ -195,15 +162,10 @@ async function switchToTransformationMode(
   await initExerciseDropdown();
 
   const transformationExercises =
-    ScenarioService.getExercisesByType("TRANSFORMATION");
+      ScenarioService.getExercisesByType("TRANSFORMATION");
   if (transformationExercises.length > 0) {
-    const exists = transformationExercises.some((ex) => ex.id === exerciseId);
-    const targetId = exists ? exerciseId : transformationExercises[0].id;
-
     // Ensure the dropdown shows the correct selection
-    UI.elements.exerciseSelect.value = targetId;
-
-    // Exercise Dropdown Event Listener will load the exercise
+    UI.elements.exerciseSelect.value = exerciseId || transformationExercises[0].id;
     UI.elements.exerciseSelect.dispatchEvent(new Event("change"));
   } else {
     UI.updateStatus("idle", "Keine Transformations-Übungen verfügbar.");
@@ -241,8 +203,8 @@ async function initDropdown(type, selectElement, placeholder) {
 
   for (const ex of filtered) {
     try {
-      // Use scenarioFile for simulations, instructionFile for transformations
-      const filePath = ex.config.scenarioFile || ex.config.instructionFile;
+      // instructionFile for transformations
+      const filePath = ex.config.instructionFile;
       const title = (await API.fetchScenarioTitle(filePath)) || ex.id;
       selectElement.add(new Option(title, ex.id));
     } catch (e) {
@@ -251,19 +213,6 @@ async function initDropdown(type, selectElement, placeholder) {
   }
   selectElement.disabled = false;
 }
-
-/**
- * Initializes the simulation scenario dropdown.
- * @async
- */
-async function initScenarioDropdown() {
-  await initDropdown(
-    "SIMULATION",
-    UI.elements.scenarioSelect,
-    "Wähle ein Szenario...",
-  );
-}
-
 /**
  * Initializes the transformation exercise dropdown.
  * @async
@@ -396,7 +345,6 @@ function downloadCurrentTranscript() {
 }
 
 /**
- * Handles the user message submission.
  * Updates the UI, adds to history, and triggers the AI partner response.
  *
  * @async
@@ -404,6 +352,9 @@ function downloadCurrentTranscript() {
 async function handleSend() {
   const userVal = UI.elements.userInput.value.trim();
   if (!userVal) return;
+
+  const config = ScenarioService.getActive();
+  if (!config) return;
 
   UI.prepareForInteraction();
   UI.appendMessage(userVal, "user", { isIchMode: false });
@@ -419,10 +370,6 @@ async function handleSend() {
       btn.classList.remove("opacity-50", "cursor-not-allowed");
     }
   });
-
-  // Simulation Mode: Real-time conversation
-  const config = ScenarioService.getActive(); // This is needed for both modes
-  if (!config) return;
 
   if (STATE.currentMode === "transformation") {
     // 1. Save response
@@ -470,8 +417,12 @@ async function handleSend() {
     UI.showTypingIndicator(config.roleName);
 
     if (!Chat.hasSystemPrompt()) {
+      // General guideline on staying in character: Prevents the AI from taking over the conversation
+      const roleAdherence = "Verhalte dich konsequent gemäß deiner Rollenbeschreibung. Überlasse die Gesprächsführung und die Initiative dem Benutzer.";
+
+      const initialTopicGuidance = "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.";
       Chat.setSystemPrompt(
-        `${config.prompts.system}\n\n${config.prompts.partner}`,
+          `${roleAdherence}\n\n${config.prompts.system}\n\n${initialTopicGuidance}\n\n${config.prompts.partner}`,
       );
     }
 
@@ -482,16 +433,15 @@ async function handleSend() {
         temperature: APP_CONFIG.CHAT_TEMPERATURE,
       });
       if (!data) return;
-      UI.hideTypingIndicator();
       const botResp = data.choices[0].message.content;
       UI.appendMessage(botResp, "partner", { roleName: config.roleName });
       Chat.add("assistant", botResp);
       if (STATE.ttsEnabled) UI.speak(botResp, config.roleName);
       UI.updateStatus("idle", "Bereit");
     } catch (e) {
-      UI.hideTypingIndicator();
       UI.updateStatus("error", e.message);
     } finally {
+      UI.hideTypingIndicator();
       UI.updateInputUI(false, `Nachricht an ${config.roleName}...`);
       UI.elements.userInput.focus();
     }
@@ -509,12 +459,10 @@ async function handleFeedback() {
   const config = ScenarioService.getActive();
   if (!config || !config.prompts) return;
 
-  // Explicit selection of the prompt based on the exercise type:
-  // - TRANSFORMATION: Uses the 'trainer' prompt for evaluation (or 'coach/mentor' if available).
-  // - SIMULATION: Mandatorily uses the 'mentor' prompt.
-  const evalPrompt = config.type === "TRANSFORMATION" 
-    ? (config.prompts.mentor || config.prompts.trainer)
-    : config.prompts.mentor;
+  // Determine the appropriate prompt based on the mode:
+  // Simulation: mentor prompt | Transformation: trainer prompt
+  const isTransform = config.type === "TRANSFORMATION";
+  const evalPrompt = isTransform ? config.prompts.trainer : config.prompts.mentor;
 
   if (!evalPrompt) {
     UI.updateStatus("error", "Coach-Instruktionen fehlen.");
@@ -522,8 +470,19 @@ async function handleFeedback() {
     return;
   }
 
+  // Fallback in case no specific prompt is defined in the configuration
+  const finalPrompt = evalPrompt || (isTransform
+      ? APP_CONFIG.FALLBACK_PROMPTS.transformation
+      : APP_CONFIG.FALLBACK_PROMPTS.simulation);
+
+  if (UI.elements.loadingTitle) {
+    UI.elements.loadingTitle.textContent = isTransform
+        ? "Coach analysiert das Gespräch..."
+        : "Mentor analysiert das Gespräch...";
+  }
   UI.elements.loadingOverlay?.classList.remove("hidden");
   UI.updateStatus("loading", "Coach analysiert...");
+
   const transcript = Chat.getTranscript(config.roleName);
 
   try {
@@ -538,19 +497,39 @@ async function handleFeedback() {
         temperature: APP_CONFIG.COACH_TEMPERATURE,
       },
     );
-    STATE.lastFeedback = data.choices[0].message.content;
-    UI.showFeedbackModal(STATE.lastFeedback);
-    if (STATE.ttsEnabled) UI.speak(data.choices[0].message.content, "Coach");
 
-    // Optional: Also show the download button in the sidebar after coach feedback
-    UI.elements.feedbackBtn.classList.add("hidden");
-    if (UI.elements.exportTranscriptBtn) {
-      UI.elements.exportTranscriptBtn.classList.remove("hidden");
+    if (data) {
+      const feedback = data.choices[0].message.content;
+      STATE.lastFeedback = feedback;
+
+      // Update the modal title based on the mode
+      if (UI.elements.feedbackModalTitle) {
+        UI.elements.feedbackModalTitle.innerHTML = isTransform
+            ? "<span>📊</span> Coach-Analyse"
+            : "<span>📊</span> Mentor-Feedback";
+      }
+
+      // Display feedback in the UI modal
+      UI.showFeedbackModal(feedback);
+
+      if (STATE.ttsEnabled) {
+        UI.speak(feedback, isTransform ? "Coach" : "Mentor");
+      }
+
+      // Hide the feedback button and show the export button after analysis
+      UI.elements.feedbackBtn?.classList.add("hidden");
+      if (UI.elements.exportTranscriptBtn) {
+        UI.elements.exportTranscriptBtn.classList.remove("hidden");
+      }
+
+      UI.updateStatus("idle", "Fertig");
+    } else {
+      UI.updateStatus("error", "Fehler: Keine Antwort von der KI erhalten.");
     }
-
-    UI.updateStatus("idle", "Fertig");
   } catch (e) {
-    UI.updateStatus("error", "Fehler: " + e.message);
+    console.error("Feedback request failed:", e);
+    const errorText = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
+    UI.updateStatus("error", "Fehler: " + errorText);
   } finally {
     UI.elements.loadingOverlay.classList.add("hidden");
   }
@@ -565,7 +544,7 @@ async function handleFeedback() {
  */
 async function startApp() {
   await loadExercises();
-  UI.init(getProfilePool("default"));
+  await UI.init();
   setupEventListeners();
   await initializeCurrentMode();
 }
@@ -575,35 +554,45 @@ async function startApp() {
  * changing scenarios, and toggling application settings.
  */
 function setupEventListeners() {
-  UI.elements.scenarioSelect.addEventListener("change", (e) =>
-    loadContent(e.target.value),
+  UI.elements.modeSelect?.addEventListener("change", async (e) => {
+    if (e.target.value === "transformation") {
+      await switchToTransformationMode();
+    } else {
+      await switchToRoleplayMode();
+    }
+  });
+
+  UI.elements.scenarioSelect.addEventListener("change", async (e) =>
+      await loadContent(e.target.value),
   );
-  UI.elements.exerciseSelect?.addEventListener("change", (e) =>
-    loadContent(e.target.value),
+  UI.elements.exerciseSelect?.addEventListener("change", async (e) =>
+      await loadContent(e.target.value),
   );
 
   UI.elements.sendBtn.addEventListener("click", handleSend);
   UI.elements.userInput.addEventListener(
-    "keypress",
-    (e) => e.key === "Enter" && handleSend(),
+      "keypress",
+      (e) => e.key === "Enter" && handleSend(),
   );
 
   UI.elements.feedbackBtn?.addEventListener("click", handleFeedback);
   UI.elements.exportTranscriptBtn?.addEventListener(
-    "click",
-    downloadCurrentTranscript,
+      "click",
+      downloadCurrentTranscript,
   );
   UI.elements.modalDownloadBtn?.addEventListener(
-    "click",
-    downloadCurrentTranscript,
+      "click",
+      downloadCurrentTranscript,
   );
 
-  // Feedback Modal Close logic (X-Button and potential Close-Buttons)
-  if (UI.elements.modalCloseFeedback) {
-    UI.elements.modalCloseFeedback.addEventListener("click", () => {
-      closeFeedbackModal();
-    });
-  }
+  // Event Listener für die "X" (Schließen) Buttons der Modals
+  UI.elements.modalCloseFeedback?.addEventListener("click", closeFeedbackModal);
+
+  UI.elements.modalCloseReset?.addEventListener("click", () => {
+    if (UI.elements.resetModal) {
+      UI.elements.resetModal.classList.add("hidden");
+    }
+  });
 
   // Sidebar Reset Button logic
   UI.elements.resetBtn?.addEventListener("click", () => {
@@ -616,17 +605,17 @@ function setupEventListeners() {
   });
 
   UI.elements.mobileMenuBtn?.addEventListener("click", () =>
-    UI.toggleMobileMenu(),
+      UI.toggleMobileMenu(),
   );
   UI.elements.sidebarOverlay?.addEventListener("click", () =>
-    UI.toggleMobileMenu(true),
+      UI.toggleMobileMenu(true),
   );
 
   UI.elements.userInput.addEventListener(
-    "focus",
-    () =>
-      window.innerWidth < 1024 &&
-      UI.elements.briefingContent.classList.add("hidden"),
+      "focus",
+      () =>
+          window.innerWidth < 1024 &&
+          UI.elements.briefingContent.classList.add("hidden"),
   );
 
   // Setup TTS toggle logic
@@ -640,8 +629,8 @@ function setupEventListeners() {
         // Immediate feedback: Speak briefing if visible
         const briefing = UI.elements.briefingContent.innerText; // Use innerText for content
         if (
-          briefing &&
-          !UI.elements.briefingContent.classList.contains("hidden")
+            briefing &&
+            !UI.elements.briefingContent.classList.contains("hidden")
         ) {
           UI.speak(briefing, "Briefing");
         }
@@ -653,18 +642,6 @@ function setupEventListeners() {
 }
 
 /**
- * Global helper for closing the feedback modal.
- * Triggers a full page reload, matching the "New Conversation" button behavior.
- * @returns {void}
- */
-function closeFeedbackModal() {
-  location.reload();
-}
-
-// Expose to window for inline HTML onclick attributes
-window.closeFeedbackModal = closeFeedbackModal;
-
-/**
  * Determines and activates the initial mode based on UI state.
  * @async
  */
@@ -673,8 +650,40 @@ async function initializeCurrentMode() {
 }
 
 // Initialization on DOM ready
-document.addEventListener("DOMContentLoaded", () => {
-  updateSubtitleText();
-  startApp();
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await startApp();
+  } catch (error) {
+    console.error("Critical initialization error:", error);
+    UI.updateStatus("error", "Die Anwendung konnte nicht korrekt initialisiert werden.");
+  }
 });
-window.addEventListener("resize", updateSubtitleText);
+
+/**
+ * Closes the feedback modal and triggers a reset of the current content,
+ * without reloading the entire page.
+ */
+async function closeFeedbackModal() {
+  const modal = UI.elements.feedbackModal;
+  if (modal) modal.classList.add("hidden");
+  document.body.style.overflow = "auto";
+
+  await confirmReset();
+}
+
+/**
+ * Performs the actual reset based on the current mode.
+ */
+async function confirmReset() {
+  // Fallback auf direct DOM access, falls UI.elements binding fehlt
+  const modal = UI.elements.resetModal || document.getElementById("reset-modal");
+  if (modal) modal.classList.add("hidden");
+
+  if (STATE.currentMode === "transformation") {
+    restartTransformationExercise();
+  }
+}
+
+// Making Functions Globally Available for onclick Attributes in index.html
+window.closeFeedbackModal = closeFeedbackModal;
+window.confirmReset = confirmReset;

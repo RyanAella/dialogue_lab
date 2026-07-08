@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.26.0] - 2024-07-08
+
+### Added
+- **Global Fallback Prompts**: Introduced a centralized fallback mechanism in `config.js` to ensure the application provides feedback even when scenario-specific prompt files are missing or fail to load.
+
+### Changed
+- **Acoustic Role Differentiation**: Tailored the `Speech` module to apply specialized rate and pitch settings for "Coach" and "Mentor" roles, creating a distinct auditory identity for feedback compared to dialogue partners.
+- **Contextual Feedback UI**: Updated the feedback modal, loading overlays, and sidebar buttons to dynamically toggle between "Coach" and "Mentor" terminology depending on the active mode (Transformation vs. Simulation).
+- **Dynamic State Labeling**: Enhanced the `resetAppForMode` and `restartTransformationExercise` logic to provide more reactive UI updates, including specific status indicators for restarted states.
+- **Refined Sidebar Interactivity**: Improved the initialization of sidebar actions to ensure buttons like "Analyse erstellen" are correctly labeled and state-managed immediately upon mode switching.
+
+### Fixed
+- **Modal Title Consistency**: Resolved an issue where the feedback modal would display a generic title; it now correctly reflects the mode-specific authority (Coach vs. Mentor).
+
+---
+
+## [0.25.0] - 2024-07-02
+
+### Added
+- **Enforced Role Adherence**: Implemented a system-level prompt injection in `app.js` that instructs the AI to remain consistently in character and yield conversational initiative to the user.
+- **Accessory Layer Support**: Expanded the `Avatar` and `UI` modules to support optional visual layers for glasses and headsets, positioned dynamically relative to the character head.
+- **Browser-Specific Guidance**: Added a heuristic check in the `UI` module to recommend high-quality "Natural" voices for users on non-Edge browsers.
+
+### Changed
+- **Automated Transformation Flow**: Refined `handleSend` in `app.js` to automatically post the next statement and update progress indicators immediately after a user submission in Transformation mode.
+- **Modal Animations**: Integrated CSS transition states (`scale-95` to `scale-100`) in `index.html` and `app.js` for a smoother reset confirmation experience.
+- **Voice Selection Heuristics**: Improved the `Speech` module's voice matching to prioritize "Neural" and "Natural" German voices while strictly respecting gender detection.
+
+### Fixed
+- **Transcript Integrity**: Ensured that the `Chat` module correctly excludes system instructions from exported protocols to maintain a clean user transcript.
+
+---
+
 ## [0.24.0] - 2024-07-01
 
 ### Changed
