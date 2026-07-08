@@ -71,8 +71,7 @@ export const ScenarioService = {
       ? exercise.config.instructionFile
       : exercise.config.scenarioFile;
 
-    // We pass the type (TRANSFORMATION or SIMULATION) to the API
-    const data = await API.fetchCompleteScenario(filePath, exercise.type);
+    const data = await API.fetchCompleteScenario(filePath);
 
     // Compute additional metadata for the active session
     this._active = {
@@ -105,15 +104,6 @@ export const ScenarioService = {
   getActive() {
     return this._active;
   },
-
-  /**
-   * Returns the entire exercise pool.
-   * @returns {Array<Object>}
-   */
-  getAll() {
-    return this._exercises;
-  },
-
   /**
    * Returns the statements for the active transformation exercise.
    * @param {boolean} [shuffled=false] - Whether to return a shuffled copy.
@@ -123,13 +113,5 @@ export const ScenarioService = {
     return shuffled
       ? Utils.shuffleArray(this._statements)
       : [...this._statements];
-  },
-
-  /**
-   * Resets the active scenario state.
-   */
-  clearActive() {
-    this._active = null;
-    this._statements = [];
   },
 };

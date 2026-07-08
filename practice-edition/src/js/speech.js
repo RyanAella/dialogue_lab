@@ -108,12 +108,12 @@ export const Speech = {
    */
   speak(text, options = {}) {
     const { roleName, btnElement, avatar, onStatus } = options;
-    if (!window.speechSynthesis) return;
+    if (!window.speechSynthesis) return false;
 
     if (window.speechSynthesis.speaking && this._lastSpokenText === text) {
       window.speechSynthesis.cancel();
-      this._lastSpokenText = null;
-      return;
+      this._lastSpokenText = /** @type {string|null} */ (null);
+      return false;
     }
 
     window.speechSynthesis.cancel();
@@ -126,9 +126,8 @@ export const Speech = {
     utterance.lang = "de-DE";
 
     const config = avatar?.getConfig();
-    let isFemale =
-      roleName?.toLowerCase().endsWith("in") || !!config?.gender === "female";
-    if (config?.gender) isFemale = config.gender === "female";
+    let isFemale = roleName?.toLowerCase().endsWith("in") || config?.gender === "female";
+    if (config?.gender) isFemale = (config.gender === "female");
 
     const voice = this._getBestVoice(isFemale);
     if (voice) utterance.voice = voice;
@@ -173,6 +172,6 @@ export const Speech = {
    */
   stop() {
     window.speechSynthesis.cancel();
-    this._lastSpokenText = null;
+    this._lastSpokenText = /** @type {string|null} */ (null);
   },
 };

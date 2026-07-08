@@ -44,60 +44,36 @@ export const API = {
    * @private
    */
   async _request(url, options = {}) {
-    // Log the request for debugging purposes
-    if (options.body) {
-        console.log(`API Request to ${url}:`, JSON.parse(options.body));
-    }
-
     const separator = url.includes("?") ? "&" : "?";
     const finalUrl = `${url}${separator}${this._getCacheBuster()}`;
 
+    let response;
     try {
-      const response = await fetch(finalUrl, options);
-      if (!response.ok) {
-        // Try to get detailed error info from the response body
-        const errorText = await response.text();
-        let errorMessage = `HTTP Error: ${response.status}`;
-        try {
-            const errData = JSON.parse(errorText);
-            errorMessage = errData.error || errData.message || errorMessage;
-        } catch (e) {
-            errorMessage = errorText || errorMessage;
-        }
-        throw new Error(errorMessage);
-      }
-      return response;
+      response = await fetch(finalUrl, options);
     } catch (error) {
       if (error.name === "AbortError") return null;
 
       let userMessage = error.message;
       if (error instanceof TypeError || error.message.includes("fetch")) {
         userMessage =
-          "Network error or CORS block. Check backend configuration.";
+            "Network error or CORS block. Check backend configuration.";
       }
-      console.error(`Request failed [${url}]:`, error);
+      console.error(`Request failed [${url}]:`, error.message, error);
       throw new Error(userMessage);
     }
-  },
 
-  /**
-   * Clears the internal in-memory cache.
-   * Useful for development or forcing a refresh of scenario data.
-   */
-  clearCache() {
-    CACHE.clear();
-  },
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMessage = errorData
+          ? (errorData.error || errorData.message || JSON.stringify(errorData))
+          : `HTTP Error: ${response.status} ${response.statusText}`;
 
-  /**
-   * Fetches raw text content from a URL.
-   * @param {string} url - The target URL.
-   * @returns {Promise<string>}
-   */
-  async fetchText(url) {
-    const response = await this._request(url);
-    return response ? response.text() : "";
-  },
+      console.error(`Request failed [${url}]:`, errorMessage);
+      throw new Error(errorMessage);
+    }
 
+    return response;
+  },
   /**
    * Loads the text content of a specific prompt file with caching support.
    *
@@ -132,11 +108,10 @@ export const API = {
    * Prompts are loaded in parallel for better performance.
    *
    * @param {string} filePath - Path to the .txt scenario file.
-   * @param {string} type - The exercise type (e.g., 'SIMULATION' or 'TRANSFORMATION').
    * @returns {Promise<Object>} Object containing scenario config and a 'prompts' map.
    * @async
    */
-  async fetchCompleteScenario(filePath, type) {
+  async fetchCompleteScenario(filePath) {
     const response = await this._request(filePath);
     const text = await response.text();
 
@@ -154,13 +129,12 @@ export const API = {
       shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
-    // The API only loads what is explicitly defined in the metadata.
-    // No more "magic" fallbacks at this level.
+    // Map file keys to their respective prompt directories
     const promptMap = {
-      trainer: { file: config.trainerPromptFile, dir: "trainer" },
       system: { file: config.systemPromptFile, dir: "system" },
       partner: { file: config.partnerPromptFile, dir: "partner" },
-      mentor: { file: config.mentorPromptFile, dir: "mentor" }
+      mentor: { file: config.mentorPromptFile, dir: "mentor" },
+      trainer: { file: config.trainerPromptFile, dir: "trainer" }
     };
 
     const prompts = {};
