@@ -50,6 +50,8 @@ export const Speech = {
       const currentVal = userInput.value.trim();
       userInput.value = currentVal + (currentVal ? " " : "") + transcript;
       userInput.focus();
+      // Trigger das Event manuell, damit der Senden-Button aktiviert wird
+      userInput.dispatchEvent(new Event("input", { bubbles: true }));
     };
 
     this._recognition.onend = () => {
