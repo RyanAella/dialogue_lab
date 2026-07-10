@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.27.0] - 2026-07-10
+
+### Added
+- **Immediate Feedback Loop**: Transformation mode now provides instant AI feedback after each submission, allowing users to reflect on their phrasing immediately.
+- **Iterative Practice**: Users can now choose to revise their answer based on feedback or proceed to the next task using a new "Next Task" navigation flow.
+- **Structured Transcript Export**: Downloads now feature a cleaner layout with distinct roles ("Ich", "Coach-Feedback", and the Partner's role) for better readability.
+- **Batch Evaluation Logic**: The final analysis in transformation mode now uses structured user answers instead of raw transcripts for higher accuracy.
+
+### Changed
+- **Smart Button Validation**: The "Send" button now dynamically enables/disables based on whether the input field contains text, preventing empty submissions.
+- **Input UX**: Improved input field synchronization. The "Send" button correctly resets after switching tasks or using voice input.
+- **Mic Button Persistence**: The microphone button now remains active while waiting for user input, even if the text field is empty, to encourage voice interaction.
+- **Functional Modal Actions**: The download button within the feedback modal is now fully linked to the export logic.
+
+### Fixed
+- **Initialization Stability**: Added optional chaining to event listeners and implemented direct DOM fallbacks (`document.getElementById`) to prevent app crashes when elements are missing or delayed.
+- **DOM Binding Resilience**: Resolved `TypeError` issues during the initialization phase by ensuring elements are correctly verified before property access.
+- **Meta Tag Compliance**: Updated deprecated mobile web app meta tags for better modern browser compatibility.
+- **Scope Error**: Fixed a `ReferenceError` by correctly scoping `handleNextExercise` as a top-level function.
+
+---
+
 ## [0.26.0] - 2024-07-08
 
 ### Added

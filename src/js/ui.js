@@ -101,17 +101,22 @@ export const UI = {
       "chevron",
       "scenarios",
       "exercises",
-      "scenario-section",
       "exercise-section",
-      "mode-select",
+      "scenario-select",
+      "exercise-select",
+      "scenario-section",
       "mode-badge",
       "chat-window",
       "start-info",
       "user-input",
       "send-btn",
+      "next-task-btn",
       "status-box",
       "mobile-menu-btn",
       "sidebar",
+      "modal-download-btn",
+      "scenario-label",
+      "exercise-label",
       "sidebar-overlay",
       "exercise-actions",
       "download-btn",
@@ -242,8 +247,8 @@ export const UI = {
   },
 
   /**
-   * Steuert die Mund-Animation des Avatars.
-   * @param {boolean} isTalking - Ob der Avatar die Sprechanimation zeigen soll.
+   * Controls the mouth animation of the avatar.
+   * @param {boolean} isTalking - Whether the avatar should show the talking animation.
    */
   setAvatarTalking(isTalking) {
     Avatar.setTalking(isTalking);

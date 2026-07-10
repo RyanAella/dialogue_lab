@@ -9,7 +9,7 @@
     <link rel="icon" href="https://fav.farm/💬" />
 
     <link rel="apple-touch-icon" href="https://fav.farm/💬" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <meta
@@ -17,6 +17,7 @@
       content="Ein interaktives Dialogue Lab zum Üben von Gesprächsführung."
     />
 
+    <!-- Note: cdn.tailwindcss.com is for development only. Switch to Tailwind CLI for production. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       /* Custom "Modern Chat" Styles */
@@ -94,8 +95,8 @@
             class="scenario-selection-headline block font-semibold mb-2 text-slate-700 text-sm"
             >Wähle ein Szenario:</label
           >
-          <label for="scenarios"></label><select
-            id="scenarios"
+          <label for="scenario-select"></label><select
+            id="scenario-select"
             class="scenario-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="" selected disabled>Wähle ein Szenario...</option>
@@ -107,8 +108,8 @@
             class="exercise-selection-headline block font-semibold mb-2 text-slate-700 text-sm mt-4"
             >Wähle eine Übung:</label
           >
-          <label for="exercises"></label><select
-            id="exercises"
+          <label for="exercise-select"></label><select
+            id="exercise-select"
             class="exercise-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="" selected disabled>Wähle eine Übung...</option>
@@ -362,7 +363,13 @@
             disabled
             class="user-text-input flex-1 p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-gray-100 cursor-not-allowed text-base"
             placeholder="Wähle zuerst ein Szenario aus..."
-          />
+        />
+          <button
+                  id="next-task-btn"
+                  class="hidden bg-emerald-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg text-sm transition-all active:scale-95 flex items-center gap-2"
+          >
+            <span>Weiter</span> ➔
+          </button>
           <button
             id="mic-btn"
             disabled
@@ -402,7 +409,7 @@
       <div
         class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"
       ></div>
-      <p class="text-xl font-semibold">Coach analysiert das Gespräch ...</p>
+    <p id="loading-title" class="text-xl font-semibold">Coach analysiert das Gespräch ...</p>
       <p class="text-sm text-gray-300">Dies kann einen Moment dauern.</p>
     </div>
 
@@ -416,7 +423,7 @@
         <div
           class="flex justify-between items-center mb-4 border-b pb-2 flex-shrink-0"
         >
-          <h2 class="text-2xl font-bold text-gray-800">📊 Coach-Analyse</h2>
+        <h2 id="feedback-modal-title" class="text-2xl font-bold text-gray-800">📊 Coach-Analyse</h2>
           <button
             id="modal-close-feedback"
             class="text-gray-500 hover:text-black text-xl"
