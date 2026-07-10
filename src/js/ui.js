@@ -64,6 +64,7 @@ export const UI = {
     isTalking: false,
     blinkTimeout: null,
     mouthInterval: null,
+    _voiceSupported: false,
     config: {
       // Populated via initAvatar(profile)
     },
@@ -109,6 +110,7 @@ export const UI = {
       "start-info",
       "user-input",
       "send-btn",
+      "next-task-btn",
       "status-box",
       "mobile-menu-btn",
       "sidebar",
@@ -386,16 +388,19 @@ export const UI = {
    */
   updateInputUI(disabled, placeholder) {
     const { userInput, sendBtn, micBtn } = this.elements;
-    const micDisabled = disabled || !this._voiceSupported;
+    const micDisabled = disabled || this._voiceSupported === false;
+    const isInputEmpty = userInput.value.trim() === "";
+    const sendBtnDisabled = disabled || isInputEmpty;
 
     userInput.disabled = disabled;
-    sendBtn.disabled = disabled;
+    sendBtn.disabled = sendBtnDisabled;
+    if (disabled) this.elements.nextTaskBtn?.classList.add("hidden");
     if (micBtn) micBtn.disabled = micDisabled;
-    userInput.placeholder = placeholder;
+    if (placeholder) userInput.placeholder = placeholder;
     userInput.classList.toggle("bg-gray-100", disabled);
     userInput.classList.toggle("cursor-not-allowed", disabled);
-    sendBtn.classList.toggle("opacity-50", disabled);
-    sendBtn.classList.toggle("cursor-not-allowed", disabled);
+    sendBtn.classList.toggle("opacity-50", sendBtnDisabled);
+    sendBtn.classList.toggle("cursor-not-allowed", sendBtnDisabled);
 
     if (micBtn) {
       micBtn.classList.toggle("opacity-50", micDisabled);
@@ -441,6 +446,11 @@ export const UI = {
       this.elements.userInput,
       (t, m) => this.updateStatus(t, m),
     );
+
+    // Falls das Mikrofon nicht unterstützt wird, informieren wir den Nutzer einmalig
+    if (!this._voiceSupported) {
+      this.updateStatus("default", "Hinweis: Spracheingabe wird von diesem Browser nicht unterstützt.");
+    }
 
     // Ensure voices are loaded (crucial for Chrome)
     if (window.speechSynthesis) {
