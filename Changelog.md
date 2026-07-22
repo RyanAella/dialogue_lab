@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  ---
 
+## [0.29.0] - 2026-07-22
+
+### Added
+- **Research Data Logging**: Implemented comprehensive dialogue turn logging via `DataLogger` module to capture all user and AI interactions for research purposes.
+- **Automatic Upload Triggers**: Conversation data is now automatically uploaded to the backend server when switching modes, scenarios/exercises, starting new conversations, or clicking reset.
+- **Backend Endpoint Integration**: DataLogger backend endpoint (`DATALOGGER_BACKEND`) is now properly configured and initialized on application start.
+
+### Changed
+- **Data Collection Workflow**: All chat messages (user input, AI responses, coach feedback) are now logged with rich metadata including mode, scenario ID, scenario title, and role names.
+- **Auto-Upload Activation**: DataLogger auto-upload is enabled by default to ensure research data is consistently collected.
+
+---
+
 ## [0.28.0] - 2026-07-05
 
 ### Added

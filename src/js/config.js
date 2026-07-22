@@ -15,6 +15,7 @@
  */
 export const APP_CONFIG = {
   PROXY_URL: "https://kite2.site/dialogue_lab/chat.php",
+  DATALOGGER_BACKEND: "https://kite2.site/dialogue_lab/save_dialogue.php",
   MODEL: "gpt-4o",
   CHAT_TEMPERATURE: 0.7,
   COACH_TEMPERATURE: 0.3,

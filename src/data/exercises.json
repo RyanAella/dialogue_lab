@@ -16,14 +16,14 @@
     }
   },
   {
-    "id": "simulation_reporting",
+    "id": "reporting",
     "type": "SIMULATION",
     "config": {
       "scenarioFile": "scenarios/simulations/reporting_scenario.txt"
     }
   },
   {
-    "id": "simulation_difficulties",
+    "id": "difficulties",
     "type": "SIMULATION",
     "config": {
       "scenarioFile": "scenarios/simulations/difficulties_scenario.txt"
