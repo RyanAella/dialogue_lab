@@ -1,10 +1,13 @@
 import {API} from "./api.js";
 import {Chat} from "./chat.js";
-import {APP_CONFIG} from "./config.js";
+import { DataLogger } from "./dataLogger.js";
+import { APP_CONFIG } from "./config.js";
 import {getProfilePool} from "./profiles.js";
 import {ScenarioService} from "./scenario.js";
 import {UI} from "./ui.js";
 import {Utils} from "./utils.js";
+import { handleFeedback, closeFeedbackModal } from "./feedback.js";
+import { downloadCurrentTranscript } from "./export.js";
 
 /**
  * @module App
@@ -30,6 +33,9 @@ const STATE = {
   ttsEnabled: false,
   lastFeedback: null,
 };
+
+// Make STATE globally available
+window.STATE = STATE;
 
 /**
  * Resets the application state and UI when switching between different modes or scenarios.
@@ -108,6 +114,8 @@ function getTransformationProgressText() {
 function restartTransformationExercise() {
   if (STATE.currentMode !== "transformation") return;
 
+  DataLogger.endConversation();
+
   STATE.exerciseIndex = 0;
   STATE.activeStatements = ScenarioService.getStatements(true);
 
@@ -156,6 +164,8 @@ function restartTransformationExercise() {
 async function switchToRoleplayMode() {
   const active = ScenarioService.getActive();
   const previousId = (active && active.type === "SIMULATION") ? active.id : null;
+
+  DataLogger.endConversation();
 
   resetAppForMode("roleplay");
   UI.updateInputUI(true, "Wähle ein Szenario...");
@@ -285,6 +295,14 @@ async function loadContent(exerciseId) {
 
   try {
     const config = await ScenarioService.loadScenario(exerciseId);
+
+    DataLogger.updateConversationMetadata({
+      mode: STATE.currentMode,
+      scenarioId: config.id,
+      scenarioTitle: config.title,
+      scenarioType: config.type
+    });
+
     const isTransform = config.type === "TRANSFORMATION";
 
     // Update Avatar Display Name
@@ -347,71 +365,6 @@ async function loadContent(exerciseId) {
  * Generates a structured transcript and starts the download.
  * Includes briefing, chat history, and the final analysis if available.
  */
-function downloadCurrentTranscript() {
-  const config = ScenarioService.getActive();
-  if (!config) return;
-
-  const isTransform = STATE.currentMode === "transformation";
-  const briefing = UI.elements.briefingContent?.innerText.trim() || "";
-  
-  // Header section
-  let fileContent = `PROTOKOLL: ${config.title}\n`;
-  fileContent += `Modus: ${isTransform ? "Transformationstraining" : "Simulation"}\n`;
-  fileContent += `Datum: ${new Date().toLocaleString()}\n`;
-  fileContent += `==========================================\n\n`;
-  
-  fileContent += `### 1. BRIEFING / AUFGABE ###\n\n${briefing}\n\n`;
-  fileContent += `==========================================\n\n`;
-  
-  fileContent += `### 2. CHAT-VERLAUF ###\n\n`;
-
-  // Chat history with role differentiation
-  const history = Chat.getHistory();
-  history.forEach(msg => {
-    let sender = msg.role === "user" ? "Ich" : config.roleName;
-    
-    // In transformation mode: separate feedback from the task statement
-    if (isTransform && msg.role === "assistant" && !msg.content.includes('"')) {
-      sender = "Coach-Feedback";
-    }
-    
-    fileContent += `${sender}:\n${msg.content}\n\n`;
-  });
-
-  // Add final analysis if available
-  if (STATE.lastFeedback) {
-    fileContent += `==========================================\n\n`;
-    fileContent += `### 3. ABSCHLIESSENDE ANALYSE ###\n\n${STATE.lastFeedback}\n`;
-  }
-
-  // Generate filename
-  const date = Utils.getFormattedDate();
-  const modePrefix = isTransform ? "Transformation" : "Simulation";
-  let filenameParts = [modePrefix];
-
-  // Add scenario title
-  const activeSelect =
-    STATE.currentMode === "transformation"
-      ? UI.elements.exerciseSelect
-      : UI.elements.scenarioSelect;
-
-  if (activeSelect && activeSelect.selectedIndex > 0) {
-    const scenarioTitle = Utils.slugify(
-      activeSelect.options[activeSelect.selectedIndex].text
-    );
-    filenameParts.push(scenarioTitle);
-  }
-  filenameParts.push(date);
-
-  const filename = filenameParts.join("_") + ".txt";
-  Utils.downloadFile(fileContent, filename);
-}
-
-/**
- * Updates the UI, adds to history, and triggers the AI partner response.
- *
- * @async
- */
 async function handleSend() {
   const userVal = UI.elements.userInput.value.trim();
   if (!userVal) return;
@@ -422,6 +375,13 @@ async function handleSend() {
   UI.prepareForInteraction();
   UI.appendMessage(userVal, "user");
   if (STATE.ttsEnabled) UI.speak(userVal, "Ich");
+
+  DataLogger.addTurn("user", userVal, {
+    mode: STATE.currentMode,
+    scenarioId: config.id,
+    scenarioTitle: config.title
+  });
+
   Chat.add("user", userVal);
   UI.elements.userInput.value = "";
 
@@ -469,6 +429,14 @@ async function handleSend() {
           isIchMode: true,
         });
         Chat.add("assistant", feedback);
+
+        DataLogger.addTurn("assistant", feedback, {
+          roleName: config.roleName,
+          messageType: "feedback",
+          mode: STATE.currentMode,
+          scenarioId: config.id
+        });
+
         if (STATE.ttsEnabled) UI.speak(feedback, config.roleName);
       }
     } catch (e) {
@@ -508,6 +476,13 @@ async function handleSend() {
       const botResp = data.choices[0].message.content;
       UI.appendMessage(botResp, "partner", { roleName: config.roleName });
       Chat.add("assistant", botResp);
+
+      DataLogger.addTurn("assistant", botResp, {
+        roleName: config.roleName,
+        mode: STATE.currentMode,
+        scenarioId: config.id
+      });
+
       if (STATE.ttsEnabled) UI.speak(botResp, config.roleName);
       UI.updateStatus("idle", "Bereit");
     } catch (e) {
@@ -565,89 +540,6 @@ function handleNextExercise() {
  * Submits the transcript to the API and displays the result in a modal.
  * @async
  */
-async function handleFeedback() {
-  if (Chat.getMessageCount() === 0) return;
-
-  const config = ScenarioService.getActive();
-  if (!config || !config.prompts) return;
-
-  // Determine the appropriate prompt based on the mode:
-  // Simulation: mentor prompt | Transformation: trainer prompt
-  const isTransform = config.type === "TRANSFORMATION";
-  const evalPrompt = isTransform ? config.prompts.trainer : config.prompts.mentor;
-
-  // Fallback in case no specific prompt is defined in the configuration
-  const finalPrompt = evalPrompt || (isTransform
-    ? APP_CONFIG.FALLBACK_PROMPTS.transformation
-    : APP_CONFIG.FALLBACK_PROMPTS.simulation);
-
-  if (UI.elements.loadingTitle) {
-    UI.elements.loadingTitle.textContent = isTransform 
-      ? "Coach analysiert das Gespräch..."
-      : "Mentor analysiert das Gespräch...";
-  }
-  UI.elements.loadingOverlay?.classList.remove("hidden");
-  UI.updateStatus("loading", isTransform ? "Coach analysiert..." : "Mentor analysiert...");
-  
-  let inputForAnalysis;
-  if (isTransform) {
-    // For transformations, we send the structured answer objects
-    inputForAnalysis = "Hier sind die Ergebnisse der Übung:\n\n" + 
-      STATE.answers.map((a, i) => `Aussage ${i+1}: "${a.statement}"\nAntwort: "${a.userResponse}"`).join("\n\n");
-  } else {
-    // For simulations, use the standard chat transcript
-    inputForAnalysis = `Gesprächsprotokoll:\n${Chat.getTranscript(config.roleName)}`;
-  }
-
-  try {
-    const data = await API.callChatApi(
-      [
-        { role: "system", content: finalPrompt },
-        { role: "user", content: inputForAnalysis },
-      ],
-      {
-        proxyUrl: APP_CONFIG.PROXY_URL,
-        model: APP_CONFIG.MODEL,
-        temperature: APP_CONFIG.COACH_TEMPERATURE,
-      },
-    );
-
-    if (data) {
-      const feedback = data.choices[0].message.content;
-      STATE.lastFeedback = feedback;
-
-      // Update the modal title based on the mode
-      if (UI.elements.feedbackModalTitle) {
-        UI.elements.feedbackModalTitle.innerHTML = isTransform
-          ? "<span>📊</span> Coach-Analyse"
-          : "<span>📊</span> Mentor-Feedback";
-      }
-
-      // Display feedback in the UI modal
-      UI.showFeedbackModal(feedback);
-
-      if (STATE.ttsEnabled) {
-        UI.speak(feedback, isTransform ? "Coach" : "Mentor");
-      }
-
-      // Hide the feedback button and show the export button after analysis
-      UI.elements.feedbackBtn?.classList.add("hidden");
-      if (UI.elements.exportTranscriptBtn) {
-        UI.elements.exportTranscriptBtn.classList.remove("hidden");
-      }
-
-      UI.updateStatus("idle", "Fertig");
-    } else {
-      UI.updateStatus("error", "Fehler: Keine Antwort von der KI erhalten.");
-    }
-  } catch (e) {
-    console.error("Feedback request failed:", e);
-    const errorText = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
-    UI.updateStatus("error", "Fehler: " + errorText);
-  } finally {
-    UI.elements.loadingOverlay.classList.add("hidden");
-  }
-}
 
 /**
  * 1. Loads exercises.
@@ -656,6 +548,10 @@ async function handleFeedback() {
  * 4. Sets initial mode.
  */
 async function startApp() {
+  DataLogger.setBackendEndpoint(APP_CONFIG.DATALOGGER_BACKEND);
+  DataLogger.setAutoUpload(true); // Optional: automatischer Upload beim Beenden
+  DataLogger.init();
+
   await loadExercises();
   await UI.init();
   setupEventListeners();
@@ -668,6 +564,8 @@ async function startApp() {
  */
 function setupEventListeners() {
   UI.elements.modeSelect?.addEventListener("change", async (e) => {
+    DataLogger.endConversation();
+
     if (e.target.value === "transformation") {
       await switchToTransformationMode();
     } else {
@@ -675,12 +573,14 @@ function setupEventListeners() {
     }
   });
 
-  UI.elements.scenarioSelect.addEventListener("change", async (e) =>
-    await loadContent(e.target.value),
-  );
-  UI.elements.exerciseSelect?.addEventListener("change", async (e) =>
-    await loadContent(e.target.value),
-  );
+  UI.elements.scenarioSelect.addEventListener("change", async (e) => {
+    DataLogger.endConversation();
+    await loadContent(e.target.value);
+  });
+  UI.elements.exerciseSelect?.addEventListener("change", async (e) => {
+    DataLogger.endConversation();
+    await loadContent(e.target.value);
+  });
 
   // Validate send button on input
   UI.elements.userInput.addEventListener("input", () => {
@@ -716,6 +616,7 @@ function setupEventListeners() {
 
   // Sidebar Reset Button logic
   UI.elements.resetBtn?.addEventListener("click", () => {
+    DataLogger.endConversation();
     UI.openResetModal();
   });
 
@@ -782,33 +683,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-/**
- * Closes the feedback modal and triggers a reset of the current content
- * without reloading the entire page.
- */
-async function closeFeedbackModal() {
-  const modal = UI.elements.feedbackModal;
-  if (modal) modal.classList.add("hidden");
-  document.body.style.overflow = "auto";
-  
-  await confirmReset();
-}
-
-/**
- * Performs the actual reset based on the current mode.
- */
-async function confirmReset() {
-  // Fallback to direct DOM access if UI.elements binding is missing
-  const modal = UI.elements.resetModal || document.getElementById("reset-modal");
-  if (modal) modal.classList.add("hidden");
-
-  if (STATE.currentMode === "transformation") {
-    restartTransformationExercise();
-  } else {
-    await switchToRoleplayMode();
-  }
-}
-
 // Funktionen global verfügbar machen für onclick-Attribute in index.html
-window.closeFeedbackModal = closeFeedbackModal;
-window.confirmReset = confirmReset;
+// Make key functions globally available for export.js
+window.restartTransformationExercise = restartTransformationExercise;
+window.switchToRoleplayMode = switchToRoleplayMode;
+window.switchToTransformationMode = switchToTransformationMode;
+window.handleNextExercise = handleNextExercise;
+window.handleSend = handleSend;
