@@ -15,9 +15,11 @@ build/
 .env.production.local
 
 # Server-side scripts & sensitive files
+backend/
 chat.php
 config.php
 auth.json
+dialogue_save.php
 
 # Debug logs
 *.log
