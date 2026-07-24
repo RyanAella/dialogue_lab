@@ -166,10 +166,10 @@ async function loadContent(exerciseId) {
       UI.elements.partnerNameDisplay.textContent = config.roleName;
     }
 
-    // Setze System-Prompt SOFORT mit initialTopicGuidance (nicht erst bei erster Nachricht)
+    // Setze System-Prompt SOFORT mit initialTopicGuidance als oberste Priorität
     const roleAdherence = "Verhalte dich konsequent gemäß deiner Rollenbeschreibung. Überlasse die Gesprächsführung und die Initiative dem Benutzer.";
-    const initialTopicGuidance = "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.";
-    Chat.setSystemPrompt(`${roleAdherence}\n\n${config.prompts.system}\n\n${initialTopicGuidance}\n\n${config.prompts.partner}`);
+    const initialTopicGuidance = "KRITISCHE REGEL: Antworte NUR auf das, was der Nutzer explizit anspricht. Bei Begrüßungen (z. B. 'Hallo', 'Wie geht's?', 'Du schon wieder') antworte kurz und neutral (z. B. 'Hallo!', 'Gut, danke.'). Beginne NIE von selbst Gespräche über Reporting, Blockaden oder andere Themen. Warte IMMER, bis der Nutzer das Thema explizit einführt.";
+    Chat.setSystemPrompt(`### ABSOLUTE PRIORITÄT ###\n${initialTopicGuidance}\n\n${roleAdherence}\n\n${config.prompts.system}\n\n${config.prompts.partner}`);
 
     // Find and initialize matching character profile
     const profileKey = config.roleLabel || config.roleName;

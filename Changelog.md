@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.29.3] - 2026-07-24
+
+### Fixed
+- **AI Proactivity Issue (Enhanced)**: Strengthened system prompt instruction in `app.js` to explicitly handle greetings (e.g., "Hallo, du schon wieder"). Added clear rule: "KRITISCHE REGEL: Antworte NUR auf das, was der Nutzer explizit anspricht. Bei Begrüßungen antworte kurz und neutral. Beginne NIE von selbst Gespräche über Reporting, Blockaden oder andere Themen." This prevents the AI from proactively introducing topics even when directly addressed by the user.
+
+---
+
 ## [0.29.2] - 2026-07-24
 
 ### Fixed
