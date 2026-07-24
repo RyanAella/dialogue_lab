@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.29.2] - 2026-07-24
+
+### Fixed
+- **AI Proactivity Issue**: Fixed AI partner prematurely introducing topics by moving system prompt initialization (including `initialTopicGuidance`) from `handleSend()` to `loadContent()`. This ensures the AI receives the "wait for user input" instruction immediately when a scenario loads, preventing it from proactively addressing conversation topics before the user initiates dialogue.
+
+---
+
 ## [0.29.1] - 2026-07-24
 
 ### Fixed

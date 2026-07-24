@@ -166,6 +166,11 @@ async function loadContent(exerciseId) {
       UI.elements.partnerNameDisplay.textContent = config.roleName;
     }
 
+    // Setze System-Prompt SOFORT mit initialTopicGuidance (nicht erst bei erster Nachricht)
+    const roleAdherence = "Verhalte dich konsequent gemäß deiner Rollenbeschreibung. Überlasse die Gesprächsführung und die Initiative dem Benutzer.";
+    const initialTopicGuidance = "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.";
+    Chat.setSystemPrompt(`${roleAdherence}\n\n${config.prompts.system}\n\n${initialTopicGuidance}\n\n${config.prompts.partner}`);
+
     // Find and initialize matching character profile
     const profileKey = config.roleLabel || config.roleName;
     const profilePool = getProfilePool(profileKey);
@@ -260,16 +265,6 @@ async function handleSend() {
   UI.updateInputUI(true, "Sende...");
   UI.updateStatus("loading", "Antwortet...");
   UI.showTypingIndicator(config.roleName);
-
-  if (!Chat.hasSystemPrompt()) {
-    // General guideline on staying in character: Prevents the AI from taking over the conversation
-    const roleAdherence = "Verhalte dich konsequent gemäß deiner Rollenbeschreibung. Überlasse die Gesprächsführung und die Initiative dem Benutzer.";
-
-    const initialTopicGuidance = "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.";
-    Chat.setSystemPrompt(
-        `${roleAdherence}\n\n${config.prompts.system}\n\n${initialTopicGuidance}\n\n${config.prompts.partner}`,
-    );
-  }
 
   try {
     const data = await API.callChatApi(Chat.getHistory(), {
