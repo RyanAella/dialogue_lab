@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.29.1] - 2026-07-24
 
 ### Fixed
-- **Avatar Display Bug**: Fixed oversized character display in chat messages by adding `relative` positioning class to partner avatar container in `ui.js`, ensuring absolute-positioned avatar layers correctly reference their parent container instead of the viewport.
+- **Avatar Display Bug**: Fixed oversized character display in chat messages and main portrait containers by adding `relative` positioning class to all avatar containers (`ui.js` and `index.html`), ensuring absolute-positioned avatar layers correctly reference their parent container instead of the viewport.
 
 ---
 
