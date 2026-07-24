@@ -3,9 +3,9 @@
  * Handles logging of dialogue turns for research purposes.
  */
 
-const LOCAL_STORAGE_KEY = "dialogue_lab_conversations";
-const FAILED_UPLOADS_KEY = "dialogue_lab_failed_uploads";
-const RESEARCHER_TOKEN_KEY = "dialogue_lab_researcher_token";
+import { DATA_LOGGER_CONFIG } from "../core/config.js";
+
+const { STORAGE_KEYS, DEFAULT } = DATA_LOGGER_CONFIG;
 
 let failedUploadQueue = [];
 
@@ -33,7 +33,7 @@ function getFormattedTimestamp() {
 
 function loadFromLocalStorage() {
   try {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEYS.CONVERSATIONS);
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error("Error loading from localStorage:", error);
@@ -43,7 +43,7 @@ function loadFromLocalStorage() {
 
 function saveToLocalStorage(conversations) {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(conversations));
+    localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(conversations));
   } catch (error) {
     console.error("Error saving to localStorage:", error);
   }
@@ -51,7 +51,7 @@ function saveToLocalStorage(conversations) {
 
 function loadFailedUploads() {
   try {
-    const stored = localStorage.getItem(FAILED_UPLOADS_KEY);
+    const stored = localStorage.getItem(STORAGE_KEYS.FAILED_UPLOADS);
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     return [];
@@ -60,7 +60,7 @@ function loadFailedUploads() {
 
 function saveFailedUploads(queue) {
   try {
-    localStorage.setItem(FAILED_UPLOADS_KEY, JSON.stringify(queue));
+    localStorage.setItem(STORAGE_KEYS.FAILED_UPLOADS, JSON.stringify(queue));
   } catch (error) {
     console.error("Error saving failed uploads:", error);
   }
@@ -70,10 +70,10 @@ function getResearcherToken() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   if (token) {
-    localStorage.setItem(RESEARCHER_TOKEN_KEY, token);
+    localStorage.setItem(STORAGE_KEYS.RESEARCHER_TOKEN, token);
     return token;
   }
-  return localStorage.getItem(RESEARCHER_TOKEN_KEY);
+  return localStorage.getItem(STORAGE_KEYS.RESEARCHER_TOKEN);
 }
 
 export const DataLogger = {
@@ -82,12 +82,7 @@ export const DataLogger = {
   _currentConversationId: null,
   _currentMetadata: {},
   _allConversations: [],
-  config: {
-    autoUpload: false,
-    retryFailedUploads: true,
-    maxRetries: 3,
-    retryDelay: 1000,
-  },
+  config: { ...DEFAULT },
 
   init() {
     this._allConversations = loadFromLocalStorage();
@@ -219,10 +214,10 @@ export const DataLogger = {
     console.log("Updated conversation metadata:", this._currentMetadata);
   },
 
-  endConversation() {
+  async endConversation() {
     if (this._currentConversationId) {
       this._saveCurrentConversation();
-      this.uploadCurrentConversation();
+      await this.uploadCurrentConversation();
     }
     this._conversationBuffer = [];
     this._currentConversationId = null;

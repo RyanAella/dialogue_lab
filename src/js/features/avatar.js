@@ -3,28 +3,10 @@
  * This module manages a multi-layered SVG/PNG character system.
  */
 
-/**
- * Fallback transparent 1x1 GIF pixel to prevent broken image icons
- * when an avatar layer is missing.
- * @constant {string}
- */
-const TRANSPARENT_PIXEL =
-  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+import { AVATAR_CONFIG, AVATAR_ANIMATION } from "../core/config.js";
 
-/**
- * Order and naming of the image layers used for the avatar stack.
- * @constant {string[]}
- */
-const LAYERS = [
-  "body",
-  "clothes",
-  "hair",
-  "glasses",
-  "headset",
-  "hands",
-  "eyes",
-  "mouth",
-];
+const { TRANSPARENT_PIXEL, LAYERS } = AVATAR_CONFIG;
+const { MOUTH_INTERVAL, BLINK_DURATION, BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX } = AVATAR_ANIMATION;
 
 /**
  * @typedef {Object} AvatarConfig
@@ -243,7 +225,7 @@ export const Avatar = {
     ) {
       this._state.mouthInterval = setInterval(() => {
         this.update(false, Math.random() > 0.5);
-      }, 150);
+      }, MOUTH_INTERVAL);
     } else if (!talking && this._state.mouthInterval) {
       clearInterval(this._state.mouthInterval);
       this._state.mouthInterval = null;
@@ -267,9 +249,9 @@ export const Avatar = {
           this.update(false, this._state.isTalking);
         this._state.blinkTimeout = setTimeout(
           blink,
-          2000 + Math.random() * 4000,
+          BLINK_INTERVAL_MIN + Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN),
         );
-      }, 150);
+      }, BLINK_DURATION);
     };
     blink();
   },
