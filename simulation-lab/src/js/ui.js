@@ -266,7 +266,7 @@ export const UI = {
     // Partner Avatar: Uses the layer system (avatar stack)
     if (Avatar.getConfig()) {
       avatar.className =
-        "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm";
+        "avatar-stack w-10 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 mt-1 shadow-sm relative";
 
       Avatar.getLayers().forEach((layer) => {
         const src = Avatar.getLayerSrc(layer);
