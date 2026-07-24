@@ -3,11 +3,11 @@
  * Handles feedback requests and modal management.
  */
 
-import { APP_CONFIG } from './config.js';
-import { API } from './api.js';
+import { APP_CONFIG, APP_MODES, EXERCISE_TYPES, FEEDBACK_MESSAGES } from '../core/config.js';
+import { API } from '../services/api.js';
 import { Chat } from './chat.js';
-import { DataLogger } from './dataLogger.js';
-import { UI } from './ui.js';
+import { DataLogger } from '../services/dataLogger.js';
+import { UI } from '../ui/ui.js';
 import { ScenarioService } from './scenario.js';
 
 /**
@@ -20,7 +20,7 @@ export async function handleFeedback() {
   if (!config || !config.prompts) return;
 
   const STATE = window.STATE;
-  const isTransform = config.type === "TRANSFORMATION";
+  const isTransform = config.type === EXERCISE_TYPES.TRANSFORMATION;
   const evalPrompt = isTransform ? config.prompts.trainer : config.prompts.mentor;
   const finalPrompt = evalPrompt || (isTransform
     ? APP_CONFIG.FALLBACK_PROMPTS.transformation
@@ -28,11 +28,13 @@ export async function handleFeedback() {
 
   if (UI.elements.loadingTitle) {
     UI.elements.loadingTitle.textContent = isTransform 
-      ? "Coach analysiert das Gespräch..."
-      : "Mentor analysiert das Gespräch...";
+      ? FEEDBACK_MESSAGES.loading.title.transformation
+      : FEEDBACK_MESSAGES.loading.title.simulation;
   }
   UI.elements.loadingOverlay?.classList.remove("hidden");
-  UI.updateStatus("loading", isTransform ? "Coach analysiert..." : "Mentor analysiert...");
+  UI.updateStatus("loading", isTransform 
+    ? FEEDBACK_MESSAGES.loading.status.transformation 
+    : FEEDBACK_MESSAGES.loading.status.simulation);
   
   let inputForAnalysis;
   if (isTransform) {
@@ -58,31 +60,32 @@ export async function handleFeedback() {
     if (data) {
       const feedback = data.choices[0].message.content;
       STATE.lastFeedback = feedback;
-      DataLogger.endConversation();
 
       if (UI.elements.feedbackModalTitle) {
         UI.elements.feedbackModalTitle.innerHTML = isTransform
-          ? "<span>📊</span> Coach-Analyse"
-          : "<span>📊</span> Mentor-Feedback";
+          ? FEEDBACK_MESSAGES.modal.title.transformation
+          : FEEDBACK_MESSAGES.modal.title.simulation;
       }
       UI.showFeedbackModal(feedback);
 
       if (STATE.ttsEnabled) {
-        UI.speak(feedback, isTransform ? "Coach" : "Mentor");
+        UI.speak(feedback, isTransform 
+          ? FEEDBACK_MESSAGES.tts.transformation 
+          : FEEDBACK_MESSAGES.tts.simulation);
       }
 
       UI.elements.feedbackBtn?.classList.add("hidden");
       if (UI.elements.exportTranscriptBtn) {
         UI.elements.exportTranscriptBtn.classList.remove("hidden");
       }
-      UI.updateStatus("idle", "Fertig");
+      UI.updateStatus("idle", FEEDBACK_MESSAGES.status.ready);
     } else {
-      UI.updateStatus("error", "Fehler: Keine Antwort von der KI erhalten.");
+      UI.updateStatus("error", FEEDBACK_MESSAGES.status.error);
     }
   } catch (e) {
     console.error("Feedback request failed:", e);
     const errorText = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
-    UI.updateStatus("error", "Fehler: " + errorText);
+    UI.updateStatus("error", FEEDBACK_MESSAGES.errorPrefix + errorText);
   } finally {
     UI.elements.loadingOverlay.classList.add("hidden");
   }
@@ -105,15 +108,25 @@ export async function closeFeedbackModal() {
  */
 export async function confirmReset() {
   const STATE = window.STATE;
-  const modal = UI.elements.resetModal || document.getElementById("reset-modal");
-  if (modal) modal.classList.add("hidden");
   
-  if (STATE.currentMode === "transformation") {
+  // Close reset modal
+  const resetModal = UI.elements.resetModal || document.getElementById("reset-modal");
+  if (resetModal) resetModal.classList.add("hidden");
+  
+  // End current conversation and WAIT for upload to complete
+  await DataLogger.endConversation();
+  
+  // Now start new conversation based on mode
+  if (STATE.currentMode === APP_MODES.TRANSFORMATION) {
     if (typeof window.restartTransformationExercise === 'function') {
       window.restartTransformationExercise();
     }
   } else {
-    if (typeof window.switchToRoleplayMode === 'function') {
+    // For roleplay mode, reload the current scenario
+    const active = ScenarioService.getActive();
+    if (active && typeof window.loadContent === 'function') {
+      await window.loadContent(active.id);
+    } else if (typeof window.switchToRoleplayMode === 'function') {
       await window.switchToRoleplayMode();
     }
   }

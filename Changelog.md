@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  ---
 
+## [0.30.0] - 2026-07-24
+
+### Changed
+- **Modular Codebase Structure**: Refactored the JavaScript codebase into a logical, feature-based folder structure under `src/js/` for improved maintainability and scalability:
+  - `core/` - Application foundation (app.js, config.js, modeManager.js, state.js)
+  - `features/` - Domain-specific modules (avatar.js, chat.js, export.js, feedback.js, profiles.js, scenario.js, speech.js)
+  - `services/` - External service integrations (api.js, contentLoader.js, dataLogger.js)
+  - `ui/` - User interface components (ui.js, uiHelpers.js, windowHandlers.js)
+  - `utils/` - Shared utility functions (dropdowns.js, eventListeners.js, messageHandlers.js, utils.js)
+- **Updated All Imports**: Adjusted 40+ relative import paths across all JavaScript modules to reference the new file locations.
+- **Updated Entry Point**: Changed `index.html` script reference from `src/js/app.js` to `src/js/core/app.js`.
+
+---
+
 ## [0.29.0] - 2026-07-22
 
 ### Added

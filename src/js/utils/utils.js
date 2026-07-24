@@ -25,12 +25,9 @@ export const Utils = {
     container.textContent = "";
     container.style.whiteSpace = "pre-wrap";
 
-    // Very small Markdown subset: **bold**
     const parts = String(text).split(/\*\*(.*?)\*\*/g);
     parts.forEach((part, index) => {
       if (!part) return;
-
-      // Odd indexes are the content captured inside the markers
       if (index % 2 === 1) {
         const strong = document.createElement("strong");
         strong.textContent = part;
@@ -38,7 +35,6 @@ export const Utils = {
         container.appendChild(strong);
         return;
       }
-
       this.appendText(container, part);
     });
   },
@@ -100,27 +96,18 @@ export const Utils = {
   extractRoleName(instructionSection, roleLabel) {
     if (roleLabel) return this.formatRoleName(roleLabel);
 
-    // Heuristic from "Your Task" section
-    const taskSection =
-      instructionSection.split(/Deine Aufgabe/i)[1] || instructionSection;
-    const roleRegex = /mit\s+(?:der|dem|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/i;
-    const autoRoleMatch = taskSection.match(roleRegex);
+    const taskSection = instructionSection.split(/Deine Aufgabe/i)[1] || instructionSection;
+    const autoRoleMatch = taskSection.match(/mit\s+(?:der|dem|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/i);
 
     let roleName = "Teammitglied";
     if (autoRoleMatch) {
       roleName = autoRoleMatch[1].trim();
     } else {
-      const fallbackRegex =
-        /\b(?:ein|einen|eine|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/;
-      const fallbackMatch = taskSection.match(fallbackRegex);
+      const fallbackMatch = taskSection.match(/\b(?:ein|einen|eine|einem|einer)\s+([A-ZÄÖÜ][a-zäöüß]+)/);
       if (fallbackMatch) roleName = fallbackMatch[1].trim();
     }
 
-    // Normalization
-    if (
-      roleName.toLowerCase().startsWith("mitarbeitend") &&
-      !roleName.toLowerCase().endsWith("in")
-    ) {
+    if (roleName.toLowerCase().startsWith("mitarbeitend") && !roleName.toLowerCase().endsWith("in")) {
       roleName = "Mitarbeiter";
     }
 
@@ -162,10 +149,7 @@ export const Utils = {
   generateTranscript(history, partnerRoleName) {
     return history
       .filter((m) => m.role !== "system")
-      .map((m) => {
-        const role = m.role === "user" ? "Führungskraft" : partnerRoleName;
-        return `${role}: ${m.content}`;
-      })
+      .map((m) => `${m.role === "user" ? "Führungskraft" : partnerRoleName}: ${m.content}`)
       .join("\n\n");
   },
 
@@ -179,7 +163,7 @@ export const Utils = {
   slugify(text) {
     if (!text) return "";
     return text
-      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "") // Keep alphanumeric, umlauts, and spaces
+      .replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "")
       .trim()
       .replace(/\s+/g, "_");
   },
@@ -201,15 +185,15 @@ export const Utils = {
    */
   cleanTextForSpeech(text) {
     return text
-      .replace(/\*\*|\*/g, "") // Remove bold/italic Markdown
-      .replace(/\(.*?\)/g, "") // Remove (stage directions)
-      .replace(/\[.*?\]/g, "") // Remove [stage directions]
-      .replace(/\n\n+/g, ". ... . ") // Replace paragraphs with long pauses
-      .replace(/:\s*\n/g, ". ... . ") // Replace trailing colon with pause
-      .replace(/:\s*/g, ", ... ") // Replace inline colon with short pause
-      .replace(/\n/g, ". ") // Replace simple line breaks with period
-      .replace(/([.!?])\s+/g, "$1 ... ") // Add tiny extra pause after punctuation
-      .replace(/\s+/g, " ") // Clean up excess whitespace
+      .replace(/\*\*|\*/g, "")
+      .replace(/\(.*?\)/g, "")
+      .replace(/\[.*?\]/g, "")
+      .replace(/\n\n+/g, ". ... . ")
+      .replace(/:\s*\n/g, ". ... . ")
+      .replace(/:\s*/g, ", ... ")
+      .replace(/\n/g, ". ")
+      .replace(/([.!?])\s+/g, "$1 ... ")
+      .replace(/\s+/g, " ")
       .trim();
   },
 
@@ -221,12 +205,12 @@ export const Utils = {
    */
   downloadFile(content, filename, type = "text/plain;charset=utf-8") {
     const blob = new Blob([content], { type });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
   },
 };

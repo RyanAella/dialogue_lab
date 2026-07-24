@@ -1,15 +1,38 @@
 /**
- * @module Profiles
- * Defines character asset pools and maps them to specific dialogue roles.
- * This file manages the visual configurations for all AI partners, including
- * layered image paths for heads, clothes, hair, and accessories.
+ * @module Characters
+ * Character asset pools and configurations for AI partner visuals.
+ * Contains all layered image paths for heads, clothes, hair, and accessories.
  */
 
 /**
  * Base directory for all character-related image assets.
  * @constant {string}
  */
-const BASE_PATH = "src/assets/Character/";
+export const BASE_PATH = "src/assets/Character/";
+
+/**
+ * Shared head assets for female characters to reduce redundancy.
+ */
+export const SHARED_FEMALE_HEADS = [
+  "HeadImages/Head_1/Head_1_a.png",
+  "HeadImages/Head_1/Head_1_b.png",
+  "HeadImages/Head_1/Head_1_c.png",
+  "HeadImages/Head_1/Head_1_d.png",
+];
+
+/**
+ * Shared head assets for male characters to reduce redundancy.
+ */
+export const SHARED_MALE_HEADS = [
+  "HeadImages/Head_1/Head_1_a.png",
+  "HeadImages/Head_1/Head_1_b.png",
+  "HeadImages/Head_1/Head_1_c.png",
+  "HeadImages/Head_1/Head_1_d.png",
+  "HeadImages/Head_2/Head_2_a.png",
+  "HeadImages/Head_2/Head_2_b.png",
+  "HeadImages/Head_2/Head_2_c.png",
+  "HeadImages/Head_2/Head_2_d.png",
+];
 
 /**
  * @typedef {Object} CharacterProfile
@@ -28,21 +51,11 @@ const BASE_PATH = "src/assets/Character/";
  */
 
 /**
- * Shared head assets for female characters to reduce redundancy.
- */
-const SHARED_FEMALE_HEADS = [
-  "HeadImages/Head_1/Head_1_a.png",
-  "HeadImages/Head_1/Head_1_b.png",
-  "HeadImages/Head_1/Head_1_c.png",
-  "HeadImages/Head_1/Head_1_d.png",
-];
-
-/**
  * Collection of female character configurations.
  * These are used as base sets that can be shared across multiple roles.
  * @type {CharacterProfile[]}
  */
-const FEMALE_CHARACTERS = [
+export const FEMALE_CHARACTERS = [
   {
     gender: "female",
     basePath: BASE_PATH,
@@ -150,24 +163,10 @@ const FEMALE_CHARACTERS = [
 ];
 
 /**
- * Shared head assets for male characters to reduce redundancy.
- */
-const SHARED_MALE_HEADS = [
-  "HeadImages/Head_1/Head_1_a.png",
-  "HeadImages/Head_1/Head_1_b.png",
-  "HeadImages/Head_1/Head_1_c.png",
-  "HeadImages/Head_1/Head_1_d.png",
-  "HeadImages/Head_2/Head_2_a.png",
-  "HeadImages/Head_2/Head_2_b.png",
-  "HeadImages/Head_2/Head_2_c.png",
-  "HeadImages/Head_2/Head_2_d.png",
-];
-
-/**
  * Collection of male character configurations.
  * @type {CharacterProfile[]}
  */
-const MALE_CHARACTERS = [
+export const MALE_CHARACTERS = [
   {
     gender: "male",
     basePath: BASE_PATH,
@@ -262,31 +261,4 @@ const MALE_CHARACTERS = [
  * Combined pool of all available characters for maximum randomization.
  * @type {CharacterProfile[]}
  */
-const ALL_CHARACTERS = [...FEMALE_CHARACTERS, ...MALE_CHARACTERS];
-
-/**
- * Maps scenario role labels to specific character pools.
- * The key corresponds to the 'role_label' or 'roleName' defined in the scenario text files.
- * @type {Object.<string, CharacterProfile[]>}
- */
-export const CHARACTER_PROFILES = {
-  Mitarbeiterin: FEMALE_CHARACTERS,
-  Kollegin: FEMALE_CHARACTERS,
-  Mitarbeiter: MALE_CHARACTERS,
-  Kollege: MALE_CHARACTERS,
-  Teammitglied: ALL_CHARACTERS,
-  Coach: ALL_CHARACTERS,
-
-  // Fallback
-  default: ALL_CHARACTERS,
-};
-
-/**
- * Retrieves the appropriate character profile pool based on a role key.
- * Falls back to the global 'default' pool if the key is not found.
- * @param {string} key - The role name or label to look up.
- * @returns {CharacterProfile[]} An array of character profiles matching the role.
- */
-export const getProfilePool = (key) => {
-  return CHARACTER_PROFILES[key] || CHARACTER_PROFILES["default"];
-};
+export const ALL_CHARACTERS = [...FEMALE_CHARACTERS, ...MALE_CHARACTERS];
