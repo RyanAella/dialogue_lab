@@ -1,14 +1,5 @@
 import { Utils } from "../utils/utils.js";
-
-/**
- * Keywords used to filter and select the most appropriate system voices.
- * @constant {Object}
- */
-const VOICE_KEYWORDS = {
-  female: ["katja", "maren", "anna", "zira", "clara", "julia", "verena"],
-  male: ["stefan", "conrad", "kasper", "killian", "hans", "michael"],
-  highQuality: ["neural", "natural", "online", "premium", "enhanced"],
-};
+import {MENTOR_KEYWORDS, SPEECH_CONFIG, VOICE_KEYWORDS} from "../core/config.js";
 
 /**
  * Service for handling Speech-to-Text (STT) and Text-to-Speech (TTS).
@@ -37,7 +28,7 @@ export const Speech = {
     if (!SpeechRecognition) return false;
 
     this._recognition = new SpeechRecognition();
-    this._recognition.lang = "de-DE";
+    this._recognition.lang = SPEECH_CONFIG.LANG;
 
     this._recognition.onstart = () => {
       this._isListening = true;
@@ -133,9 +124,8 @@ export const Speech = {
     if (voice) utterance.voice = voice;
 
     const isHQ = voice?.name.toLowerCase().includes("neural");
-    const isMentor =
-      roleName?.toLowerCase().includes("mentor") ||
-      roleName?.toLowerCase().includes("feedback");
+    const isMentor = roleName && MENTOR_KEYWORDS.some(kw => roleName.toLowerCase().includes(kw));
+
 
     utterance.rate = isMentor ? (isHQ ? 0.88 : 0.85) : isHQ ? 0.95 : 0.9;
     utterance.pitch = isMentor ? 0.95 : isFemale ? 1.05 : 0.98;

@@ -3,29 +3,10 @@
  * This module manages a multi-layered SVG/PNG character system.
  */
 
-/**
- * Fallback transparent 1x1 GIF pixel to prevent broken image icons
- * when an avatar layer is missing.
- * @constant {string}
- */
-const TRANSPARENT_PIXEL =
-  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+import { AVATAR_CONFIG, AVATAR_ANIMATION } from "../core/config.js";
 
-/**
- * Order and naming of the image layers used for the avatar stack.
- * @constant {string[]}
- */
-const LAYERS = [
-  "body",
-  "clothes",
-  "hair",
-  "glasses",
-  "headset",
-  "hands",
-  "eyes",
-  "mouth",
-];
-
+const { TRANSPARENT_PIXEL, LAYERS } = AVATAR_CONFIG;
+const { MOUTH_INTERVAL, BLINK_DURATION, BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX } = AVATAR_ANIMATION;
 
 /**
  * @typedef {Object} AvatarConfig
@@ -60,7 +41,7 @@ export const Avatar = {
     blinkTimeout: null, // Reference for the blinking loop timeout
     mouthInterval: null, // Reference for the mouth movement interval
     /** @type {AvatarConfig | null} */
-    config: null, // The currently active character profile configuration
+    config: null,
     current: {
       head: 0,
       clothes: 0,
@@ -104,12 +85,12 @@ export const Avatar = {
   },
 
   /**
-   * Initializes the component by selecting all avatar layer elements in the DOM.
+   * Initializes the component with DOM node references.
    */
   init() {
     LAYERS.forEach((layer) => {
       this._nodes[layer] = document.querySelectorAll(
-        `.js-avatar-layer[data-layer="${layer}"]`,
+          `.js-avatar-layer[data-layer="${layer}"]`,
       );
     });
   },
@@ -125,8 +106,8 @@ export const Avatar = {
 
     /** @type {AvatarConfig} */
     const profile = Array.isArray(data)
-      ? data[Math.floor(Math.random() * data.length)]
-      : data;
+        ? data[Math.floor(Math.random() * data.length)]
+        : data;
 
     // Reset config to null (cast to any or use explicit nullability to satisfy IDE)
     this._state.config = /** @type {AvatarConfig | null} */ (null);
@@ -151,8 +132,8 @@ export const Avatar = {
     s.current.skinTone = colorMatch ? colorMatch[1].toLowerCase() : "a";
 
     const handPool = Array.isArray(c.hands)
-      ? c.hands
-      : c.hands[s.current.skinTone] || [""];
+        ? c.hands
+        : (c.hands ? c.hands[s.current.skinTone] : [""]);
     s.current.hands = rand(handPool);
     s.current.eyes = rand(c.eyesOpen);
     s.current.mouth = rand(c.mouthsClosed);
@@ -219,7 +200,7 @@ export const Avatar = {
   update(eyesClosed = false, mouthOpen = false) {
     LAYERS.forEach((layer) => {
       const src =
-        this.getLayerSrc(layer, eyesClosed, mouthOpen) || TRANSPARENT_PIXEL;
+          this.getLayerSrc(layer, eyesClosed, mouthOpen) || TRANSPARENT_PIXEL;
       const elements = this._nodes[layer];
 
       if (elements) {
@@ -238,13 +219,13 @@ export const Avatar = {
   setTalking(talking) {
     this._state.isTalking = talking;
     if (
-      talking &&
-      !this._state.mouthInterval &&
-      this._state.config?.mouthsOpen
+        talking &&
+        !this._state.mouthInterval &&
+        this._state.config?.mouthsOpen
     ) {
       this._state.mouthInterval = setInterval(() => {
         this.update(false, Math.random() > 0.5);
-      }, 150);
+      }, MOUTH_INTERVAL);
     } else if (!talking && this._state.mouthInterval) {
       clearInterval(this._state.mouthInterval);
       this._state.mouthInterval = null;
@@ -267,10 +248,10 @@ export const Avatar = {
         if (this._state.config?.eyesOpen)
           this.update(false, this._state.isTalking);
         this._state.blinkTimeout = setTimeout(
-          blink,
-          2000 + Math.random() * 4000,
+            blink,
+            BLINK_INTERVAL_MIN + Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN),
         );
-      }, 150);
+      }, BLINK_DURATION);
     };
     blink();
   },
@@ -285,7 +266,7 @@ export const Avatar = {
 
   /**
    * Returns the active character profile configuration.
-   * @returns {Object|null}
+   * @returns {AvatarConfig|null}
    */
   getConfig() {
     return this._state.config;

@@ -1,52 +1,13 @@
 import { Avatar } from "../features/avatar.js";
 import { Speech } from "../features/speech.js";
 import { Utils } from "../utils/utils.js";
+import {DOM_ELEMENT_ALIASES, DOM_ELEMENT_IDS, MESSAGE_STYLES, MODE_BADGE_CONFIG, STATUS_CONFIGS} from "../core/config.js";
 
 /**
  * @module UI
  * Modular UI Manager for the Dialogue Lab.
  * Handles dynamic rendering, DOM event binding, and multimedia integration (TTS/STT).
  */
-
-/**
- * Visual configurations for the status box to prevent re-allocation during updates.
- */
-const STATUS_CONFIGS = {
-  loading: {
-    cls: "bg-blue-50 text-blue-700 border-blue-200",
-    dot: "bg-blue-500 animate-ping",
-  },
-  error: {
-    cls: "bg-red-50 text-red-700 border-red-200",
-    dot: "bg-red-500"
-  },
-  default: {
-    cls: "bg-slate-50 text-slate-600 border-slate-200",
-    dot: "bg-green-500",
-  },
-};
-
-/**
- * Mapping of message senders/types to their respective visual styles and labels.
- */
-const MESSAGE_STYLES = {
-  user: {
-    label: "Deine Antwort",
-    cls: "bg-blue-600 text-white rounded-tr-none",
-  },
-  partner: {
-    label: "Partner",
-    cls: "bg-white text-slate-800 border-slate-100 rounded-tl-none",
-  },
-  task: {
-    label: "Aufgabe",
-    cls: "bg-sky-50 text-sky-900 border-sky-100 rounded-tl-none",
-  },
-  feedback: {
-    label: "Feedback",
-    cls: "bg-indigo-50 text-indigo-900 border-indigo-100 rounded-tl-none",
-  },
-};
 
 export const UI = {
   /**
@@ -95,42 +56,13 @@ export const UI = {
    * @private
    */
   _bindElements() {
-    const ids = [
-      "briefing-header",
-      "briefing-content",
-      "chevron",
-      "scenarios",
-      "scenario-section",
-      "mode-badge",
-      "chat-window",
-      "start-info",
-      "user-input",
-      "send-btn",
-      "status-box",
-      "mobile-menu-btn",
-      "sidebar",
-      "sidebar-overlay",
-      "download-btn",
-      "feedback-btn",
-      "export-transcript-btn",
-      "modal-download-btn",
-      "reset-btn",
-      "auto-speak-toggle",
-      "speak-briefing-btn",
-      "stop-speech-btn",
-      "mic-btn",
-      "loading-overlay",
-      "feedback-modal",
-      "reset-modal",
-      "partner-name-display",
-    ];
-    ids.forEach((id) => {
+    DOM_ELEMENT_IDS.forEach((id) => {
       const camelCaseId = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
       this.elements[camelCaseId] = document.getElementById(id);
     });
-    // Remap specific non-standard IDs
-    this.elements.scenarioSelect = this.elements.scenarios;
-
+    Object.entries(DOM_ELEMENT_ALIASES).forEach(([prop, id]) => {
+      this.elements[prop] = this.elements[id];
+    });
     Avatar.init();
   },
 
@@ -351,12 +283,13 @@ export const UI = {
    * Sets the content and style of the current mode badge.
    * @returns {void}
    */
-  setModeBadge() {
+  setModeBadge(mode) {
     const { modeBadge } = this.elements;
     if (!modeBadge) return;
-    modeBadge.textContent = "Modus: Simulationen";
-    modeBadge.className =
-      "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200";
+    const isTransformation = mode === "transformation";
+    const config = MODE_BADGE_CONFIG[isTransformation ? "transformation" : "simulation"];
+    modeBadge.textContent = config.label;
+    modeBadge.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.cls}`;
   },
 
   /**
@@ -503,6 +436,30 @@ export const UI = {
     briefingContent?.classList.toggle("hidden", !expanded);
     if (chevron)
       chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(-90deg)";
+  },
+
+  /**
+   * Sets the visibility and state of exercise action buttons (feedback, reset, export).
+   * When hidden, also disables and applies opacity styles to feedback/reset buttons.
+   * @param {boolean} visible - Whether the buttons should be visible and enabled.
+   * @returns {void}
+   */
+  setExerciseActionsVisible(visible) {
+    const { exportTranscriptBtn, feedbackBtn, resetBtn } = this.elements;
+    if (exportTranscriptBtn) {
+      exportTranscriptBtn.classList.toggle("hidden", !visible);
+    }
+    if (feedbackBtn) {
+      feedbackBtn.classList.toggle("hidden", !visible);
+      feedbackBtn.disabled = !visible;
+      feedbackBtn.classList.toggle("opacity-50", !visible);
+      feedbackBtn.classList.toggle("cursor-not-allowed", !visible);
+    }
+    if (resetBtn) {
+      resetBtn.disabled = !visible;
+      resetBtn.classList.toggle("opacity-50", !visible);
+      resetBtn.classList.toggle("cursor-not-allowed", !visible);
+    }
   },
 
   /**
