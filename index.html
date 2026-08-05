@@ -9,7 +9,7 @@
     <link rel="icon" href="https://fav.farm/💬" />
 
     <link rel="apple-touch-icon" href="https://fav.farm/💬" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <meta
@@ -17,20 +17,22 @@
       content="Ein interaktives Dialogue Lab zum Üben von Gesprächsführung."
     />
 
+    <script>
+      // Suppress Tailwind CDN warning for development
+      // For production, install Tailwind CSS as PostCSS plugin
+      if (console && console.warn) {
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+          if (args.some(arg => typeof arg === 'string' && arg.includes('cdn.tailwindcss.com'))) {
+            return; // Skip Tailwind CDN warning
+          }
+          originalWarn.apply(console, args);
+        };
+      }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       /* Custom "Modern Chat" Styles */
-      .chat-bubble-user {
-        border-radius: 22px;
-        border-top-right-radius: 4px;
-      }
-      .chat-bubble-partner {
-        border-radius: 22px;
-        border-top-left-radius: 4px;
-      }
-      .chat-bubble-portrait {
-        border-radius: 12px;
-      }
       @keyframes pulse-soft {
         0%,
         100% {
@@ -42,9 +44,7 @@
           transform: scale(0.95);
         }
       }
-      .animate-pulse-soft {
-        animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-      }
+
       /* Prevent scrollbar flickering while maintaining layout */
       .chat-main-container {
         scrollbar-gutter: stable;
@@ -128,6 +128,11 @@
       <div
         class="sidebar-actions mt-auto space-y-3 pt-6 border-t border-slate-100"
       >
+        <!-- Datenschutz-Hinweis -->
+        <div class="bg-blue-50 border border-blue-100 text-blue-700 px-3 py-2 rounded-lg text-xs flex items-center gap-2">
+          <span>ℹ️</span>
+          <span>Gespräche werden serverseitig gespeichert</span>
+        </div>
         <button
           id="feedback-btn"
           disabled
@@ -176,6 +181,9 @@
                   class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"
                 >
                   Modus: Simulationen
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 ml-2">
+                  <span class="mr-1">💾</span> Gespräche werden serverseitig gespeichert
                 </span>
               </div>
               <p id="main-subtitle" class="main-subtitle text-slate-500 mt-2">
@@ -427,7 +435,7 @@
             📥 Protokoll & Feedback herunterladen
           </button>
           <button
-            onclick="location.reload()"
+            onclick="closeFeedbackModal()"
             class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
           >
             🔄 Neues Gespräch beginnen
@@ -460,6 +468,7 @@
         <div class="flex gap-3">
           <button
             id="modal-close-reset"
+            onclick="document.getElementById('reset-modal').classList.add('hidden')"
             class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition"
           >
             Abbrechen

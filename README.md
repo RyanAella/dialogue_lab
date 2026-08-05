@@ -14,6 +14,7 @@ Das **Lab für Sozioinformatik: Simulation Lab** ist eine interaktive Web-Anwend
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Natürliches Sprachgefühl:** Integrierte **Sprachausgabe (TTS)** mit kontextabhängiger Geschwindigkeit und Pitch-Modulation erzeugt lebendige Dialoge. Optimiert für Microsoft Edge (Neural Voices).
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive Briefing mit einem Klick als strukturierte Textdatei speichern – ideal für die Nachbereitung.
+- **Automatische Server-Speicherung:** Gespräche werden **automatisch auf dem Server gesichert** (Endpoint: `DATALOGGER_BACKEND` in `config.js`). Dies ermöglicht eine zentrale Datenerfassung für Forschungszwecke und Nutzer-History.
 
 ## 2. Technische Architektur
 
@@ -34,7 +35,7 @@ Die Codebasis ist modular nach Verantwortungsbereichen organisiert:
 |--------------|-----------------------------------------|---------------------------------------|
 | **`core/`**  | **Controller**: Application Foundation | `app.js`, `config.js`                 |
 | **`features/`** | **Domain Logic** | `avatar.js` (Visuals), `chat.js` (State-Manager), `profiles.js` (Assets), `scenario.js` (Data-Service), `speech.js` (Audio-Service) |
-| **`services/`** | **Network** | `api.js` (API-Anfragen & Caching) |
+| **`services/`** | **Network & Logging** | `api.js` (API-Anfragen & Caching), `dataLogger.js` (Automatische Gesprächs-Speicherung), `contentLoader.js` (Szenario-Ladevorgänge) |
 | **`ui/`**    | **View-Manager** | `ui.js` (DOM-Elemente & Rendering) |
 | **`utils/`** | **Helpers** | `utils.js` (Markdown-Parsing & Text-Bereinigung) |
 
@@ -99,11 +100,25 @@ Die Kommunikation erfolgt über einen PHP-Proxy, um den API-Key sicher zu verwah
 
 Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hinzu und leitet die Anfrage an OpenAI weiter. (Eine Vorlage befindet sich im Dokumentations-Ordner).
 
+### 5.3 Automatische Gesprächs-Speicherung (DataLogger)
+
+Die Anwendung speichert Gesprächsverläufe automatisch auf einem Server-Endpoint:
+
+- **Endpoint:** Konfiguriert in `src/js/core/config.js` unter `DATALOGGER_BACKEND` (Standard: `https://kite2.site/dialogue_lab/save_dialogue.php`)
+- **Aktivierung:** In `app.js` via `DataLogger.setAutoUpload(true)`
+- **Daten:** Gesprächsverläufe, Metadaten (Mode, Szenario-ID, Zeitstempel)
+- **Fallback:** Bei Offline-Nutzung werden Gespräche im `localStorage` zwischengespeichert und beim nächsten Online-Zustand nachgeladen
+- **UI-Hinweis:** Nutzer werden in der Sidebar und neben dem Modus-Badge über die Speicherung informiert
+
+> **📢 Datenschutz-Hinweis:** Diese Anwendung speichert Gesprächsverläufe automatisch auf einem Server. Nutzer werden hierüber in der UI informiert (Info-Box in Sidebar und neben Modus-Badge).
+
 ## 6. Deployment & Konfiguration
 
 1. **Frontend:** Repository auf GitHub Pages hosten.
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
-3. **Konfiguration:** Die `PROXY_URL` in `src/js/core/config.js` an den Pfad deines Proxy-Skripts anpassen.
+3. **Konfiguration:** 
+   - `PROXY_URL` in `src/js/core/config.js` an den Pfad deines Proxy-Skripts anpassen
+   - `DATALOGGER_BACKEND` in `src/js/core/config.js` auf deine Server-Endpoint für die Gesprächs-Speicherung setzen
 4. **Wichtig für GitHub Pages:** Da GitHub Pages auf Linux-Servern läuft, ist das Dateisystem **case-sensitive**. Achte strikt darauf, dass Dateinamen im Code exakt so geschrieben werden wie im Dateisystem. Vermeide Leerzeichen in Dateinamen (nutze stattdessen `snake_case`).
 
 ### Multi-Branch Deployment
@@ -154,6 +169,7 @@ The **Socio-Informatics Lab: Simulation Lab** is an interactive web application 
 - **Accessible Input:** Responses can be spoken directly using the microphone icon (**Speech-to-Text**). Note: This feature uses the browser's native Web Speech API and is currently supported by Chrome and Edge (disabled in Firefox due to missing browser support).
 - **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with context-aware rate and pitch modulation creates lifelike dialogues. Optimized for Microsoft Edge (Neural Voices).
 - **Track Your Progress:** Use the **Transcript Export** feature to save the entire conversation history, including the briefing, as a structured text file with a single click—perfect for self-reflection.
+- **Automatic Server Storage:** Conversations are **automatically saved to the server** (Endpoint: `DATALOGGER_BACKEND` in `config.js`). This enables centralized data collection for research purposes and user history.
 
 ## 2. Technical Architecture
 
@@ -174,7 +190,7 @@ The codebase is organized modularly by responsibility:
 |---------------|-----------------------------------------|---------------------------------------|
 | **`core/`**   | **Controller**: Application Foundation | `app.js`, `config.js`                 |
 | **`features/`** | **Domain Logic** | `avatar.js` (Visuals), `chat.js` (State-Manager), `profiles.js` (Assets), `scenario.js` (Data-Service), `speech.js` (Audio-Service) |
-| **`services/`** | **Network** | `api.js` (API requests & Caching) |
+| **`services/`** | **Network & Logging** | `api.js` (API requests & Caching), `dataLogger.js` (Automatic Conversation Storage), `contentLoader.js` (Scenario Loading) |
 | **`ui/`**     | **View-Manager** | `ui.js` (DOM elements & Rendering) |
 | **`utils/`**  | **Helpers** | `utils.js` (Markdown parsing & Text cleaning) |
 
@@ -239,11 +255,25 @@ Communication is handled via a PHP proxy to keep the API key secure.
 
 The script receives the payload from the frontend, adds the Authorization header, and forwards the request to OpenAI. (A template is provided in the documentation folder).
 
+### 5.3 Automatic Conversation Storage (DataLogger)
+
+The application automatically saves conversation histories to a server endpoint:
+
+- **Endpoint:** Configured in `src/js/core/config.js` under `DATALOGGER_BACKEND` (Default: `https://kite2.site/dialogue_lab/save_dialogue.php`)
+- **Activation:** In `app.js` via `DataLogger.setAutoUpload(true)`
+- **Data:** Conversation histories, metadata (mode, scenario ID, timestamps)
+- **Fallback:** When offline, conversations are temporarily stored in `localStorage` and uploaded when connection is restored
+- **UI Notice:** Users are informed about storage via a notice in the sidebar and next to the mode badge
+
+> **📢 Privacy Notice:** This application automatically stores conversation histories on a server. Users are informed about this in the UI (info box in sidebar and next to mode badge).
+
 ## 6. Deployment & Configuration
 
 1. **Frontend:** Host the repository on GitHub Pages.
 2. **Proxy:** Upload `chat.php` to a web server with HTTPS support.
-3. **Configuration:** Adjust the `PROXY_URL` in `src/js/core/config.js` to point to the actual path of your proxy script.
+3. **Configuration:** 
+   - Adjust the `PROXY_URL` in `src/js/core/config.js` to point to the actual path of your proxy script
+   - Set `DATALOGGER_BACKEND` in `src/js/core/config.js` to your server endpoint for conversation storage
 4. **Important for GitHub Pages:** Since GitHub Pages runs on Linux servers, the file system is **case-sensitive**. Ensure that filenames in the code match the filesystem exactly. Avoid spaces in filenames (use `snake_case` instead).
 
 ### Multi-Branch Deployment

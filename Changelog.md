@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.31.0] - 2026-08-05
+
+### Fixed
+- **Module Import Paths**: Fixed incorrect import paths causing 404 errors:
+    - `app.js`: Corrected `../config.js` → `./config.js`, `../state.js` → `./state.js`, `windowHandlers.js` → `windowHandler.js` (typo fix)
+    - `ui.js`: Added missing `.js` extension to `../core/config` import
+    - `chat.js`: Added missing `.js` extension to `../core/config` import
+- **Feedback Button Visibility**: Feedback button now visible in sidebar from the start (previously hidden after scenario load). Removed `setExerciseActionsVisible(false)` calls from `contentLoader.js` and `state.js`.
+- **Scenario ID Preservation**: Added missing `id` and `type` fields to `ScenarioService._active` in `scenario.js` to prevent "Exercise undefined not found" errors when restarting conversations.
+- **Restart Function Reference**: Added missing import of `restartTransformationExercise` from `modeManager.js` in `app.js`.
+- **Deprecated Meta Tag**: Updated `apple-mobile-web-app-capable` to `mobile-web-app-capable`.
+
+### Added
+- **Data Privacy Notices**: Added visible data storage notifications in UI:
+    - Info box in sidebar: "ℹ️ Gespräche werden serverseitig gespeichert"
+    - Notice next to mode badge for mobile/closed sidebar visibility
+- **DataLogger Documentation**: Updated `README.md` with comprehensive documentation for automatic conversation storage feature.
+
+### Changed
+- **Documentation**: Updated `README.md` (German & English) to include:
+    - Automatic Server Storage feature description
+    - DataLogger configuration details (`DATALOGGER_BACKEND` endpoint)
+    - Updated services table with `dataLogger.js` and `contentLoader.js`
+    - Privacy notice for users
+
+---
+
 ## [0.30.0] - 2026-08-05
 
 ### Changed
