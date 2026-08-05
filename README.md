@@ -22,23 +22,21 @@ Das Projekt folgt einem modernen, service-orientierten JavaScript-Ansatz (ES6 Mo
 - **Frontend:** Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript).
 - **Backend-Proxy:** Ein serverseitiges Skript (z.B. PHP `chat.php`), das die API-Keys kapselt.
 - **Sicherheit (CORS):** Der Proxy akzeptiert nur Anfragen vom definierten **Origin** der Web-App (z.B. `https://ryanaella.github.io`).
-- **KI-Modell:** OpenAI (Konfigurationswerte werden zentral in der `src/js/config.js` verwaltet).
+- **KI-Modell:** OpenAI (Konfigurationswerte werden zentral in der `src/js/core/config.js` verwaltet).
 
 ## 3. Repository-Dateistruktur
 
 ### Kern-Module (`src/js/`)
 
-| Modul             | Verantwortung                                                                              |
-| :---------------- | :----------------------------------------------------------------------------------------- |
-| **`app.js`**      | **Controller**: Orchestriert den Programmfluss und initialisiert die Services.             |
-| **`ui.js`**       | **View-Manager**: Verwaltet DOM-Elemente, Event-Listener und das Chat-Rendering.           |
-| **`avatar.js`**   | **Visuals**: Steuert das Multi-Layer-System, Animationen (Blinken) und Lippensynchronität. |
-| **`speech.js`**   | **Audio-Service**: Kapselt TTS (Sprachausgabe) und STT (Diktierfunktion).                  |
-| **`chat.js`**     | **State-Manager**: Hält die Gesprächshistorie und bereitet Transkripte vor.                |
-| **`scenario.js`** | **Data-Service**: Lädt Übungspools und verwaltet das aktive Szenario-State.                |
-| **`api.js`**      | **Network**: Handling der API-Anfragen mit integriertem Caching.                           |
-| **`utils.js`**    | **Helpers**: Statische Funktionen für Markdown-Parsing und Text-Bereinigung.               |
-| **`profiles.js`** | **Assets**: Konfiguration der Charakter-Pools und Grafik-Ebenen.                           |
+Die Codebasis ist modular nach Verantwortungsbereichen organisiert:
+
+| Ordner       | Verantwortung                          | Enthaltene Module                     |
+|--------------|-----------------------------------------|---------------------------------------|
+| **`core/`**  | **Controller**: Application Foundation | `app.js`, `config.js`                 |
+| **`features/`** | **Domain Logic** | `avatar.js` (Visuals), `chat.js` (State-Manager), `profiles.js` (Assets), `scenario.js` (Data-Service), `speech.js` (Audio-Service) |
+| **`services/`** | **Network** | `api.js` (API-Anfragen & Caching) |
+| **`ui/`**    | **View-Manager** | `ui.js` (DOM-Elemente & Rendering) |
+| **`utils/`** | **Helpers** | `utils.js` (Markdown-Parsing & Text-Bereinigung) |
 
 ### Daten & Inhalte
 
@@ -105,7 +103,7 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 
 1. **Frontend:** Repository auf GitHub Pages hosten.
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
-3. **Konfiguration:** Die `PROXY_URL` in `src/js/config.js` an den Pfad deines Proxy-Skripts anpassen.
+3. **Konfiguration:** Die `PROXY_URL` in `src/js/core/config.js` an den Pfad deines Proxy-Skripts anpassen.
 4. **Wichtig für GitHub Pages:** Da GitHub Pages auf Linux-Servern läuft, ist das Dateisystem **case-sensitive**. Achte strikt darauf, dass Dateinamen im Code exakt so geschrieben werden wie im Dateisystem. Vermeide Leerzeichen in Dateinamen (nutze stattdessen `snake_case`).
 
 ### Multi-Branch Deployment
@@ -164,23 +162,21 @@ The project follows a modern, service-oriented JavaScript approach (ES6 Modules)
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript).
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) that encapsulates the API keys.
 - **Security (CORS):** The proxy only accepts requests from the defined **Origin** of the web app (e.g., `https://ryanaella.github.io`).
-- **AI Model:** OpenAI (configuration values are managed centrally in `src/js/config.js`).
+- **AI Model:** OpenAI (configuration values are managed centrally in `src/js/core/config.js`).
 
 ## 3. Repository File Structure
 
 ### Core Modules (`src/js/`)
 
-| Module            | Responsibility                                                                        |
-| :---------------- | :------------------------------------------------------------------------------------ |
-| **`app.js`**      | **Controller**: Orchestrates the application flow and initializes services.           |
-| **`ui.js`**       | **View-Manager**: Manages DOM elements, event listeners, and chat rendering.          |
-| **`avatar.js`**   | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-syncing. |
-| **`speech.js`**   | **Audio-Service**: Encapsulates TTS (Speech Output) and STT (Dictation).              |
-| **`chat.js`**     | **State-Manager**: Maintains conversation history and prepares transcripts.           |
-| **`scenario.js`** | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
-| **`api.js`**      | **Network**: Handles API requests with integrated caching.                            |
-| **`utils.js`**    | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
-| **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                      |
+The codebase is organized modularly by responsibility:
+
+| Folder        | Responsibility                          | Contained Modules                     |
+|---------------|-----------------------------------------|---------------------------------------|
+| **`core/`**   | **Controller**: Application Foundation | `app.js`, `config.js`                 |
+| **`features/`** | **Domain Logic** | `avatar.js` (Visuals), `chat.js` (State-Manager), `profiles.js` (Assets), `scenario.js` (Data-Service), `speech.js` (Audio-Service) |
+| **`services/`** | **Network** | `api.js` (API requests & Caching) |
+| **`ui/`**     | **View-Manager** | `ui.js` (DOM elements & Rendering) |
+| **`utils/`**  | **Helpers** | `utils.js` (Markdown parsing & Text cleaning) |
 
 ### Data & Content
 
@@ -247,7 +243,7 @@ The script receives the payload from the frontend, adds the Authorization header
 
 1. **Frontend:** Host the repository on GitHub Pages.
 2. **Proxy:** Upload `chat.php` to a web server with HTTPS support.
-3. **Configuration:** Adjust the `PROXY_URL` in `src/js/config.js` to point to the actual path of your proxy script.
+3. **Configuration:** Adjust the `PROXY_URL` in `src/js/core/config.js` to point to the actual path of your proxy script.
 4. **Important for GitHub Pages:** Since GitHub Pages runs on Linux servers, the file system is **case-sensitive**. Ensure that filenames in the code match the filesystem exactly. Avoid spaces in filenames (use `snake_case` instead).
 
 ### Multi-Branch Deployment

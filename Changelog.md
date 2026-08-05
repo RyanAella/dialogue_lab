@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.30.0] - 2026-08-05
+
+### Changed
+- **Modular Codebase Structure**: Refactored the JavaScript codebase into a logical, feature-based folder structure under `src/js/` for improved maintainability and scalability:
+    - `core/` - Application foundation (app.js, config.js)
+    - `features/` - Domain-specific modules (avatar.js, chat.js, profiles.js, scenario.js, speech.js)
+    - `services/` - External service integrations (api.js)
+    - `ui/` - User interface components (ui.js)
+    - `utils/` - Shared utility functions (utils.js)
+- **Updated Entry Point**: Changed `index.html` script reference from `src/js/app.js` to `src/js/core/app.js`.
+- **Documentation**: Updated `README.md` (German & English) to reflect the new modular folder structure.
+
+---
+
 ## [0.29.3] - 2026-07-24
 
 ### Fixed
@@ -228,7 +242,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - **Documentation Alignment:** Fully synchronized the German and English versions of the `README.md` across both Lab editions (Simulation & Transformation) to ensure content parity and structural symmetry.
-- **Path Accuracy:** Updated file paths (e.g., `src/js/config.js`) in documentation to reflect the actual project structure.
+- **Path Accuracy:** Updated file paths (e.g., `src/js/core/config.js`) in documentation to reflect the actual project structure.
 
 ### Fixed
 

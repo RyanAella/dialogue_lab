@@ -1,4 +1,4 @@
-import { Utils } from "./utils.js";
+import { Utils } from "../utils/utils.js";
 
 /**
  * Keywords used to filter and select the most appropriate system voices.

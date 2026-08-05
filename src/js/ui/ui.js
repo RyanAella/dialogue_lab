@@ -1,6 +1,6 @@
-import { Avatar } from "./avatar.js";
-import { Speech } from "./speech.js";
-import { Utils } from "./utils.js";
+import { Avatar } from "../features/avatar.js";
+import { Speech } from "../features/speech.js";
+import { Utils } from "../utils/utils.js";
 
 /**
  * @module UI

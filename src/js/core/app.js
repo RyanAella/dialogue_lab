@@ -1,10 +1,10 @@
-import { API } from "./api.js";
-import { Chat } from "./chat.js";
+import { API } from "../services/api.js";
+import { Chat } from "../features/chat.js";
 import { APP_CONFIG } from "./config.js";
-import { getProfilePool } from "./profiles.js";
-import { ScenarioService } from "./scenario.js";
-import { UI } from "./ui.js";
-import { Utils } from "./utils.js";
+import { getProfilePool } from "../features/profiles.js";
+import { ScenarioService } from "../features/scenario.js";
+import { UI } from "../ui/ui.js";
+import { Utils } from "../utils/utils.js";
 
 /**
  * @module App
