@@ -22,7 +22,6 @@ export const APP_CONFIG = {
   ICH_BOTSCHAFT_TEMPERATURE: 0.4,
   EXERCISES_FILE: "src/data/exercises.json",
   FALLBACK_PROMPTS: {
-    transformation: "Du bist ein erfahrener Kommunikations-Coach. Analysiere die Umformulierungen des Nutzers kritisch und gib konstruktives Feedback.",
     simulation: "Du bist ein Mentor. Analysiere das Gesprächsprotokoll und gib hilfreiches Feedback."
   }
 };
@@ -71,7 +70,6 @@ export const MESSAGE_STYLES = {
  * Configuration for mode badge display.
  */
 export const MODE_BADGE_CONFIG = {
-  transformation: { label: "Modus: Übungen", cls: "bg-violet-100 text-violet-700 border border-violet-200" },
   simulation: { label: "Modus: Simulationen", cls: "bg-slate-100 text-slate-700 border border-slate-200" },
 };
 
@@ -125,7 +123,6 @@ export const MENTOR_KEYWORDS = ["mentor", "feedback", "coach"];
  * Exercise type constants.
  */
 export const EXERCISE_TYPES = {
-  TRANSFORMATION: "TRANSFORMATION",
   SIMULATION: "SIMULATION",
 };
 
@@ -153,22 +150,18 @@ export const SCENARIO_FILE_KEYS = {
 export const FEEDBACK_MESSAGES = {
   loading: {
     title: {
-      transformation: "Coach analysiert das Gespräch...",
       simulation: "Mentor analysiert das Gespräch...",
     },
     status: {
-      transformation: "Coach analysiert...",
       simulation: "Mentor analysiert...",
     },
   },
   modal: {
     title: {
-      transformation: "<span>📊</span> Coach-Analyse",
       simulation: "<span>📊</span> Mentor-Feedback",
     },
   },
   tts: {
-    transformation: "Coach",
     simulation: "Mentor",
   },
   status: {
@@ -198,10 +191,6 @@ export const EXPORT_MESSAGES = {
     },
   },
   modeLabels: {
-    transformation: {
-      display: "Transformationstraining",
-      filePrefix: "Transformation",
-    },
     simulation: {
       display: "Simulation",
       filePrefix: "Simulation",
