@@ -1,6 +1,6 @@
-import { API } from "./api.js";
-import { APP_CONFIG } from "./config.js";
-import { Utils } from "./utils.js";
+import { API } from "../services/api.js";
+import { APP_CONFIG } from "../core/config.js";
+import { Utils } from "../utils/utils.js";
 
 /**
  * @module ScenarioService

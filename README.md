@@ -105,7 +105,7 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 
 1. **Frontend:** Repository auf GitHub Pages hosten.
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
-3. **Konfiguration:** Die `PROXY_URL` in `src/js/config.js` an den Pfad deines Proxy-Skripts anpassen.
+3. **Konfiguration:** Die `PROXY_URL` in `src/js/core/config.js` an den Pfad deines Proxy-Skripts anpassen.
 
 ### Multi-Branch Deployment
 
@@ -246,7 +246,7 @@ The script receives the payload from the frontend, adds the Authorization header
 
 1. **Frontend:** Host the repository on GitHub Pages.
 2. **Proxy:** Place `chat.php` on a web server with HTTPS support.
-3. **Configuration:** Adjust the `PROXY_URL` in `src/js/config.js` to point to your proxy script.
+3. **Configuration:** Adjust the `PROXY_URL` in `src/js/core/config.js` to point to your proxy script.
 
 ### Multi-Branch Deployment
 

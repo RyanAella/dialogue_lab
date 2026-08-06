@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.28.0] - 2026-08-06
+
+### Changed
+- **Modular Codebase Structure**: Refactored the JavaScript codebase into a logical, feature-based folder structure under `src/js/` for improved maintainability and scalability:
+  - `core/` - Application foundation (app.js, config.js)
+  - `features/` - Domain-specific modules (avatar.js, chat.js, profiles.js, scenario.js, speech.js)
+  - `services/` - External service integrations (api.js)
+  - `ui/` - User interface components (ui.js)
+  - `utils/` - Shared utility functions (utils.js)
+- **Updated Entry Point**: Changed `index.html` script reference from `src/js/app.js` to `src/js/core/app.js`.
+- **Import Paths**: Updated all relative import paths across the codebase to reflect the new modular folder structure
+
+### Fixed
+- **Avatar Container Positioning**: Added `relative` positioning class to mobile and desktop avatar containers in `index.html` to ensure proper layer stacking
+- **Documentation**: Updated `README.md` configuration references from `src/js/config.js` to `src/js/core/config.js`
+
+---
+
 ## [0.27.0] - 2026-07-10
 
 ### Added
