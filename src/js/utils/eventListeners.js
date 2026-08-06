@@ -5,7 +5,6 @@
 
 import { UI } from "../ui/ui.js";
 import { DataLogger } from "../services/dataLogger.js";
-import { APP_MODES } from "../core/config.js";
 import { handleFeedback, closeFeedbackModal } from "../features/feedback.js";
 import { downloadCurrentTranscript } from "../features/export.js";
 import { STATE } from "../core/state.js";
@@ -20,7 +19,6 @@ import { handleSend, handleNextExercise } from "./messageHandlers.js";
  */
 export function setupEventListeners(handlers) {
     const {
-        switchToTransformationMode,
         switchToRoleplayMode,
         loadContent
     } = handlers;
@@ -29,11 +27,7 @@ export function setupEventListeners(handlers) {
     UI.elements.modeSelect?.addEventListener("change", async (e) => {
         await DataLogger.endConversation();
 
-        if (e.target.value === APP_MODES.TRANSFORMATION) {
-            await switchToTransformationMode();
-        } else {
-            await switchToRoleplayMode();
-        }
+        await switchToRoleplayMode();
     });
 
     // Scenario Selector

@@ -6,11 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.32.0] - 2025-08-06
+
+### Removed
+- **Transformation Mode**:
+  - Complete removal of transformation exercise functionality, including `switchToTransformationMode()` and `restartTransformationExercise()`.
+  - Removed `TRANSFORMATION` from `APP_MODES` and `EXERCISE_TYPES` in `config.js`.
+  - Cleaned up transformation-specific UI texts, event listeners, and global exports.
+
+### Changed
+- **Mode Management**:
+  - `initializeCurrentMode()` now enforces `ROLEPLAY` mode only.
+- **File Naming**:
+  - Fixed typos: `src/data/character.js` -> `src/data/characters.js` (deleted singular file).
+  - Fixed typos: `src/js/ui/windowHandler.js` -> `src/js/ui/windowHandlers.js` (deleted singular file).
+  - Updated import in `profiles.js` to reference `characters.js`.
+
+### Fixed
+- Restored `UI.setExerciseActionsVisible(false)` in `state.js` (previously removed by mistake).
+- Removed dead code and unused imports related to transformation mode.
+
+---
+
 ## [0.31.0] - 2026-08-05
 
 ### Fixed
 - **Module Import Paths**: Fixed incorrect import paths causing 404 errors:
-    - `app.js`: Corrected `../config.js` → `./config.js`, `../state.js` → `./state.js`, `windowHandlers.js` → `windowHandler.js` (typo fix)
+    - `app.js`: Corrected `../config.js` → `./config.js`, `../state.js` → `./state.js`, `windowHandlers.js` → `windowHandlers.js` (typo fix)
     - `ui.js`: Added missing `.js` extension to `../core/config` import
     - `chat.js`: Added missing `.js` extension to `../core/config` import
 - **Feedback Button Visibility**: Feedback button now visible in sidebar from the start (previously hidden after scenario load). Removed `setExerciseActionsVisible(false)` calls from `contentLoader.js` and `state.js`.

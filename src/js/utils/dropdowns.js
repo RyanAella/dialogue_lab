@@ -52,15 +52,3 @@ export async function initScenarioDropdown() {
         UI_TEXTS.input.chooseScenario,
     );
 }
-
-/**
- * Initializes the transformation exercise dropdown.
- * @async
- */
-export async function initExerciseDropdown() {
-    await initDropdown(
-        EXERCISE_TYPES.TRANSFORMATION,
-        UI.elements.exerciseSelect,
-        UI_TEXTS.input.chooseExercise,
-    );
-}

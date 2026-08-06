@@ -8,15 +8,14 @@ import { DataLogger } from "../services/dataLogger.js";
 import { APP_MODES, EXERCISE_TYPES, UI_TEXTS } from "./config.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE, resetState, resetUI, resetSidebarButtons } from "./state.js";
-import { appendPartnerMessage, updateInputAndStatus, showBriefingError } from "../ui/uiHelpers.js";
-import { initScenarioDropdown, initExerciseDropdown } from "../utils/dropdowns.js";
-import { getTransformationProgressText } from "../utils/messageHandlers.js";
+import { updateInputAndStatus, showBriefingError } from "../ui/uiHelpers.js";
+import { initScenarioDropdown } from "../utils/dropdowns.js";
 
 /**
  * Resets the application state and UI when switching between different modes or scenarios.
  * Prepares the sidebar buttons, clears chat history, and resets local indices.
  *
- * @param {string} mode - The mode to initialize (APP_MODES.ROLEPLAY or APP_MODES.TRANSFORMATION).
+ * @param {string} mode - The mode to initialize (APP_MODES.ROLEPLAY).
  * @returns {void}
  */
 export function resetAppForMode(mode) {
@@ -29,16 +28,12 @@ export function resetAppForMode(mode) {
     UI.elements.chatWindow.closest("main")?.scrollTo(0, 0);
     UI.elements.briefingContent.classList.remove("hidden");
     UI.setBriefingExpanded(true);
-    UI.updateSidebarVisibility(mode);
     UI.setModeBadge(mode);
 
-    const isTransform = mode === APP_MODES.TRANSFORMATION;
     resetSidebarButtons();
 
     if (UI.elements.feedbackBtn) {
-        UI.elements.feedbackBtn.innerHTML = isTransform
-            ? UI_TEXTS.feedbackBtn.transformation
-            : UI_TEXTS.feedbackBtn.roleplay;
+        UI.elements.feedbackBtn.innerHTML = UI_TEXTS.feedbackBtn.roleplay;
     }
 }
 
@@ -88,70 +83,11 @@ export async function switchToRoleplayMode() {
 }
 
 /**
- * Configures the application for Transformation mode.
- * Populates exercise dropdowns and loads the specified or default exercise.
- *
- * @async
- * @param {string} [exerciseId="ich_botschaften_basis"] - The ID of the exercise to activate.
- */
-export async function switchToTransformationMode(exerciseId = "ich_botschaften_basis") {
-    await DataLogger.endConversation();
-    resetAppForMode(APP_MODES.TRANSFORMATION);
-    updateInputAndStatus(true, UI_TEXTS.input.chooseExercise, "idle", UI_TEXTS.status.transformationActive);
-
-    await initExerciseDropdown();
-
-    const transformationExercises = ScenarioService.getExercisesByType(EXERCISE_TYPES.TRANSFORMATION);
-    if (transformationExercises.length > 0) {
-        UI.elements.exerciseSelect.value = exerciseId || transformationExercises[0].id;
-        UI.elements.exerciseSelect.dispatchEvent(new Event("change"));
-    } else {
-        updateInputAndStatus(true, UI_TEXTS.errors.noExercises, "idle", UI_TEXTS.errors.noTransformations);
-    }
-}
-
-/**
- * Initializes the current mode based on STATE.currentMode.
+ * Initializes the current mode.
  *
  * @async
  */
 export async function initializeCurrentMode() {
-    if (STATE.currentMode === APP_MODES.TRANSFORMATION) {
-        await switchToTransformationMode();
-    } else {
-        await switchToRoleplayMode();
-    }
-}
-
-/**
- * Resets the current transformation session.
- * Re-shuffles statements, clears the local history, and restarts the progression
- * from the first task.
- * @returns {void}
- */
-export function restartTransformationExercise() {
-    if (STATE.currentMode !== APP_MODES.TRANSFORMATION) return;
-
-    resetState();
-    STATE.activeStatements = ScenarioService.getStatements(true);
-
-    resetUI();
-    resetSidebarButtons();
-
-    if (UI.elements.feedbackBtn) {
-        UI.elements.feedbackBtn.innerHTML = UI_TEXTS.feedbackBtn.transformation;
-    }
-
-    const config = ScenarioService.getActive();
-    if (!config) return;
-
-    const statement = STATE.activeStatements[STATE.exerciseIndex];
-    if (!statement) return;
-
-    const taskText = `"${statement}"\n\n${config.shortInstruction}`;
-
-    appendPartnerMessage(taskText, config);
-    if (STATE.ttsEnabled) UI.speak(taskText, config.roleName);
-    UI.updateInputUI(false, UI_TEXTS.input.transformationRestart);
-    UI.updateStatus("idle", `${getTransformationProgressText()} (${UI_TEXTS.status.restarting})`);
+    STATE.currentMode = APP_MODES.ROLEPLAY;
+    await switchToRoleplayMode();
 }

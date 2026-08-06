@@ -1,5 +1,5 @@
 import { API } from "../services/api.js";
-import {APP_CONFIG, EXERCISE_TYPES, SCENARIO_DEFAULTS, SCENARIO_FILE_KEYS} from "../core/config.js";
+import {APP_CONFIG, SCENARIO_DEFAULTS, SCENARIO_FILE_KEYS} from "../core/config.js";
 import { Utils } from "../utils/utils.js";
 
 /**
@@ -60,10 +60,7 @@ export const ScenarioService = {
     if (!exercise) throw new Error(`Exercise ${id} not found`);
 
 
-    const isTransform = exercise.type === EXERCISE_TYPES.TRANSFORMATION;
-    const filePath = isTransform
-        ? exercise.config[SCENARIO_FILE_KEYS.INSTRUCTION_FILE]
-        : exercise.config[SCENARIO_FILE_KEYS.SCENARIO_FILE];
+    const filePath = exercise.config[SCENARIO_FILE_KEYS.SCENARIO_FILE];
 
     const data = await API.fetchCompleteScenario(filePath);
 
@@ -76,16 +73,6 @@ export const ScenarioService = {
       shortInstruction: data.shortInstruction || SCENARIO_DEFAULTS.SHORT_INSTRUCTION,
     };
 
-    // Load additional statements if it's a transformation exercise
-    if (isTransform && exercise.config[SCENARIO_FILE_KEYS.SOURCE_FILE]) {
-      const resp = await fetch(`${exercise.config[SCENARIO_FILE_KEYS.SOURCE_FILE]}?t=${Date.now()}`);
-      const text = await resp.text();
-      this._statements = text
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter((l) => l && !l.startsWith(SCENARIO_DEFAULTS.COMMENT_PREFIX));
-    }
-
     return this._active;
   },
 
@@ -95,16 +82,5 @@ export const ScenarioService = {
    */
   getActive() {
     return this._active;
-  },
-
-  /**
-   * Returns the statements for the active transformation exercise.
-   * @param {boolean} [shuffled=false] - Whether to return a shuffled copy.
-   * @returns {string[]}
-   */
-  getStatements(shuffled = false) {
-    return shuffled
-        ? Utils.shuffleArray(this._statements)
-        : [...this._statements];
   },
 };

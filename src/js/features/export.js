@@ -8,7 +8,7 @@ import { UI } from '../ui/ui.js';
 import { Utils } from '../utils/utils.js';
 import { Chat } from './chat.js';
 import { ScenarioService } from './scenario.js';
-import { EXERCISE_TYPES, EXPORT_MESSAGES } from '../core/config.js';
+import { EXPORT_MESSAGES } from '../core/config.js';
 
 /**
  * Downloads the current chat transcript as a text file.
@@ -18,12 +18,9 @@ export function downloadCurrentTranscript() {
     if (!config) return;
 
     const STATE = window.STATE;
-    const isTransform = STATE.currentMode === EXERCISE_TYPES.TRANSFORMATION;
     const briefing = UI.elements.briefingContent?.innerText.trim() || "";
     const dateString = new Date().toLocaleString();
-    const modeLabel = isTransform
-        ? EXPORT_MESSAGES.modeLabels.transformation.display
-        : EXPORT_MESSAGES.modeLabels.simulation.display;
+    const modeLabel = EXPORT_MESSAGES.modeLabels.simulation.display;
 
     let fileContent = `${EXPORT_MESSAGES.transcript.header}${config.title}\n`;
     fileContent += `${EXPORT_MESSAGES.transcript.modeLabel}${modeLabel}\n`;
@@ -39,9 +36,7 @@ export function downloadCurrentTranscript() {
         let sender = msg.role === "user"
             ? EXPORT_MESSAGES.transcript.senders.user
             : config.roleName;
-        if (isTransform && msg.role === "assistant" && !msg.content.includes('"')) {
-            sender = EXPORT_MESSAGES.transcript.senders.coach;
-        }
+
         fileContent += `${sender}:\n${msg.content}\n\n`;
     });
 
@@ -51,13 +46,9 @@ export function downloadCurrentTranscript() {
     }
 
     const date = Utils.getFormattedDate();
-    const modePrefix = isTransform
-        ? EXPORT_MESSAGES.modeLabels.transformation.filePrefix
-        : EXPORT_MESSAGES.modeLabels.simulation.filePrefix;
+    const modePrefix = EXPORT_MESSAGES.modeLabels.simulation.filePrefix;
     let filenameParts = [modePrefix];
-    const activeSelect = isTransform
-        ? UI.elements.exerciseSelect
-        : UI.elements.scenarioSelect;
+    const activeSelect = UI.elements.scenarioSelect;
 
     if (activeSelect && activeSelect.selectedIndex > 0) {
         const scenarioTitle = Utils.slugify(activeSelect.options[activeSelect.selectedIndex].text);

@@ -45,11 +45,9 @@ export function resetState() {
  */
 export function resetUI() {
     UI.elements.chatWindow.innerHTML = "";
-    // Feedback button stays visible but disabled - only hide export button
     if (UI.elements.exportTranscriptBtn) {
         UI.elements.exportTranscriptBtn.classList.add("hidden");
     }
-    // Reset sidebar buttons to initial disabled state (visible but disabled)
     resetSidebarButtons();
 }
 

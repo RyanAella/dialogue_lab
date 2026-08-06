@@ -22,7 +22,6 @@ export const APP_CONFIG = {
   ICH_BOTSCHAFT_TEMPERATURE: 0.4,
   EXERCISES_FILE: "src/data/exercises.json",
   FALLBACK_PROMPTS: {
-    transformation: "Du bist ein erfahrener Kommunikations-Coach. Analysiere die Umformulierungen des Nutzers kritisch und gib konstruktives Feedback.",
     simulation: "Du bist ein Mentor. Analysiere das Gesprächsprotokoll und gib hilfreiches Feedback."
   }
 };
@@ -71,7 +70,6 @@ export const MESSAGE_STYLES = {
  * Configuration for mode badge display.
  */
 export const MODE_BADGE_CONFIG = {
-  transformation: { label: "Modus: Übungen", cls: "bg-violet-100 text-violet-700 border border-violet-200" },
   simulation: { label: "Modus: Simulationen", cls: "bg-slate-100 text-slate-700 border border-slate-200" },
 };
 
@@ -125,7 +123,6 @@ export const MENTOR_KEYWORDS = ["mentor", "feedback", "coach"];
  * Exercise type constants.
  */
 export const EXERCISE_TYPES = {
-  TRANSFORMATION: "TRANSFORMATION",
   SIMULATION: "SIMULATION",
 };
 
@@ -153,22 +150,18 @@ export const SCENARIO_FILE_KEYS = {
 export const FEEDBACK_MESSAGES = {
   loading: {
     title: {
-      transformation: "Coach analysiert das Gespräch...",
       simulation: "Mentor analysiert das Gespräch...",
     },
     status: {
-      transformation: "Coach analysiert...",
       simulation: "Mentor analysiert...",
     },
   },
   modal: {
     title: {
-      transformation: "<span>📊</span> Coach-Analyse",
       simulation: "<span>📊</span> Mentor-Feedback",
     },
   },
   tts: {
-    transformation: "Coach",
     simulation: "Mentor",
   },
   status: {
@@ -198,10 +191,6 @@ export const EXPORT_MESSAGES = {
     },
   },
   modeLabels: {
-    transformation: {
-      display: "Transformationstraining",
-      filePrefix: "Transformation",
-    },
     simulation: {
       display: "Simulation",
       filePrefix: "Simulation",
@@ -274,7 +263,6 @@ export const AVATAR_ANIMATION = {
  */
 export const APP_MODES = {
   ROLEPLAY: "roleplay",
-  TRANSFORMATION: "transformation",
 };
 
 /**
@@ -284,20 +272,17 @@ export const APP_MODES = {
 export const UI_TEXTS = {
   // Button Labels
   feedbackBtn: {
-    transformation: "<span>📊</span> Auswertung erstellen",
     roleplay: "<span>📊</span> Feedback erhalten",
   },
   // Subtitles
   subtitles: {
     roleplay: "Lies das Briefing und starte das Gespräch mit einer Nachricht.",
-    transformation: (title, instruction) => `${title}: ${instruction}`,
   },
   // Status Messages
   status: {
     loading: "Lade...",
     ready: "Bereit",
     roleplayActive: "Simulationen aktiv",
-    transformationActive: "Transformationen aktiv",
     allExercisesDone: "Alle Aussagen bearbeitet. Klicke jetzt auf 'Auswertung erstellen', um dein abschließendes Feedback zu erhalten.",
     exerciseComplete: "Übung abgeschlossen",
     sending: "Sende...",
@@ -308,7 +293,6 @@ export const UI_TEXTS = {
   errors: {
     prefix: "Fehler:",
     noSimulations: "Keine Rollenspiel-Szenarien verfügbar.",
-    noTransformations: "Keine Transformations-Übungen verfügbar.",
     noExercises: "Keine Übungen verfügbar.",
     noEntriesAvailable: "Keine Einträge verfügbar",
     loadingError: "Ladefehler.",
@@ -318,9 +302,6 @@ export const UI_TEXTS = {
   // Input placeholders
   input: {
     roleplay: (roleName) => `Nachricht an ${roleName}...`,
-    transformation: "Eingabe...",
-    transformationNext: "Deine neue Umformulierung...",
-    transformationRestart: "Eingabe...",
     chooseScenario: "Wähle ein Szenario...",
     chooseExercise: "Wähle eine Übung...",
     allDone: "Alle Aufgaben erledigt.",
@@ -344,10 +325,5 @@ export const PROMPT_TEMPLATES = {
     initialTopicGuidance: "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.",
     systemPrompt: (systemPrompt, partnerPrompt) =>
         `${systemPrompt}\n\n${partnerPrompt}`,
-  },
-  // Transformation mode prompts
-  transformation: {
-    userEvaluation: (statement, userVal) =>
-        `Aufgabe: Formuliere die Aussage "${statement}" um.\n\nEingabe des Nutzers: "${userVal}"\n\nGib eine kurze, hilfreiche Rückmeldung (max. 2-3 Sätze) zu dieser spezifischen Umformulierung.`,
   },
 };
