@@ -5,11 +5,12 @@
 
 import { UI } from "../ui/ui.js";
 import { DataLogger } from "./dataLogger.js";
-import { UI_TEXTS } from "../core/config.js";
+import { UI_TEXTS, PROMPT_TEMPLATES } from "../core/config.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE } from "../core/state.js";
 import { Utils } from "../utils/utils.js";
 import { getProfilePool } from "../features/profiles.js";
+import {Chat} from "../features/chat.js";
 
 /**
  * Main entry point for loading specific content (scenarios or exercises).
@@ -27,6 +28,11 @@ export async function loadContent(exerciseId) {
 
     try {
         const config = await ScenarioService.loadScenario(exerciseId);
+
+        // Setze System-Prompt SOFORT mit klarem Warten-Befehl (nicht erst bei erster Nachricht)
+        Chat.setSystemPrompt(
+            `KRITISCHE REGEL: Warte immer, bis der Benutzer das Thema explizit einführt. Beginne NIE von selbst Gespräche oder führe Themen ein. Überlasse die Initiative komplett dem Nutzer.\n\n${PROMPT_TEMPLATES.roleplay.roleAdherence}\n\n${config.prompts.system}\n\n${config.prompts.partner}`
+        );
 
         DataLogger.updateConversationMetadata({
             mode: STATE.currentMode,
