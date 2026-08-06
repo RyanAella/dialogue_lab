@@ -274,7 +274,6 @@ export const AVATAR_ANIMATION = {
  */
 export const APP_MODES = {
   ROLEPLAY: "roleplay",
-  TRANSFORMATION: "transformation",
 };
 
 /**
@@ -284,20 +283,17 @@ export const APP_MODES = {
 export const UI_TEXTS = {
   // Button Labels
   feedbackBtn: {
-    transformation: "<span>📊</span> Auswertung erstellen",
     roleplay: "<span>📊</span> Feedback erhalten",
   },
   // Subtitles
   subtitles: {
     roleplay: "Lies das Briefing und starte das Gespräch mit einer Nachricht.",
-    transformation: (title, instruction) => `${title}: ${instruction}`,
   },
   // Status Messages
   status: {
     loading: "Lade...",
     ready: "Bereit",
     roleplayActive: "Simulationen aktiv",
-    transformationActive: "Transformationen aktiv",
     allExercisesDone: "Alle Aussagen bearbeitet. Klicke jetzt auf 'Auswertung erstellen', um dein abschließendes Feedback zu erhalten.",
     exerciseComplete: "Übung abgeschlossen",
     sending: "Sende...",
@@ -308,7 +304,6 @@ export const UI_TEXTS = {
   errors: {
     prefix: "Fehler:",
     noSimulations: "Keine Rollenspiel-Szenarien verfügbar.",
-    noTransformations: "Keine Transformations-Übungen verfügbar.",
     noExercises: "Keine Übungen verfügbar.",
     noEntriesAvailable: "Keine Einträge verfügbar",
     loadingError: "Ladefehler.",
@@ -318,9 +313,6 @@ export const UI_TEXTS = {
   // Input placeholders
   input: {
     roleplay: (roleName) => `Nachricht an ${roleName}...`,
-    transformation: "Eingabe...",
-    transformationNext: "Deine neue Umformulierung...",
-    transformationRestart: "Eingabe...",
     chooseScenario: "Wähle ein Szenario...",
     chooseExercise: "Wähle eine Übung...",
     allDone: "Alle Aufgaben erledigt.",
@@ -344,10 +336,5 @@ export const PROMPT_TEMPLATES = {
     initialTopicGuidance: "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.",
     systemPrompt: (systemPrompt, partnerPrompt) =>
         `${systemPrompt}\n\n${partnerPrompt}`,
-  },
-  // Transformation mode prompts
-  transformation: {
-    userEvaluation: (statement, userVal) =>
-        `Aufgabe: Formuliere die Aussage "${statement}" um.\n\nEingabe des Nutzers: "${userVal}"\n\nGib eine kurze, hilfreiche Rückmeldung (max. 2-3 Sätze) zu dieser spezifischen Umformulierung.`,
   },
 };

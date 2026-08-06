@@ -9,7 +9,7 @@ import {
   FEMALE_CHARACTERS,
   MALE_CHARACTERS,
   ALL_CHARACTERS
-} from "../../data/character.js";
+} from "../../data/characters.js";
 
 /**
  * Maps scenario role labels to specific character pools.

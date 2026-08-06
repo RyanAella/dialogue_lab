@@ -1,6 +1,6 @@
 import { DataLogger } from "../services/dataLogger.js";
 import { APP_CONFIG, UI_TEXTS } from "./config.js";
-import "../ui/windowHandler.js";
+import "../ui/windowHandlers.js";
 import {UI} from "../ui/ui.js";
 import { handleSend, handleNextExercise } from "../utils/messageHandlers.js";
 import { setupEventListeners } from "../utils/eventListeners.js";
@@ -8,9 +8,7 @@ import { loadContent } from "../services/contentLoader.js";
 import {
   loadExercises,
   switchToRoleplayMode,
-  switchToTransformationMode,
-  initializeCurrentMode,
-  restartTransformationExercise
+  initializeCurrentMode
 } from "./modeManager.js";
 
 /**
@@ -34,7 +32,6 @@ async function startApp() {
   await loadExercises();
   await UI.init();
   setupEventListeners({
-    switchToTransformationMode,
     switchToRoleplayMode,
     loadContent
   });
@@ -51,9 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // Make key functions globally available for export.js and onclick attributes in index.html
-window.restartTransformationExercise = restartTransformationExercise;
 window.switchToRoleplayMode = switchToRoleplayMode;
-window.switchToTransformationMode = switchToTransformationMode;
 window.handleNextExercise = handleNextExercise;
 window.handleSend = handleSend;
 window.loadContent = loadContent;
