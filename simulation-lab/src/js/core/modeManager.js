@@ -8,15 +8,14 @@ import { DataLogger } from "../services/dataLogger.js";
 import { APP_MODES, EXERCISE_TYPES, UI_TEXTS } from "./config.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE, resetState, resetUI, resetSidebarButtons } from "./state.js";
-import { appendPartnerMessage, updateInputAndStatus, showBriefingError } from "../ui/uiHelpers.js";
-import { initScenarioDropdown, initExerciseDropdown } from "../utils/dropdowns.js";
-import { getTransformationProgressText } from "../utils/messageHandlers.js";
+import { updateInputAndStatus, showBriefingError } from "../ui/uiHelpers.js";
+import { initScenarioDropdown } from "../utils/dropdowns.js";
 
 /**
  * Resets the application state and UI when switching between different modes or scenarios.
  * Prepares the sidebar buttons, clears chat history, and resets local indices.
  *
- * @param {string} mode - The mode to initialize (APP_MODES.ROLEPLAY or APP_MODES.TRANSFORMATION).
+ * @param {string} mode - The mode to initialize (APP_MODES.ROLEPLAY).
  * @returns {void}
  */
 export function resetAppForMode(mode) {
@@ -29,16 +28,12 @@ export function resetAppForMode(mode) {
     UI.elements.chatWindow.closest("main")?.scrollTo(0, 0);
     UI.elements.briefingContent.classList.remove("hidden");
     UI.setBriefingExpanded(true);
-    UI.updateSidebarVisibility(mode);
     UI.setModeBadge(mode);
 
-    const isTransform = mode === APP_MODES.TRANSFORMATION;
     resetSidebarButtons();
 
     if (UI.elements.feedbackBtn) {
-        UI.elements.feedbackBtn.innerHTML = isTransform
-            ? UI_TEXTS.feedbackBtn.transformation
-            : UI_TEXTS.feedbackBtn.roleplay;
+        UI.elements.feedbackBtn.innerHTML = UI_TEXTS.feedbackBtn.roleplay;
     }
 }
 

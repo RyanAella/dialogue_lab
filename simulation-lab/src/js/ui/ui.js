@@ -67,16 +67,6 @@ export const UI = {
   },
 
   /**
-   * Updates the sidebar visibility or layout based on the current application mode.
-   * @param {string} mode - The active mode (e.g., 'roleplay', 'transformation').
-   * @todo Implement logic for transformation mode if needed.
-   */
-  updateSidebarVisibility(mode) {
-    const isTransformation = mode === "transformation";
-    this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
-  },
-
-  /**
    * Updates the global status box with a message and a colored visual indicator.
    * @param {string} type - The status type ('loading', 'error', or 'default').
    * @param {string} message - The text to display.
@@ -286,8 +276,7 @@ export const UI = {
   setModeBadge(mode) {
     const { modeBadge } = this.elements;
     if (!modeBadge) return;
-    const isTransformation = mode === "transformation";
-    const config = MODE_BADGE_CONFIG[isTransformation ? "transformation" : "simulation"];
+    const config = MODE_BADGE_CONFIG["simulation"];
     modeBadge.textContent = config.label;
     modeBadge.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.cls}`;
   },
@@ -437,31 +426,6 @@ export const UI = {
     if (chevron)
       chevron.style.transform = expanded ? "rotate(0deg)" : "rotate(-90deg)";
   },
-
-  /**
-   * Sets the visibility and state of exercise action buttons (feedback, reset, export).
-   * When hidden, also disables and applies opacity styles to feedback/reset buttons.
-   * @param {boolean} visible - Whether the buttons should be visible and enabled.
-   * @returns {void}
-   */
-  setExerciseActionsVisible(visible) {
-    const { exportTranscriptBtn, feedbackBtn, resetBtn } = this.elements;
-    if (exportTranscriptBtn) {
-      exportTranscriptBtn.classList.toggle("hidden", !visible);
-    }
-    if (feedbackBtn) {
-      feedbackBtn.classList.toggle("hidden", !visible);
-      feedbackBtn.disabled = !visible;
-      feedbackBtn.classList.toggle("opacity-50", !visible);
-      feedbackBtn.classList.toggle("cursor-not-allowed", !visible);
-    }
-    if (resetBtn) {
-      resetBtn.disabled = !visible;
-      resetBtn.classList.toggle("opacity-50", !visible);
-      resetBtn.classList.toggle("cursor-not-allowed", !visible);
-    }
-  },
-
   /**
    * Toggles the mobile navigation sidebar and the background overlay.
    * @param {boolean} [forceClose=false] - If true, always closes the menu.

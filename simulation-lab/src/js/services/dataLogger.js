@@ -186,10 +186,6 @@ export const DataLogger = {
         console.log(`Saved conversation to local storage: ${this._currentConversationId}`);
     },
 
-    getConversationId() {
-        return this._currentConversationId;
-    },
-
     addTurn(role, content, metadata = {}) {
         if (!this._currentConversationId) {
             const meta = {};

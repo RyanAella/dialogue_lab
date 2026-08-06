@@ -6,7 +6,7 @@
 import { API } from "../services/api.js";
 import { Chat } from "../features/chat.js";
 import { DataLogger } from "../services/dataLogger.js";
-import { APP_CONFIG, APP_MODES, UI_TEXTS, PROMPT_TEMPLATES } from "../core/config.js";
+import { APP_CONFIG, UI_TEXTS, PROMPT_TEMPLATES } from "../core/config.js";
 import { UI } from "../ui/ui.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE, enableSidebarButtons } from "../core/state.js";
@@ -47,71 +47,6 @@ export function prepareMessageSend(userVal) {
     UI.elements.userInput.value = "";
 
     return config;
-}
-
-/**
- * Handles message sending in TRANSFORMATION mode.
- * Provides immediate feedback for each transformation attempt.
- * @param {Object} config - The scenario configuration
- * @returns {Promise<void>}
- */
-export async function handleTransformationSend(config) {
-    UI.updateInputUI(true, UI_TEXTS.status.analyzing);
-    UI.showTypingIndicator(config.roleName);
-
-    // Save response
-    STATE.answers.push({
-        statement: STATE.activeStatements[STATE.exerciseIndex],
-        userResponse: UI.elements.userInput.value.trim(),
-    });
-
-    // Get immediate feedback
-    try {
-        const evalPrompt = config.prompts.trainer || APP_CONFIG.FALLBACK_PROMPTS.transformation;
-        const userPrompt = PROMPT_TEMPLATES.transformation.userEvaluation(
-            STATE.activeStatements[STATE.exerciseIndex],
-            STATE.answers[STATE.answers.length - 1].userResponse
-        );
-
-        const data = await API.callChatApi(
-            [
-                { role: "system", content: evalPrompt },
-                { role: "user", content: userPrompt },
-            ],
-            {
-                proxyUrl: APP_CONFIG.PROXY_URL,
-                model: APP_CONFIG.MODEL,
-                temperature: APP_CONFIG.ICH_BOTSCHAFT_TEMPERATURE,
-            }
-        );
-
-        if (data) {
-            const feedback = data.choices[0].message.content;
-            UI.appendMessage(feedback, "partner", {
-                roleName: config.roleName,
-                messageType: "feedback",
-                isIchMode: true,
-            });
-            Chat.add("assistant", feedback);
-
-            DataLogger.addTurn("assistant", feedback, {
-                roleName: config.roleName,
-                messageType: "feedback",
-                mode: STATE.currentMode,
-                scenarioId: config.id
-            });
-
-            if (STATE.ttsEnabled) UI.speak(feedback, config.roleName);
-        }
-    } catch (e) {
-        console.error("Direct Feedback Error:", e);
-    } finally {
-        UI.hideTypingIndicator();
-        UI.updateInputUI(false, UI_TEXTS.input.retryOrContinue);
-        if (UI.elements.nextTaskBtn) {
-            UI.elements.nextTaskBtn.classList.remove("hidden");
-        }
-    }
 }
 
 /**
@@ -175,11 +110,7 @@ export async function handleSend() {
     // Enable sidebar buttons on first interaction
     enableSidebarButtons();
 
-    if (STATE.currentMode === APP_MODES.TRANSFORMATION) {
-        await handleTransformationSend(config);
-    } else {
-        await handleRoleplaySend(config);
-    }
+    await handleRoleplaySend(config);
 }
 
 /**
