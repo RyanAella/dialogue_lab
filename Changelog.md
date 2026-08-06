@@ -6,7 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.32.0] - 2025-08-06
+## [0.33.0] - 2026-08-07
+
+### Fixed
+- **AI Proactivity in Roleplay Mode**: Fixed AI partner prematurely initiating conversations by setting a strict system prompt in `contentLoader.js`. The critical instruction is now placed **at the end** of the system prompt (highest priority in OpenAI) with explicit rules: "Reagiere NUR auf das, was der Nutzer sagt. Beginne NIE von selbst Gespräche, führe NIE Themen ein und übernimm NIE die Initiative."
+
+### Changed
+- **System Prompt Architecture**: System prompt is now set immediately when loading scenario content (in `contentLoader.js`) with critical wait instruction positioned at the end for maximum priority, ensuring the AI strictly waits for user input before any interaction.
+- **Import Consolidation**: Added `PROMPT_TEMPLATES` and `Chat` imports to `contentLoader.js` for direct system prompt management.
+
+---
+
+## [0.32.0] - 2026-08-06
 
 ### Removed
 - **Transformation Mode**:
