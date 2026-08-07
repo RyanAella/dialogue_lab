@@ -5,12 +5,13 @@
 
 import { UI } from "../ui/ui.js";
 import { DataLogger } from "./dataLogger.js";
-import { UI_TEXTS, PROMPT_TEMPLATES } from "../core/config.js";
+import { UI_TEXTS, PROMPT_TEMPLATES, APP_CONFIG } from "../core/config.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE } from "../core/state.js";
 import { Utils } from "../utils/utils.js";
 import { getProfilePool } from "../features/profiles.js";
-import {Chat} from "../features/chat.js";
+import { Chat } from "../features/chat.js";
+import { PromptBuilder } from "../core/promptBuilder.js";
 
 /**
  * Main entry point for loading specific content (scenarios or exercises).
@@ -29,10 +30,8 @@ export async function loadContent(exerciseId) {
     try {
         const config = await ScenarioService.loadScenario(exerciseId);
 
-        // Setze System-Prompt mit Warte-Anweisung AM ENDE (höchste Priorität in OpenAI)
-        Chat.setSystemPrompt(
-            `${PROMPT_TEMPLATES.roleplay.roleAdherence}\n\n${config.prompts.system}\n\n${config.prompts.partner}\n\nKRITISCHE REGEL: Warte immer, bis der Benutzer das Thema explizit einführt. Reagiere NUR auf das, was der Nutzer sagt. Beginne NIE von selbst Gespräche, führe NIE Themen ein und übernimm NIE die Initiative. Dein einziges Ziel ist es, auf die Eingaben des Nutzers zu antworten.`
-        );
+        // Zentrale Prompt-Verwaltung
+        PromptBuilder.setupSystemPrompt(config, true);
 
         DataLogger.updateConversationMetadata({
             mode: STATE.currentMode,

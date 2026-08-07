@@ -33,11 +33,12 @@ Die Codebasis ist modular nach Verantwortungsbereichen organisiert:
 
 | Ordner       | Verantwortung                          | Enthaltene Module                     |
 |--------------|-----------------------------------------|---------------------------------------|
-| **`core/`**  | **Controller**: Application Foundation | `app.js`, `config.js`                 |
+| **`core/`**  | **Controller**: Application Foundation | `app.js`, `config.js`, `promptBuilder.js` (Zentrale Prompt-Verwaltung) |
+| **`data/`**  | **Prompt-Konfiguration** | `promptRules.js` (Absolute System-Regeln) |
 | **`features/`** | **Domain Logic** | `avatar.js` (Visuals), `chat.js` (State-Manager), `profiles.js` (Assets), `scenario.js` (Data-Service), `speech.js` (Audio-Service) |
 | **`services/`** | **Network & Logging** | `api.js` (API-Anfragen & Caching), `dataLogger.js` (Automatische Gesprächs-Speicherung), `contentLoader.js` (Szenario-Ladevorgänge) |
 | **`ui/`**    | **View-Manager** | `ui.js` (DOM-Elemente & Rendering) |
-| **`utils/`** | **Helpers** | `utils.js` (Markdown-Parsing & Text-Bereinigung) |
+| **`utils/`** | **Helpers** | `utils.js` (Markdown-Parsing & Text-Bereinigung), `eventListeners.js` (Event-Handling), `messageHandlers.js` (Nachrichten-Verarbeitung) |
 
 ### Daten & Inhalte
 
@@ -188,11 +189,12 @@ The codebase is organized modularly by responsibility:
 
 | Folder        | Responsibility                          | Contained Modules                     |
 |---------------|-----------------------------------------|---------------------------------------|
-| **`core/`**   | **Controller**: Application Foundation | `app.js`, `config.js`                 |
+| **`core/`**   | **Controller**: Application Foundation | `app.js`, `config.js`, `promptBuilder.js` (Centralized Prompt Management) |
+| **`data/`**   | **Prompt Configuration** | `promptRules.js` (Absolute System Rules) |
 | **`features/`** | **Domain Logic** | `avatar.js` (Visuals), `chat.js` (State-Manager), `profiles.js` (Assets), `scenario.js` (Data-Service), `speech.js` (Audio-Service) |
 | **`services/`** | **Network & Logging** | `api.js` (API requests & Caching), `dataLogger.js` (Automatic Conversation Storage), `contentLoader.js` (Scenario Loading) |
 | **`ui/`**     | **View-Manager** | `ui.js` (DOM elements & Rendering) |
-| **`utils/`**  | **Helpers** | `utils.js` (Markdown parsing & Text cleaning) |
+| **`utils/`**  | **Helpers** | `utils.js` (Markdown parsing & Text cleaning), `eventListeners.js` (Event Handling), `messageHandlers.js` (Message Processing) |
 
 ### Data & Content
 
