@@ -17,7 +17,7 @@ export const APP_CONFIG = {
   PROXY_URL: "https://kite2.site/dialogue_lab/chat.php",
   DATALOGGER_BACKEND: "https://kite2.site/dialogue_lab/save_dialogue.php",
   MODEL: "gpt-4o",
-  CHAT_TEMPERATURE: 0.7,
+  CHAT_TEMPERATURE: 0.6,
   COACH_TEMPERATURE: 0.3,
   ICH_BOTSCHAFT_TEMPERATURE: 0.4,
   EXERCISES_FILE: "src/data/exercises.json",
@@ -319,11 +319,8 @@ export const UI_TEXTS = {
  * Centralized for easier maintenance and consistency.
  */
 export const PROMPT_TEMPLATES = {
-  // Roleplay mode system prompts
   roleplay: {
     roleAdherence: "Verhalte dich konsequent gemäß deiner Rollenbeschreibung. Überlasse die Gesprächsführung und die Initiative dem Benutzer.",
     initialTopicGuidance: "Warte, bis der Benutzer das Thema des Gesprächs einführt, bevor du auf die Details deiner Rolle eingehst.",
-    systemPrompt: (systemPrompt, partnerPrompt) =>
-        `${systemPrompt}\n\n${partnerPrompt}`,
   },
 };

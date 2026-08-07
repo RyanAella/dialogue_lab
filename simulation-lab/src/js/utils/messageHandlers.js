@@ -6,11 +6,12 @@
 import { API } from "../services/api.js";
 import { Chat } from "../features/chat.js";
 import { DataLogger } from "../services/dataLogger.js";
-import { APP_CONFIG, UI_TEXTS, PROMPT_TEMPLATES } from "../core/config.js";
+import { APP_CONFIG, UI_TEXTS, PROMPT_TEMPLATES, CHAT_ROLES } from "../core/config.js";
 import { UI } from "../ui/ui.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE, enableSidebarButtons } from "../core/state.js";
 import { appendPartnerMessage, updateInputAndStatus } from "../ui/uiHelpers.js";
+import { PromptBuilder } from "../core/promptBuilder.js";
 
 /**
  * Generates a human-readable progress indicator for transformation mode.
@@ -59,17 +60,10 @@ export async function handleRoleplaySend(config) {
     UI.updateInputUI(true, UI_TEXTS.status.sending, "loading", UI_TEXTS.status.sending);
     UI.showTypingIndicator(config.roleName);
 
-    if (!Chat.hasSystemPrompt()) {
-        Chat.setSystemPrompt(
-            PROMPT_TEMPLATES.roleplay.systemPrompt(
-                `${PROMPT_TEMPLATES.roleplay.roleAdherence}\n\n${config.prompts.system}\n\n${PROMPT_TEMPLATES.roleplay.initialTopicGuidance}`,
-                config.prompts.partner
-            )
-        );
-    }
+    const messages = Chat.getHistory();
 
     try {
-        const data = await API.callChatApi(Chat.getHistory(), {
+        const data = await API.callChatApi(messages, {
             proxyUrl: APP_CONFIG.PROXY_URL,
             model: APP_CONFIG.MODEL,
             temperature: APP_CONFIG.CHAT_TEMPERATURE,

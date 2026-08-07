@@ -6,7 +6,7 @@ import {CHAT_ROLES} from "../core/config.js";
  * Manages the chat history state, including system prompts and user/assistant messages.
  * Provides utilities for data transformation, such as generating transcripts.
  */
-export const Chat = {
+export let Chat = {
   /**
    * Internal storage for chat messages.
    * @type {Array<{role: string, content: string}>}
@@ -79,3 +79,5 @@ export const Chat = {
     return Utils.generateTranscript(this._history, partnerName);
   },
 };
+
+window.Chat = Chat;
