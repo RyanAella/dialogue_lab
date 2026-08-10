@@ -75,14 +75,9 @@
         class="fixed inset-y-0 left-0 z-[60] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
 >
   <div class="sidebar-section mb-6">
-    <label class="block font-semibold mb-2 text-slate-700 text-sm"
     <div id="exercise-section" class="mt-4">
-      <label
-              id="exercise-label"
-              class="exercise-selection-headline block font-semibold mb-2 text-slate-700 text-sm mt-4"
-      >Wähle eine Übung:</label
-      >
-      <label for="exercises"></label><select
+      <label for="exercises" class="exercise-selection-headline block font-semibold mb-2 text-slate-700 text-sm mt-4">Wähle eine Übung:</label>
+      <select
             id="exercises"
             class="exercise-selection-dropdown w-full border border-slate-300 rounded-lg p-2.5 bg-white text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
     >
@@ -92,12 +87,8 @@
   </div>
 
   <div class="sidebar-section mb-6 pt-6 border-t border-slate-100">
-    <label class="block font-semibold mb-2 text-slate-700 text-sm"
-    >Ausgabe (Hören)</label
-    >
-    <label
-            class="flex items-center justify-between mb-3 cursor-pointer group"
-    >
+    <label class="block font-semibold mb-2 text-slate-700 text-sm">Ausgabe (Hören)</label>
+    <label class="flex items-center justify-between mb-3 cursor-pointer group">
       <span class="text-xs text-slate-500">Auto-Vorlesen</span>
       <input
               id="auto-speak-toggle"
@@ -339,12 +330,13 @@
           class="input-area py-4 border-t border-slate-200 bg-white z-[30] flex-shrink-0"
   >
     <div class="input-container max-w-3xl mx-auto flex gap-2 px-4 w-full">
-      <label for="user-input"></label><input
+      <input
             type="text"
             id="user-input"
             disabled
             class="user-text-input flex-1 p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-gray-100 cursor-not-allowed text-base"
             placeholder="Wähle eine Übung aus..."
+            aria-label="Nachricht eingeben"
     />
       <button
               id="next-task-btn"

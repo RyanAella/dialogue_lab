@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.31.1] - 2026-08-10
+
+### Fixed
+- **HTML Label Syntax Errors**: Fixed malformed `<label>` tags in `index.html` (missing `>`, incorrect tag structure) in exercise dropdown and audio settings sections.
+- **Missing Associated Labels**: Added `for="exercises"` attribute to label for exercise dropdown `<select>` and replaced empty `<label for="user-input"></label>` with `aria-label="Nachricht eingeben"` on input field for proper accessibility.
+
+---
+
 ## [0.31.0] - 2026-08-10
 
 ### Added
