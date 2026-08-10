@@ -24,8 +24,6 @@ export async function loadContent(exerciseId) {
     UI.updateStatus("loading", UI_TEXTS.status.loading);
     UI.setBriefingLoading(true);
     UI.elements.chatWindow.innerHTML = "";
-    // Feedback button remains visible but stays disabled until first message
-    // UI.setExerciseActionsVisible(false);
 
     STATE.lastFeedback = null;
 

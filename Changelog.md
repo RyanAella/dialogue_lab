@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.30.0] - 2026-08-10
+
+### Fixed
+- **Deprecated Meta Tag**: Updated `<meta name="mobile-web-app-capable">` to `<meta name="apple-mobile-web-app-capable">` in `index.html` for modern browser compatibility.
+- **Feedback Button Visibility**: Removed commented-out `UI.setExerciseActionsVisible(false)` call from `contentLoader.js`, ensuring the feedback button remains visible in the sidebar from the start.
+
+### Changed
+- **Restart Function Reference**: Added import of `restartTransformationExercise` from `modeManager.js` in `app.js` and exposed it globally via `window.restartTransformationExercise`.
+
+---
+
 ## [0.29.0] - 2026-08-10
 
 ### Removed
