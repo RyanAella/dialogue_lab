@@ -52,13 +52,13 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 
 ### Daten & Inhalte
 
-- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen.
-- `scenarios/`: Markdown-ähnliche Szenario-Beschreibungen und GUI-Instruktionen.
+- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Übungen.
+- `scenarios/`: Enthält die Übungsdateien (Instruktionen und Aussagen) für Transformations-Übungen.
 - `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Szenarien und Konfiguration
 
-Dieser Abschnitt beschreibt, wie die Inhalte für die Simulationen strukturiert und konfiguriert werden. Die App trennt strikt zwischen Code und Inhalt, um eine einfache Wartung und Erweiterung zu ermöglichen.
+Dieser Abschnitt beschreibt, wie die Inhalte für die Übungen strukturiert und konfiguriert werden. Die App trennt strikt zwischen Code und Inhalt, um eine einfache Wartung und Erweiterung zu ermöglichen.
 
 ### 4.1 Die `exercises.json`
 
@@ -77,9 +77,9 @@ Diese Datei steuert alle verfügbaren Inhalte.
 ]
 ```
 
-### 4.2 Szenarioformat & Prompt-Mapping (`*.txt`)
+### 4.2 Übungsformat & Prompt-Mapping (`*.txt`)
 
-Jedes Szenario besteht aus einem **META-Block** (Referenzierung der Prompts) und der **GUI Instruction** (Briefing für den Nutzer).
+Jede Übung besteht aus einem **META-Block** (Referenzierung der Prompts) und der **GUI Instruction** (Briefing für den Nutzer).
 
 ```text
 ### META ###
@@ -114,9 +114,9 @@ Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 - **Main-Branch:** Hauptversion unter der Root-URL.
 - **Feature-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
 
-## 7. Neues Szenario hinzufügen
+## 7. Neue Übung hinzufügen
 
-1. **Trainer-Prompt:** Eine Datei in `prompts/trainers/` anlegen (für das KI-Feedback).
+1. **Trainer-Prompt:** Eine Datei in `prompts/trainer/` anlegen (für das KI-Feedback).
 2. **Inhalts-Dateien:** In `scenarios/transformations/` eine Datei für die Instruktionen (`instructions.txt`) und eine für die Aussagen-Liste (`statements.txt`) erstellen.
 3. **Pool erweitern:** Die neue Übung in `src/data/exercises.json` registrieren und dabei die Pfade zu `sourceFile` (Aussagen) und `instructionFile` (Briefing) angeben.
 4. **Avatar-Mapping:** Optional den `role_label` in der META-Sektion der Instruktions-Datei anpassen, um einen spezifischen Pool aus `profiles.js` zu laden.
@@ -193,13 +193,13 @@ The application uses a static frontend with a server-side proxy to protect API k
 
 ### Data & Content
 
-- `src/data/exercises.json`: Central catalog of all available simulations.
-- `scenarios/`: Markdown-like scenario descriptions and GUI instructions.
+- `src/data/exercises.json`: Central catalog of all available transformation exercises.
+- `scenarios/`: Contains exercise files (instructions and statements) for transformation exercises.
 - `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Scenarios and Configuration
 
-This section describes how the content for simulations is structured and configured. The app strictly separates code and content to allow for easy maintenance and expansion.
+This section describes how the content for exercises is structured and configured. The app strictly separates code and content to allow for easy maintenance and expansion.
 
 ### 4.1 The `exercises.json`
 
@@ -218,9 +218,9 @@ This file controls all available content.
 ]
 ```
 
-### 4.2 Scenario Format (`*.txt`)
+### 4.2 Exercise Format (`*.txt`)
 
-Each scenario consists of a **META block** (referencing the prompts) and the **GUI Instruction** (the briefing for the user).
+Each exercise consists of a **META block** (referencing the prompts) and the **GUI Instruction** (the briefing for the user).
 
 ```text
 ### META ###
@@ -253,20 +253,20 @@ The script receives the payload from the frontend, adds the Authorization header
 Every push to a branch triggers an automated deployment:
 
 - **Main Branch:** Main version under the root URL.
-- **Simulation Branch:** Special version under `/practice-edition/`.
+- **Transformation Branch:** Main version under `/practice-edition/`. Have a look at the `practice-edition` branch.
 
-## 7. Adding a New Scenario
+## 7. Adding a New Exercise
 
-1. **Trainer Prompt:** Create a feedback prompt file in `prompts/trainers/`.
-2. **Content Files:** Create the instruction (briefing) and statements (sentences) `.txt` files in `scenarios/transformations/`.
+1. **Trainer Prompt:** Create a feedback prompt file in `prompts/trainer/`. 
+2. **Content Files:** Create the instruction (briefing) and statements (sentences) `.txt` files in `scenarios/transformations/`. Have a look at the existing exercises as templates.
 3. **Register:** Add the new ID and respective file paths (`sourceFile` and `instructionFile`) to `src/data/exercises.json`.
 4. **Avatar Mapping:** Ensure the `role_label` in the metadata matches a key in `profiles.js` to load the correct character pool.
 
 ## 8. Content Maintenance
 
-1. Edit scenario files under `scenarios/transformations/` (content and GUI instruction).
-2. Adjust prompt files in `prompts/` (trainers).
-3. Update `exercises.json` if new scenarios are added.
+1. Edit exercise files under `scenarios/transformations/` (content and GUI instruction).
+2. Adjust prompt files in `prompts/trainer/` as needed.
+3. Update `exercises.json` if new exercises are added.
 
 ---
 

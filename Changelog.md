@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.29.0] - 2026-08-10
+
+### Removed
+
+- **Simulation Mode (ROLEPLAY)**: Completely removed all simulation/roleplay functionality, configurations, and UI elements. The application now focuses exclusively on **Transformation Exercises** as documented in the README.
+  - Removed `APP_MODES.ROLEPLAY` from `config.js`
+  - Removed simulation-specific prompts, messages, and UI texts from `config.js`
+  - Removed `handleRoleplaySend` function and related logic from `messageHandlers.js`
+  - Removed mode-switching UI elements (mode-select dropdown) from `index.html`
+  - Removed scenario-section and scenario-select dropdown from `index.html`
+  - Removed simulation-specific handlers from `eventListeners.js`
+  - Removed simulation references from `feedback.js`, `export.js`, `contentLoader.js`
+  - Cleaned up `DOM_ELEMENT_IDS` and `DOM_ELEMENT_ALIASES` in `config.js`
+
+### Changed
+- **Documentation**: Updated `README.md` to reflect the removal of simulation mode, replacing all references to "Simulationen/Szenarios" with "Übungen/Exercises" and clarifying that the application now exclusively supports transformation exercises.
+
+### Fixed
+
+- **Avatar Image Loading**: Fixed method name in `ui.js` from `Avatar._getLayerSrc(layer)` to `Avatar.getLayerSrc(layer)` - this was preventing character images from being displayed.
+- **Exercise Dropdown Loading**: Fixed syntax error in `dropdowns.js` where a template literal was incorrectly closed, preventing exercises from being loaded into the dropdown.
+- **Event Listener Syntax**: Fixed arrow function syntax in `eventListeners.js` where async event handler was missing curly braces for multiple statements.
+
+---
+
 ## [0.28.0] - 2026-08-06
 
 ### Changed

@@ -53,12 +53,10 @@ export const API = {
     } catch (error) {
       if (error.name === "AbortError") return null;
 
-      let userMessage = error.message;
-      if (error instanceof TypeError || error.message.includes("fetch")) {
-        userMessage =
-            "Network error or CORS block. Check backend configuration.";
-      }
-      console.error(`Request failed [${url}]:`, error.message, error);
+      const userMessage = error instanceof TypeError || error.message.includes("fetch")
+          ? "Network error or CORS block. Check backend configuration."
+          : error.message;
+      console.error(`Request failed [${url}]:`, userMessage, error);
       throw new Error(userMessage);
     }
 
@@ -74,6 +72,7 @@ export const API = {
 
     return response;
   },
+
   /**
    * Loads the text content of a specific prompt file with caching support.
    *
@@ -93,13 +92,7 @@ export const API = {
 
     const response = await this._request(`prompts/${type}/${promptName}.txt`);
     const content = (await response.text()).trim();
-
-    // Cache the result
-    CACHE.set(cacheKey, {
-      content,
-      timestamp: Date.now(),
-    });
-
+    CACHE.set(cacheKey, { content, timestamp: Date.now() });
     return content;
   },
 
@@ -114,37 +107,31 @@ export const API = {
   async fetchCompleteScenario(filePath) {
     const response = await this._request(filePath);
     const text = await response.text();
-
-    const { metaSection, instructionSection } =
-      Utils.parseScenarioContent(text);
+    const { metaSection, instructionSection } = Utils.parseScenarioContent(text);
 
     const config = {
       title: Utils.parseMetaValue(metaSection, "title"),
       roleLabel: Utils.parseMetaValue(metaSection, "role_label"),
       trainerPromptFile: Utils.parseMetaValue(metaSection, "trainer_prompt"),
-      systemPromptFile: Utils.parseMetaValue(metaSection, "system_prompt"),
-      partnerPromptFile: Utils.parseMetaValue(metaSection, "partner_prompt"),
-      mentorPromptFile: Utils.parseMetaValue(metaSection, "mentor_prompt"),
+      systemFile: Utils.parseMetaValue(metaSection, "system_prompt"),
+      partnerFile: Utils.parseMetaValue(metaSection, "partner_prompt"),
+      mentorFile: Utils.parseMetaValue(metaSection, "mentor_prompt"),
       instructionSection,
       shortInstruction: Utils.parseMetaValue(metaSection, "short_instruction"),
     };
 
-    // Map file keys to their respective prompt directories
     const promptMap = {
-      system: { file: config.systemPromptFile, dir: "system" },
-      partner: { file: config.partnerPromptFile, dir: "partner" },
-      mentor: { file: config.mentorPromptFile, dir: "mentor" },
-      trainer: { file: config.trainerPromptFile, dir: "trainer" }
+      system: { file: config.systemFile, dir: "system" },
+      partner: { file: config.partnerFile, dir: "partner" },
+      mentor: { file: config.mentorFile, dir: "mentor" },
+      trainer: { file: config.trainerPromptFile, dir: "trainer" },
     };
 
     const prompts = {};
-    // Load all defined prompts in parallel
     await Promise.all(
-      Object.entries(promptMap).map(async ([key, cfg]) => {
-        if (cfg.file) {
-          prompts[key] = await this.loadPromptContent(cfg.dir, cfg.file);
-        }
-      }),
+        Object.entries(promptMap).map(async ([key, cfg]) => {
+          if (cfg.file) prompts[key] = await this.loadPromptContent(cfg.dir, cfg.file);
+        })
     );
 
     return { ...config, prompts };
@@ -172,26 +159,19 @@ export const API = {
    * @param {Array<Object>} messages - The chat history in OpenAI message format.
    * @param {Object} config - Configuration including proxyUrl, model, and temperature.
    * @returns {Promise<Object|null>} The JSON response from the API.
+   * @async
    */
   async callChatApi(messages, config) {
     const { proxyUrl, model, temperature } = config;
 
-    // Abort any ongoing request before starting a new one
     if (activeChatController) activeChatController.abort();
     activeChatController = new AbortController();
 
-    // Use the unified request handler for the Chat API call
     const response = await this._request(proxyUrl, {
       method: "POST",
       signal: activeChatController.signal,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: model,
-        messages,
-        temperature,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model, messages, temperature }),
     });
 
     if (!response) return null;

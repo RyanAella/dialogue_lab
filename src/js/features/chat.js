@@ -1,4 +1,5 @@
 import { Utils } from "../utils/utils.js";
+import {CHAT_ROLES} from "../core/config.js";
 
 /**
  * @module Chat
@@ -35,7 +36,7 @@ export const Chat = {
    * @returns {boolean} True if a system prompt is found.
    */
   hasSystemPrompt() {
-    return this._history.some((m) => m.role === "system");
+    return this._history.some((m) => m.role === CHAT_ROLES.SYSTEM);
   },
 
   /**
@@ -49,7 +50,7 @@ export const Chat = {
       // Update existing system prompt (assumed to be the first element)
       this._history[0].content = content;
     } else {
-      this._history.unshift({ role: "system", content });
+      this._history.unshift({ role: CHAT_ROLES.SYSTEM, content });
     }
   },
 
@@ -66,7 +67,7 @@ export const Chat = {
    * @returns {number} The count of non-system messages.
    */
   getMessageCount() {
-    return this._history.filter((m) => m.role !== "system").length;
+    return this._history.filter((m) => m.role !== CHAT_ROLES.SYSTEM).length;
   },
 
   /**
