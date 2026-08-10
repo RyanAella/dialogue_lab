@@ -7,7 +7,8 @@ import { setupEventListeners } from "../utils/eventListeners.js";
 import { loadContent } from "../services/contentLoader.js";
 import {
   loadExercises,
-  initializeCurrentMode
+  initializeCurrentMode,
+  restartTransformationExercise
 } from "./modeManager.js";
 
 /**
@@ -49,3 +50,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 window.handleNextExercise = handleNextExercise;
 window.handleSend = handleSend;
 window.loadContent = loadContent;
+window.restartTransformationExercise = restartTransformationExercise;
