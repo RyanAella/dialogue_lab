@@ -6,7 +6,8 @@
 import { API } from "../services/api.js";
 import { Chat } from "../features/chat.js";
 import { DataLogger } from "../services/dataLogger.js";
-import { APP_CONFIG, UI_TEXTS, PROMPT_TEMPLATES } from "../core/config.js";
+import { APP_CONFIG, UI_TEXTS } from "../core/config.js";
+import { PROMPT_TEMPLATES, getFallbackPrompt } from "../core/promptBuilder.js";
 import { UI } from "../ui/ui.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE, enableSidebarButtons } from "../core/state.js";
@@ -67,7 +68,7 @@ export async function handleTransformationSend(config) {
 
     // Get immediate feedback
     try {
-        const evalPrompt = config.prompts.trainer || APP_CONFIG.FALLBACK_PROMPTS.transformation;
+        const evalPrompt = config.prompts.trainer || getFallbackPrompt("transformation");
         const userPrompt = PROMPT_TEMPLATES.transformation.userEvaluation(
             STATE.activeStatements[STATE.exerciseIndex],
             STATE.answers[STATE.answers.length - 1].userResponse

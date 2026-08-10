@@ -5,13 +5,14 @@
 
 import { UI } from "../ui/ui.js";
 import { DataLogger } from "./dataLogger.js";
-import { EXERCISE_TYPES, UI_TEXTS } from "../core/config.js";
+import { EXERCISE_TYPES, UI_TEXTS, APP_MODES } from "../core/config.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE } from "../core/state.js";
 import { Utils } from "../utils/utils.js";
 import { getProfilePool } from "../features/profiles.js";
 import { appendPartnerMessage } from "../ui/uiHelpers.js";
 import { getTransformationProgressText } from "../utils/messageHandlers.js";
+import { setupSystemPrompt } from "../core/promptBuilder.js";
 
 /**
  * Main entry point for loading transformation exercises.
@@ -29,6 +30,9 @@ export async function loadContent(exerciseId) {
 
     try {
         const config = await ScenarioService.loadScenario(exerciseId);
+
+        // Set up system prompt with centralized prompt management
+        setupSystemPrompt(APP_MODES.TRANSFORMATION, config);
 
         DataLogger.updateConversationMetadata({
             mode: STATE.currentMode,

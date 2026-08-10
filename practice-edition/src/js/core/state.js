@@ -80,3 +80,11 @@ export function enableSidebarButtons() {
         }
     });
 }
+
+/**
+ * Sets the visibility of exercise action buttons in the sidebar.
+ * @param {boolean} visible - Whether the actions should be visible.
+ */
+export function setExerciseActionsVisible(visible) {
+    UI.setExerciseActionsVisible(visible);
+}
