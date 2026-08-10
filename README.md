@@ -49,10 +49,15 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 | **`api.js`**      | **Network**: Handling der API-Anfragen mit integriertem Caching.                           |
 | **`utils.js`**    | **Helpers**: Statische Funktionen für Markdown-Parsing und Text-Bereinigung.               |
 | **`profiles.js`** | **Assets**: Konfiguration der Charakter-Pools und Grafik-Ebenen.                           |
+| **`promptBuilder.js`** | **Prompt-Manager**: Zentralisierte Steuerung aller System-Prompts und Prompt-Templates. |
+| **`dataLogger.js`** | **Storage-Service**: Automatisches Speichern von Konversationen und Upload-Handling.        |
+| **`contentLoader.js`** | **Content-Service**: Lädt Transformations-Übungsinhalte und initialisiert die UI.         |
 
 ### Daten & Inhalte
 
 - `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Übungen.
+- `src/data/promptRules.js`: Zentrale Konfiguration für absolute KI-Verhaltensregeln.
+- `src/data/characters.js`: Charakter-Pool-Konfigurationen für das Avatar-System.
 - `scenarios/`: Enthält die Übungsdateien (Instruktionen und Aussagen) für Transformations-Übungen.
 - `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`).
 
@@ -190,10 +195,15 @@ The application uses a static frontend with a server-side proxy to protect API k
 | **`api.js`**      | **Network**: Handling API requests with integrated caching.                        |
 | **`utils.js`**    | **Helpers**: Static functions for Markdown parsing and text cleaning.              |
 | **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                   |
+| **`promptBuilder.js`** | **Prompt Manager**: Centralized control of all system prompts and prompt templates. |
+| **`dataLogger.js`** | **Storage Service**: Automatic conversation storage and upload handling.          |
+| **`contentLoader.js`** | **Content Service**: Loads transformation exercise content and initializes UI. |
 
 ### Data & Content
 
 - `src/data/exercises.json`: Central catalog of all available transformation exercises.
+- `src/data/promptRules.js`: Central configuration for absolute AI behavior rules.
+- `src/data/characters.js`: Character pool configurations for the avatar system.
 - `scenarios/`: Contains exercise files (instructions and statements) for transformation exercises.
 - `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`).
 

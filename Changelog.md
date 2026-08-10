@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.31.0] - 2026-08-10
+
+### Added
+- **Centralized Prompt Management**: Introduced `src/js/core/promptBuilder.js` as a single source of truth for all system prompt logic, ensuring consistent behavior across all conversation starts (scenario load, page reload, restart).
+- **External Rules Configuration**: Added `src/data/promptRules.js` to centralize absolute AI behavior rules in a separate, maintainable file.
+- **Data Privacy Notices**: Added info box in sidebar and notice next to mode badge for mobile/closed sidebar visibility to inform users that conversations are stored server-side.
+
+### Changed
+- **Prompt Architecture**: Refactored prompt handling to use `PromptBuilder.setupSystemPrompt()` exclusively, removing redundant prompt-setting logic from `messageHandlers.js` and `feedback.js`.
+- **Safety Checks**: Added null/undefined validation in `PromptBuilder.setupSystemPrompt()` to prevent errors when config is missing.
+- **UI.setExerciseActionsVisible in state.js**: Restored `setExerciseActionsVisible` function in `state.js` for proper exercise action visibility control.
+- **Documentation**: Updated `README.md` to reflect new `promptBuilder.js` and `promptRules.js` modules in the project structure.
+
+---
+
 ## [0.30.0] - 2026-08-10
 
 ### Fixed

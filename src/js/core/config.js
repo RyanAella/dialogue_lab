@@ -21,9 +21,6 @@ export const APP_CONFIG = {
   COACH_TEMPERATURE: 0.3,
   ICH_BOTSCHAFT_TEMPERATURE: 0.4,
   EXERCISES_FILE: "src/data/exercises.json",
-  FALLBACK_PROMPTS: {
-    transformation: "Du bist ein erfahrener Kommunikations-Coach. Analysiere die Umformulierungen des Nutzers kritisch und gib konstruktives Feedback.",
-  }
 };
 
 /**
@@ -308,14 +305,3 @@ export const UI_TEXTS = {
   },
 };
 
-/**
- * Prompt templates for AI interactions.
- * Centralized for easier maintenance and consistency.
- */
-export const PROMPT_TEMPLATES = {
-  // Transformation mode prompts
-  transformation: {
-    userEvaluation: (statement, userVal) =>
-        `Aufgabe: Formuliere die Aussage "${statement}" um.\n\nEingabe des Nutzers: "${userVal}"\n\nGib eine kurze, hilfreiche Rückmeldung (max. 2-3 Sätze) zu dieser spezifischen Umformulierung.`,
-  },
-};

@@ -4,6 +4,7 @@
  */
 
 import { APP_CONFIG, FEEDBACK_MESSAGES } from '../core/config.js';
+import { getFallbackPrompt } from '../core/promptBuilder.js';
 import { API } from '../services/api.js';
 import { Chat } from './chat.js';
 import { DataLogger } from '../services/dataLogger.js';
@@ -19,7 +20,7 @@ export async function handleFeedback() {
     if (Chat.getMessageCount() === 0) return;
     const config = ScenarioService.getActive();
     if (!config || !config.prompts) return;
-    const evalPrompt = config.prompts.trainer || APP_CONFIG.FALLBACK_PROMPTS.transformation;
+    const evalPrompt = config.prompts.trainer || getFallbackPrompt("transformation");
 
     if (UI.elements.loadingTitle) {
         UI.elements.loadingTitle.textContent = FEEDBACK_MESSAGES.loading.title.transformation;
