@@ -5,12 +5,11 @@
 
 import { UI } from "../ui/ui.js";
 import { DataLogger } from "./dataLogger.js";
-import { UI_TEXTS, PROMPT_TEMPLATES, APP_CONFIG } from "../core/config.js";
+import { UI_TEXTS } from "../core/config.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE } from "../core/state.js";
 import { Utils } from "../utils/utils.js";
 import { getProfilePool } from "../features/profiles.js";
-import { Chat } from "../features/chat.js";
 import { PromptBuilder } from "../core/promptBuilder.js";
 
 /**
@@ -30,7 +29,7 @@ export async function loadContent(exerciseId) {
     try {
         const config = await ScenarioService.loadScenario(exerciseId);
 
-        // Zentrale Prompt-Verwaltung
+        // Central prompt management
         PromptBuilder.setupSystemPrompt(config, true);
 
         DataLogger.updateConversationMetadata({

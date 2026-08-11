@@ -73,7 +73,7 @@ export function setupEventListeners(handlers) {
         UI.openResetModal();
     });
 
-    // Briefing Header Toggle
+    // Briefing header toggle
     UI.elements.briefingHeader.addEventListener("click", () => {
         const h = UI.elements.briefingContent.classList.toggle("hidden");
         UI.elements.chevron.style.transform = h ? "rotate(-90deg)" : "rotate(0deg)";
