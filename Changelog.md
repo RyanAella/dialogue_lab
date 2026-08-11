@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.31.2] - 2026-08-11
+
+### Changed
+- **Prompt Builder Optimization**: Optimized `buildSystemPrompt()` in `src/js/core/promptBuilder.js` to separate absolute and non-absolute rules in a single pass instead of dual filtering, caching `Object.values(ABSOLUTE_RULES)` for performance. Maintains absolute rules at the end of system prompts for maximum OpenAI priority.
+
+---
+
 ## [0.31.1] - 2026-08-10
 
 ### Fixed
