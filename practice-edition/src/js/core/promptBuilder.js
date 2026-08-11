@@ -34,20 +34,39 @@ export function buildSystemPrompt(mode, customPrompts = {}) {
     return FALLBACK_PROMPTS.transformation;
   }
 
-  // Start with base prompt for the mode
-  const promptParts = [modeConfig.base];
-
-  // Add mode-specific rules
+  const promptParts = [];
+  
+  // Separate absolute and non-absolute rules in one pass for efficiency
+  const absoluteRuleValues = Object.values(ABSOLUTE_RULES);
+  const nonAbsoluteRules = [];
+  const absoluteRules = [];
+  
   if (modeConfig.rules) {
-    promptParts.push(...modeConfig.rules);
+    for (const rule of modeConfig.rules) {
+      if (absoluteRuleValues.includes(rule)) {
+        absoluteRules.push(rule);
+      } else {
+        nonAbsoluteRules.push(rule);
+      }
+    }
   }
 
-  // Add custom prompts if provided
+  // Build prompt in correct order
   if (customPrompts.trainer) {
-    promptParts.unshift(customPrompts.trainer);
+    promptParts.push(customPrompts.trainer);
+  }
+  
+  promptParts.push(modeConfig.base);
+  
+  if (nonAbsoluteRules.length > 0) {
+    promptParts.push(...nonAbsoluteRules);
+  }
+  
+  // Add absolute rules at the END for maximum priority (OpenAI behavior)
+  if (absoluteRules.length > 0) {
+    promptParts.push(...absoluteRules);
   }
 
-  // Join with double newlines and ensure absolute rules are at the end
   return promptParts.join("\n\n");
 }
 
