@@ -55,6 +55,15 @@ export const Chat = {
   },
 
   /**
+   * Gets the current system prompt content.
+   * @returns {string|null} The system prompt content, or null if not set.
+   */
+  getSystemPrompt() {
+    const systemMessage = this._history.find((m) => m.role === CHAT_ROLES.SYSTEM);
+    return systemMessage ? systemMessage.content : null;
+  },
+
+  /**
    * Resets the chat history to an empty array.
    */
   clear() {
