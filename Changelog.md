@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.34.1] - 2026-08-11
+
+### Changed
+- **Code Cleanup**: Removed commit markers (`✅ Add missing id/type`) from `scenario.js` to maintain clean code standards.
+- **Localization**: Translated remaining German comments in `promptBuilder.js`, `contentLoader.js`, and `eventListeners.js` to English for consistency.
+
+---
+
 ## [0.34.0] - 2026-08-07
 
 ### Added

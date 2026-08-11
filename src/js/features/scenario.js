@@ -67,8 +67,8 @@ export const ScenarioService = {
     // Compute additional metadata for the active session
     this._active = {
       ...data,
-      id: exercise.id,        // ✅ Add missing id
-      type: exercise.type,    // ✅ Add missing type
+      id: exercise.id,
+      type: exercise.type,
       roleName: Utils.extractRoleName(data.instructionSection, data.roleLabel),
       shortInstruction: data.shortInstruction || SCENARIO_DEFAULTS.SHORT_INSTRUCTION,
     };

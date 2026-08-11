@@ -1,7 +1,7 @@
 /**
  * @module PromptBuilder
- * Zentrale Prompt-Verwaltung für die Anwendung.
- * Stellt sicher, dass alle System-Prompts konsistent mit den absoluten Regeln gesetzt werden.
+ * Centralized prompt management for the application.
+ * Ensures all system prompts are set consistently with absolute rules.
  */
 
 import { Chat } from "../features/chat.js";
@@ -9,13 +9,13 @@ import { PROMPT_TEMPLATES } from "./config.js";
 import { ABSOLUTE_RULES } from "../../data/promptRules.js";
 
 /**
- * Zentrale Instanz für Prompt-Erstellung und -Verwaltung.
+ * Central instance for prompt creation and management.
  */
 export const PromptBuilder = {
     /**
-     * Erstellt den vollständigen System-Prompt mit allen Regeln.
-     * @param {Object} config - Szenario-Konfiguration (enthält prompts.system, prompts.partner)
-     * @returns {string} Der vollständige System-Prompt
+     * Builds the complete system prompt with all rules.
+     * @param {Object} config - Scenario configuration (contains prompts.system, prompts.partner)
+     * @returns {string} The complete system prompt
      */
     buildSystemPrompt(config) {
         return `${ABSOLUTE_RULES}\n\n
@@ -28,14 +28,14 @@ export const PromptBuilder = {
     },
 
     /**
-     * Setzt den System-Prompt und optional löscht den Chat-Verlauf.
-     * @param {Object} config - Szenario-Konfiguration
-     * @param {boolean} [clearHistory=true] - Chat-Verlauf zurücksetzen
+     * Sets the system prompt and optionally clears chat history.
+     * @param {Object} config - Scenario configuration
+     * @param {boolean} [clearHistory=true] - Reset chat history
      */
     setupSystemPrompt(config, clearHistory = true) {
-        // Sicherheit: Abbruch, wenn keine gültige Config
+        // Safety: Abort if config is invalid
         if (!config || !config.prompts) {
-            console.warn("PromptBuilder: Keine gültige Config – System-Prompt wird nicht gesetzt");
+            console.warn("PromptBuilder: Invalid config - system prompt not set");
             return;
         }
 

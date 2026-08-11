@@ -6,23 +6,11 @@
 import { API } from "../services/api.js";
 import { Chat } from "../features/chat.js";
 import { DataLogger } from "../services/dataLogger.js";
-import { APP_CONFIG, UI_TEXTS, PROMPT_TEMPLATES, CHAT_ROLES } from "../core/config.js";
+import { APP_CONFIG, UI_TEXTS } from "../core/config.js";
 import { UI } from "../ui/ui.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE, enableSidebarButtons } from "../core/state.js";
 import { appendPartnerMessage, updateInputAndStatus } from "../ui/uiHelpers.js";
-import { PromptBuilder } from "../core/promptBuilder.js";
-
-/**
- * Generates a human-readable progress indicator for transformation mode.
- * @returns {string}
- */
-export function getTransformationProgressText() {
-    return STATE.activeStatements.length
-        ? `Aussage ${STATE.exerciseIndex + 1} von ${STATE.activeStatements.length}`
-        : UI_TEXTS.status.ready;
-}
-
 /**
  * Shared preparation logic for both message modes.
  * @param {string} userVal - The trimmed user input value
@@ -129,7 +117,6 @@ export function handleNextExercise() {
         appendPartnerMessage(taskText, config, { shouldScroll: false });
 
         if (STATE.ttsEnabled) UI.speak(taskText, config.roleName);
-        updateInputAndStatus(false, UI_TEXTS.input.transformationNext, "idle", getTransformationProgressText());
     } else {
         const endMsg = UI_TEXTS.status.allExercisesDone;
         UI.appendMessage(endMsg, "partner", {
