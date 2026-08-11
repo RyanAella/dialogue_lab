@@ -68,7 +68,7 @@ export async function handleTransformationSend(config) {
 
     // Get immediate feedback
     try {
-        const evalPrompt = config.prompts.trainer || getFallbackPrompt("transformation");
+        const evalPrompt = Chat.getSystemPrompt() || config.prompts.trainer || getFallbackPrompt("transformation");
         const userPrompt = PROMPT_TEMPLATES.transformation.userEvaluation(
             STATE.activeStatements[STATE.exerciseIndex],
             STATE.answers[STATE.answers.length - 1].userResponse

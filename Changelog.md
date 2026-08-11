@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.31.3] - 2026-08-11
+
+### Changed
+- **Evaluation Prompt Simplification**: Added `getSystemPrompt()` method to `Chat` module and refactored `messageHandlers.js` to use the centralized system prompt via `Chat.getSystemPrompt()` as primary source, with fallback chain to `config.prompts.trainer` and `getFallbackPrompt()` for backwards compatibility.
+
+---
+
 ## [0.31.2] - 2026-08-11
 
 ### Changed
