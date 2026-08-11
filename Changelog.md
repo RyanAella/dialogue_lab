@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
- ---
+
+## [0.31.0] - 2026-08-11
+
+### Changed
+- Updated GitHub Pages workflow to deploy only `practice-edition` and `simulation-lab` branches. The `main` branch is excluded from deployment to prevent confusion. Branch names are automatically converted to lowercase with hyphens for URL safety.
+
 
 ## [0.30.0] - 2026-07-24
 
