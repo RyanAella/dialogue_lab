@@ -88,6 +88,36 @@ export async function switchToRoleplayMode() {
 }
 
 /**
+ * Configures the application for Simulation mode.
+ * Populates scenario dropdowns and activates the default or previously selected simulation.
+ *
+ * @async
+ */
+export async function switchToSimulationMode() {
+  const active = ScenarioService.getActive();
+  const previousId = (active && active.type === EXERCISE_TYPES.SIMULATION) ? active.id : null;
+
+  await DataLogger.endConversation();
+
+  resetAppForMode(APP_MODES.SIMULATION);
+  UI.updateInputUI(true, UI_TEXTS.input.chooseScenario);
+
+  await initScenarioDropdown();
+
+  const simulationExercises = ScenarioService.getExercisesByType(EXERCISE_TYPES.SIMULATION);
+  if (simulationExercises.length > 0) {
+    const exists = simulationExercises.some(ex => ex.id === previousId);
+    UI.elements.scenarioSelect.value = exists ? previousId : simulationExercises[0].id;
+    UI.elements.scenarioSelect.dispatchEvent(new Event("change"));
+  } else {
+    UI.updateStatus("idle", UI_TEXTS.errors.noSimulations);
+  }
+
+  document.getElementById("main-subtitle").textContent = UI_TEXTS.subtitles.roleplay;
+  updateInputAndStatus(true, UI_TEXTS.input.chooseScenario, "idle", UI_TEXTS.status.simulationActive);
+}
+
+/**
  * Configures the application for Transformation mode.
  * Populates exercise dropdowns and loads the specified or default exercise.
  *
@@ -118,6 +148,8 @@ export async function switchToTransformationMode(exerciseId = "ich_botschaften_b
 export async function initializeCurrentMode() {
   if (STATE.currentMode === APP_MODES.TRANSFORMATION) {
     await switchToTransformationMode();
+  } else if (STATE.currentMode === APP_MODES.SIMULATION) {
+    await switchToSimulationMode();
   } else {
     await switchToRoleplayMode();
   }

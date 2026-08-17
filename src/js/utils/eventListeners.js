@@ -6,6 +6,7 @@
 import { UI } from "../ui/ui.js";
 import { DataLogger } from "../services/dataLogger.js";
 import { APP_MODES } from "../core/config.js";
+import { switchToSimulationMode } from "../core/modeManager.js";
 import { handleFeedback, closeFeedbackModal } from "../features/feedback.js";
 import { downloadCurrentTranscript } from "../features/export.js";
 import { STATE } from "../core/state.js";
@@ -22,6 +23,7 @@ export function setupEventListeners(handlers) {
   const {
     switchToTransformationMode,
     switchToRoleplayMode,
+    switchToSimulationMode,
     loadContent
   } = handlers;
 
@@ -31,6 +33,8 @@ export function setupEventListeners(handlers) {
 
     if (e.target.value === APP_MODES.TRANSFORMATION) {
       await switchToTransformationMode();
+    } else if (e.target.value === APP_MODES.SIMULATION) {
+      await switchToSimulationMode();
     } else {
       await switchToRoleplayMode();
     }

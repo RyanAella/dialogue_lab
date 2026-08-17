@@ -73,6 +73,7 @@ export const MESSAGE_STYLES = {
 export const MODE_BADGE_CONFIG = {
   transformation: { label: "Modus: Übungen", cls: "bg-violet-100 text-violet-700 border border-violet-200" },
   simulation: { label: "Modus: Simulationen", cls: "bg-slate-100 text-slate-700 border border-slate-200" },
+  roleplay: { label: "Modus: Simulationen", cls: "bg-slate-100 text-slate-700 border border-slate-200" },
 };
 
 /**
@@ -274,6 +275,7 @@ export const AVATAR_ANIMATION = {
  */
 export const APP_MODES = {
   ROLEPLAY: "roleplay",
+  SIMULATION: "simulation",
   TRANSFORMATION: "transformation",
 };
 
@@ -297,6 +299,7 @@ export const UI_TEXTS = {
     loading: "Lade...",
     ready: "Bereit",
     roleplayActive: "Simulationen aktiv",
+    simulationActive: "Simulationen aktiv",
     transformationActive: "Transformationen aktiv",
     allExercisesDone: "Alle Aussagen bearbeitet. Klicke jetzt auf 'Auswertung erstellen', um dein abschließendes Feedback zu erhalten.",
     exerciseComplete: "Übung abgeschlossen",

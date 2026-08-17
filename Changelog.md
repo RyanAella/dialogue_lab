@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [0.32.0] - 2026-08-17
+
+### Changed
+- **Mode Selection Refactoring**: Simplified mode dropdown to only show **Simulation** and **Transformation** modes (removed Roleplay mode).
+- **Mode Management Enhancement**: Added `APP_MODES.SIMULATION` constant and implemented `switchToSimulationMode()` function for proper mode switching.
+- **Event Listener Updates**: Modified mode change event listener to explicitly handle simulation mode and route to the correct mode switcher.
+- **UI Mode Badge**: Updated `setModeBadge()` to dynamically use the current mode for badge configuration.
+- **Initial State**: Changed default mode from `ROLEPLAY` to `SIMULATION` in `STATE.currentMode`.
+
 ## [0.31.0] - 2026-08-11
 
 ### Changed
