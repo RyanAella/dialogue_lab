@@ -68,12 +68,7 @@ function saveFailedUploads(queue) {
 
 function getResearcherToken() {
   const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  if (token) {
-    localStorage.setItem(STORAGE_KEYS.RESEARCHER_TOKEN, token);
-    return token;
-  }
-  return localStorage.getItem(STORAGE_KEYS.RESEARCHER_TOKEN);
+  return urlParams.get('token');
 }
 
 export const DataLogger = {

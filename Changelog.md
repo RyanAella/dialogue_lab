@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [0.32.1] - 2026-08-17
+
+### Added
+- **Researcher Menu**: Implemented indirect login via URL token (`?token=<token>`). Menu appears in bottom-right corner with the following options:
+  - Export all conversations as **ZIP** (using JSZip library)
+  - Export all conversations as **JSON**
+  - **Delete server data** (requires valid token, deletes all dialogue logs from server)
+  - **Statistics** (shows total conversations, turns, current conversation ID, etc.)
+- **Backend Delete Endpoint**: Created `backend/delete_dialogue.php` for server-side data deletion with token validation.
+
+### Changed
+- **Token Storage**: Researcher token is now **only read from URL** (`?token=<token>`) and **no longer stored in localStorage**. This improves security by preventing persistent token storage in the browser. Menu visibility and server operations now depend solely on the URL parameter.
+
+### Removed
+- CSV export option (poor formatting)
+
+---
+
 ## [0.32.0] - 2026-08-17
 
 ### Changed
