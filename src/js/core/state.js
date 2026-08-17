@@ -20,7 +20,7 @@ import { UI } from "../ui/ui.js";
  */
 export let STATE = {
   answers: [],
-  currentMode: APP_MODES.ROLEPLAY,
+  currentMode: APP_MODES.SIMULATION,
   exerciseIndex: 0,
   activeStatements: [],
   ttsEnabled: false,

@@ -18,6 +18,7 @@ import {
   resetAppForMode,
   loadExercises,
   switchToRoleplayMode,
+  switchToSimulationMode,
   switchToTransformationMode,
   initializeCurrentMode,
   restartTransformationExercise
@@ -45,6 +46,7 @@ async function startApp() {
   setupEventListeners({
     switchToTransformationMode,
     switchToRoleplayMode,
+    switchToSimulationMode,
     loadContent
   });
   await initializeCurrentMode();
