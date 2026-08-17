@@ -249,8 +249,7 @@ export const UI = {
   setModeBadge(mode) {
     const { modeBadge } = this.elements;
     if (!modeBadge) return;
-    const isTransformation = mode === "transformation";
-    const config = MODE_BADGE_CONFIG[isTransformation ? "transformation" : "simulation"];
+    const config = MODE_BADGE_CONFIG[mode] || MODE_BADGE_CONFIG.simulation;
     modeBadge.textContent = config.label;
     modeBadge.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.cls}`;
   },
