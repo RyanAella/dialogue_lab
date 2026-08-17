@@ -32,9 +32,12 @@ jobs:
       - name: Determine Deployment Path
         id: subpath
         run: |
-          # Convert to lowercase + replace special characters with hyphens
-          CLEAN_NAME=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
-          echo "SUB_PATH=$CLEAN_NAME" >> $GITHUB_OUTPUT
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "SUB_PATH=" >> $GITHUB_OUTPUT  # Leerer Pfad = Root
+          else
+            CLEAN_NAME=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
+            echo "SUB_PATH=$CLEAN_NAME" >> $GITHUB_OUTPUT
+          fi
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
