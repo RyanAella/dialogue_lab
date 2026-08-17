@@ -23,6 +23,7 @@ import {
   initializeCurrentMode,
   restartTransformationExercise
 } from "../core/modeManager.js";
+import { initResearcherMenu } from "../features/researcherMenu.js";
 
 /**
  * @module App
@@ -50,6 +51,7 @@ async function startApp() {
     loadContent
   });
   await initializeCurrentMode();
+  initResearcherMenu();
 }
 
 // Initialization on DOM ready
