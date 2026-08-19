@@ -53,17 +53,16 @@ export function prepareMessageSend(userVal) {
  * Handles message sending in TRANSFORMATION mode.
  * Provides immediate feedback for each transformation attempt.
  * @param {Object} config - The scenario configuration
- * @param {string} userVal - The user input value
  * @returns {Promise<void>}
  */
-export async function handleTransformationSend(config, userVal) {
+export async function handleTransformationSend(config) {
   UI.updateInputUI(true, UI_TEXTS.status.analyzing);
   UI.showTypingIndicator(config.roleName);
 
   // Save response
   STATE.answers.push({
     statement: STATE.activeStatements[STATE.exerciseIndex],
-    userResponse: userVal,
+    userResponse: UI.elements.userInput.value.trim(),
   });
 
   // Get immediate feedback
@@ -177,7 +176,7 @@ export async function handleSend() {
   enableSidebarButtons();
 
   if (STATE.currentMode === APP_MODES.TRANSFORMATION) {
-    await handleTransformationSend(config, userVal);
+    await handleTransformationSend(config);
   } else {
     await handleRoleplaySend(config);
   }
