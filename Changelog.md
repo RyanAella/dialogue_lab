@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [0.32.2] - 2026-08-19
+
+### Fixed
+- **Transformation Input Storage**: Fixed critical bug in `handleTransformationSend()` where user input was being read from `UI.elements.userInput.value` after it was already cleared by `prepareMessageSend()`, resulting in empty responses being stored and sent to the AI. Now correctly passes the original `userVal` parameter to ensure the actual user input is saved and evaluated.
+
+---
+
 ## [0.32.1] - 2026-08-17
 
 ### Added
