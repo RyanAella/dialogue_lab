@@ -1,5 +1,17 @@
 # Lab für Sozioinformatik: Gesprächstraining
 
+> **Interactive AI-powered conversation training** — practice difficult conversations with an AI counterpart: roleplay simulations, targeted exercises, speech-to-text, natural text-to-speech, and a layered avatar system.
+
+**[▶ Try the live demo](https://ryanaella.github.io/dialogue_lab/)**
+
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![Web Speech API](https://img.shields.io/badge/Web_Speech_API-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
+
+<!-- TODO: Add a screenshot or GIF of the chat interface here, e.g.: -->
+<!-- ![Dialogue Lab chat interface](docs/screenshot.png) -->
+
 ## 1. Das Projekt auf einen Blick
 
 Das **Lab für Sozioinformatik: Simulation Lab** ist eine interaktive Web-Anwendung, die die Brücke zwischen psychologischer Gesprächsführung und moderner KI schlägt. Nutzer können hier in einem geschützten Raum komplexe Gesprächssituationen trainieren und direktes Feedback erhalten.
@@ -19,7 +31,8 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
 
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Visuelles Feedback:** Ein animierter **Typing Indicator** (Schreib-Indikator) signalisiert dem Nutzer sofort, wenn die KI eine Antwort generiert, was die gefühlte Wartezeit verkürzt.
-- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung und automatischen Pausen bei Satzzeichen werden die Dialoge lebendig. Ein globaler **Stop-Button** in der Sidebar erlaubt es, die Ausgabe jederzeit sofort abzubrechen. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung und automatischen Pausen bei Satzzeichen werden die Dialoge lebendig. E
+in globaler **Stop-Button** in der Sidebar erlaubt es, die Ausgabe jederzeit sofort abzubrechen. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive des ursprünglichen Briefings mit einem Klick als strukturierte Textdatei (`[Modus]_[Titel]_[Datum].txt`) speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
 - **Abwechslungsreiches Training:** Die Übungen im Transformations-Modus werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
 
@@ -35,7 +48,8 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
 - **Robuste Kommunikation**: Implementierung von `AbortController` zur Vermeidung von Race-Conditions bei API-Anfragen.
 
-## 3. Repository-Dateistruktur
+## 3. R
+epository-Dateistruktur
 
 ### Kern-Module (`src/js/`)
 
@@ -68,7 +82,8 @@ Diese Datei steuert alle verfügbaren Inhalte und unterscheidet zwischen den Typ
 ```json
 [
   {
-    "id": "ich_botschaften_basis",
+    "id": "
+ich_botschaften_basis",
     "type": "TRANSFORMATION",
     "config": {
       "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt",
@@ -132,7 +147,8 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
 - **Main-Branch:** Hauptversion unter der Root-URL.
-- **Feature-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
+- **Featu
+re-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
 
 ## 7. Neues Szenario hinzufügen
 
@@ -165,7 +181,8 @@ _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht d
 
 ## 1. Project at a Glance
 
-The **Socio-Informatics Lab: Dialogue Lab** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. Users can practice complex conversation scenarios in a safe environment and receive direct feedback.
+The **Socio-Informatics Lab: Dialogue Lab** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. Users can practice complex conversation scenari
+os in a safe environment and receive direct feedback.
 
 ### Core Functions & Modes
 
@@ -182,7 +199,8 @@ The application offers two specialized training environments:
 - **Visual Feedback:** An animated **typing indicator** signals when the AI is generating a response, enhancing the interactive feel.
 - **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with context-aware rate and pitch modulation creates lifelike dialogues. Optimized for Microsoft Edge (Neural Voices).
 - **Track Your Progress:** Use the **Transcript Export** feature to save the entire conversation history, including the briefing, as a structured text file (`[Mode]_[Title]_[Date].txt`) with a single click—perfect for review or documenting learning progress.
-- **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
+- **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions eng
+aging.
 
 ## 2. Technical Architecture
 
@@ -206,7 +224,8 @@ The application combines a static frontend with a server-side proxy (for API key
 | **`ui.js`**       | **View-Manager**: Manages DOM elements, event listeners, and chat rendering.          |
 | **`avatar.js`**   | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-syncing. |
 | **`speech.js`**   | **Audio-Service**: Encapsulates TTS (Speech Output) and STT (Dictation).              |
-| **`chat.js`**     | **State-Manager**: Maintains conversation history and prepares transcripts.           |
+| **`chat.js`**     | **State-Mana
+ger**: Maintains conversation history and prepares transcripts.           |
 | **`scenario.js`** | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
 | **`api.js`**      | **Network**: Handles API requests with integrated caching.                            |
 | **`utils.js`**    | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
@@ -260,7 +279,8 @@ partner_prompt: reporting_partner_prompt
 mentor_prompt: reporting_mentor_prompt
 
 ### GUI INSTRUCTION ###
-Here follows the briefing shown to the user before starting...
+Here follows the briefing shown to the user before starti
+ng...
 ```
 
 **Variant B: Transformations (Exercise Mode)**
@@ -309,7 +329,8 @@ Every push to a branch triggers an automated deployment:
 
 ## 8. Content Maintenance
 
-### Best Practices for Prompts
+### B
+est Practices for Prompts
 
 - **Avoid Meta-Talk:** AI partners should never discuss "phases" or "prompts"; they must remain in character.
 - **Objection Rotation:** Include a list of 4-5 objections in the partner prompt to ensure variety across sessions.
