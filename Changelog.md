@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Simplified Mode Switching**: Removed the obsolete roleplay branch from the mode selector (`eventListeners.js`, `app.js`, `feedback.js`) as part of the path-based edition approach; simulation mode is the consistent fallback.
 - **Global State Access**: `export.js` now imports `STATE` as an ES module instead of reading `window.STATE` (last consumer removed; the global itself will be dropped with the state store package).
 
+### Fixed
+- **BASE_PATH Normalization**: Opening `index.html` directly (e.g. `/dialogue_lab/index.html`) previously appended the document name to `BASE_PATH`, producing invalid module and asset URLs (`.../index.html/src/js/core/app.js`) and blocking module loading with a MIME-type error. The document filename is now stripped from the pathname before computing `BASE_PATH`.
+
 ## [0.32.3] - 2026-10-06
 ### Changed
 - **Prompt Builder Module**: Ported centralized prompt management from the `dialogue_lab-refactor` repository (first of three incremental packages):
