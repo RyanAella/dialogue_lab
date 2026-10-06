@@ -31,88 +31,8 @@
       }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      // ============================================
-      // Dynamic mode configuration for Dialogue Lab
-      // Detects the current path and derives BASE_PATH and edition settings
-      // ============================================
-      (function() {
-        const rawPath = window.location.pathname.toLowerCase();
-
-        // Strip the document filename so BASE_PATH always points at a directory
-        // Handles /dialogue_lab/, /dialogue_lab/index.html and / alike
-        const path = rawPath.replace(/\/index\.html$/, '/') .replace(/\/[a-z_-]+\.html$/, '/');
-
-        // Compute BASE_PATH dynamically
-        // On GitHub Pages: /dialogue_lab/
-        // Remove mode-specific path segments to find the true base path
-        let basePath = path;
-        const modePaths = ['/simulation-lab', '/simulation', '/practice-edition', '/practice'];
-        for (const mp of modePaths) {
-          if (basePath.includes(mp)) {
-            basePath = basePath.split(mp)[0];
-            break;
-          }
-        }
-
-        // Ensure it ends with a slash
-        if (!basePath.endsWith('/')) basePath += '/';
-
-        let modeClass = 'mode-full';
-        let config;
-        if (path.includes('/simulation-lab/') || path.includes('/simulation/')) {
-          modeClass = 'mode-simulation';
-          config = {
-            MODE: 'simulation-only',
-            ALLOWED_MODES: ['SIMULATION'],
-            HIDE_SIMULATION: false,
-            HIDE_TRANSFORMATION: true,
-            DEFAULT_MODE: 'SIMULATION',
-            BASE_PATH: basePath
-          };
-        } else if (path.includes('/practice-edition/') || path.includes('/practice/')) {
-          modeClass = 'mode-practice';
-          config = {
-            MODE: 'practice-only',
-            ALLOWED_MODES: ['TRANSFORMATION'],
-            HIDE_SIMULATION: true,
-            HIDE_TRANSFORMATION: false,
-            DEFAULT_MODE: 'TRANSFORMATION',
-            BASE_PATH: basePath
-          };
-        } else {
-          config = {
-            MODE: 'full',
-            ALLOWED_MODES: ['SIMULATION', 'TRANSFORMATION'],
-            HIDE_SIMULATION: false,
-            HIDE_TRANSFORMATION: false,
-            DEFAULT_MODE: 'SIMULATION',
-            BASE_PATH: basePath
-          };
-        }
-
-        // Expose configuration globally for the modules
-        window.DIALOGUE_LAB_CONFIG = config;
-
-        // Add mode class to the html element for CSS-based visibility
-        document.documentElement.classList.add(modeClass);
-      })();
-    </script>
     <style>
       /* Custom "Modern Chat" Styles */
-      /* Mode visibility: path-based editions hide UI sections via CSS */
-      .mode-full .mode-select-container { display: block !important; }
-      .mode-full #scenario-section { display: block !important; }
-      .mode-full #exercise-section { display: none !important; }
-
-      .mode-simulation .mode-select-container { display: none !important; }
-      .mode-simulation #scenario-section { display: block !important; }
-      .mode-simulation #exercise-section { display: none !important; }
-
-      .mode-practice .mode-select-container { display: none !important; }
-      .mode-practice #scenario-section { display: none !important; }
-      .mode-practice #exercise-section { display: block !important; }
-
       @keyframes pulse-soft {
         0%,
         100% {
@@ -168,7 +88,6 @@
       class="fixed inset-y-0 left-0 z-[60] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
     >
       <div class="sidebar-section mb-6">
-        <div class="mode-select-container">
         <label class="block font-semibold mb-2 text-slate-700 text-sm">Modus</label>
         <label for="mode-select"></label>
         <select
@@ -178,7 +97,6 @@
           <option value="simulation" selected>Simulation</option>
           <option value="transformation">Transformation</option>
         </select>
-        </div>
         <div id="scenario-section" class="mt-4">
           <label
             id="scenario-label"
@@ -453,13 +371,6 @@
       </div>
     </div>
 
-    <script>
-      // Load app.js with the correct BASE_PATH before DOMContentLoaded fires
-      const basePath = window.DIALOGUE_LAB_CONFIG.BASE_PATH;
-      const appScript = document.createElement('script');
-      appScript.type = 'module';
-      appScript.src = `${basePath}src/js/core/app.js`;
-      document.head.appendChild(appScript);
-    </script>
+    <script src="src/js/core/app.js" type="module"></script>
   </body>
 </html>

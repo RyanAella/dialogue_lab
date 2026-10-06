@@ -120,12 +120,12 @@ export async function confirmReset() {
       window.restartTransformationExercise();
     }
   } else {
-    // For simulation mode, reload the current scenario
+    // For roleplay mode, reload the current scenario
     const active = ScenarioService.getActive();
     if (active && typeof window.loadContent === 'function') {
       await window.loadContent(active.id);
-    } else if (typeof window.switchToSimulationMode === 'function') {
-      await window.switchToSimulationMode();
+    } else if (typeof window.switchToRoleplayMode === 'function') {
+      await window.switchToRoleplayMode();
     }
   }
 }

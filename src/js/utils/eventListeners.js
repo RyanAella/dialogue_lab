@@ -16,13 +16,13 @@ import { handleSend, handleNextExercise } from "./messageHandlers.js";
  * Registers all event listeners for core UI interactions.
  * @param {Object} handlers - Object containing handler functions
  * @param {Function} handlers.switchToTransformationMode - Transformation mode handler
- * @param {Function} [handlers.switchToSimulationMode] - Simulation mode handler
- * @param {Function} [handlers.switchToTransformationMode] - Transformation mode handler
+ * @param {Function} handlers.switchToRoleplayMode - Roleplay mode handler
  * @param {Function} handlers.loadContent - Content loading handler
  */
 export function setupEventListeners(handlers) {
   const {
     switchToTransformationMode,
+    switchToRoleplayMode,
     switchToSimulationMode,
     loadContent
   } = handlers;
@@ -31,10 +31,12 @@ export function setupEventListeners(handlers) {
   UI.elements.modeSelect?.addEventListener("change", async (e) => {
     await DataLogger.endConversation();
 
-    if (e.target.value === APP_MODES.TRANSFORMATION && typeof switchToTransformationMode === 'function') {
+    if (e.target.value === APP_MODES.TRANSFORMATION) {
       await switchToTransformationMode();
-    } else if (typeof switchToSimulationMode === 'function') {
+    } else if (e.target.value === APP_MODES.SIMULATION) {
       await switchToSimulationMode();
+    } else {
+      await switchToRoleplayMode();
     }
   });
 

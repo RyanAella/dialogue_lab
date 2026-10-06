@@ -31,7 +31,8 @@ Die Anwendung bietet zwei spezialisierte Trainingsumgebungen:
 
 - **Barrierefreie Eingabe:** Über das Mikrofon-Symbol können Antworten direkt eingesprochen werden (**Speech-to-Text**). Hinweis: Diese Funktion nutzt die native Web Speech API und wird aktuell von Chrome und Edge unterstützt (in Firefox technisch bedingt deaktiviert).
 - **Visuelles Feedback:** Ein animierter **Typing Indicator** (Schreib-Indikator) signalisiert dem Nutzer sofort, wenn die KI eine Antwort generiert, was die gefühlte Wartezeit verkürzt.
-- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung und automatischen Pausen bei Satzzeichen werden die Dialoge lebendig. Ein globaler **Stop-Button** in der Sidebar erlaubt es, die Ausgabe jederzeit sofort abzubrechen. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
+- **Natürliches Sprachgefühl:** Dank integrierter **Sprachausgabe (TTS)** mit optimierter Betonung und automatischen Pausen bei Satzzeichen werden die Dialoge lebendig. E
+in globaler **Stop-Button** in der Sidebar erlaubt es, die Ausgabe jederzeit sofort abzubrechen. (Tipp: In Microsoft Edge klingen die Stimmen besonders menschlich!)
 - **Fortschritt sichern:** Über den **Protokoll-Export** lässt sich der gesamte Gesprächsverlauf inklusive des ursprünglichen Briefings mit einem Klick als strukturierte Textdatei (`[Modus]_[Titel]_[Datum].txt`) speichern – ideal für die Nachbereitung oder zur Dokumentation von Lernfortschritten.
 - **Abwechslungsreiches Training:** Die Übungen im Transformations-Modus werden bei jedem Start automatisch zufällig angeordnet, um den Lerneffekt zu steigern und Wiederholungen interessanter zu gestalten.
 
@@ -41,15 +42,14 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 
 - **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
 - **Architektur**: Modulare Struktur nach dem **Separation of Concerns** Prinzip. Klare Trennung zwischen UI-Steuerung, API-Kommunikation und Hilfsfunktionen.
-- **Editionen über Pfade**: Eine gemeinsame Codebasis; Editionen werden über die URL ausgewählt (`window.DIALOGUE_LAB_CONFIG` in `index.html`). Alle Ressourcen-Pfade werden zentral über `getFullPath()` (in `src/js/core/config.js`) mit dem dynamischen `BASE_PATH` aufgelöst.
-- **Prompt-Verwaltung**: Der `promptBuilder.js` (Kernmodul) baut System-Prompts zentral zusammen; absolute KI-Verhaltensregeln liegen datengetrieben in `src/data/promptRules.js` und werden für maximale Priorität am Prompt-Ende platziert.
 - **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
 - **Modulares Grafik-System**: Die Darstellung der Partner erfolgt über einen "Avatar-Stack" (CSS Grid). Bilder werden zur Laufzeit kombiniert, um verschiedene Hauttöne, Accessoires und Animationen (Blinzeln, Mundbewegungen) darzustellen.
 - **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
 - **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
 - **Robuste Kommunikation**: Implementierung von `AbortController` zur Vermeidung von Race-Conditions bei API-Anfragen.
 
-## 3. Repository-Dateistruktur
+## 3. R
+epository-Dateistruktur
 
 ### Kern-Module (`src/js/`)
 
@@ -62,17 +62,14 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 | **`chat.js`**     | **State-Manager**: Hält die Gesprächshistorie und bereitet Transkripte vor.                |
 | **`scenario.js`** | **Data-Service**: Lädt Übungspools und verwaltet das aktive Szenario-State.                |
 | **`api.js`**      | **Network**: Handling der API-Anfragen mit integriertem Caching.                           |
-| **`promptBuilder.js`** | **Prompts**: Zentraler Aufbau der System-Prompts aus Szenario-Konfiguration und Regelwerk. |
-| **`state.js`**    | **State**: Zentraler Laufzeit-State (Modus, Übungsfortschritt) der Anwendung.            |
 | **`utils.js`**    | **Helpers**: Statische Funktionen für Markdown-Parsing und Text-Bereinigung.               |
 | **`profiles.js`** | **Assets**: Konfiguration der Charakter-Pools und Grafik-Ebenen.                           |
 
 ### Daten & Inhalte
 
-- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen und Übungen.
-- `src/data/promptRules.js`: Absolute KI-Verhaltensregeln und modusspezifische Basis-Prompts.
+- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen.
 - `scenarios/`: Markdown-ähnliche Szenario-Beschreibungen und GUI-Instruktionen.
-- `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`, `trainer/`).
+- `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`).
 
 ## 4. Szenarien und Konfiguration
 
@@ -143,22 +140,15 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 
 1. **Frontend:** Repository auf GitHub Pages hosten.
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
-3. **Konfiguration:** Die `PROXY_URL` in `src/js/core/config.js` an den Pfad deines Proxy-Skripts anpassen.
-
-### Editions-Deployment über Pfade
-
-Editionen werden nicht mehr über separate Branches, sondern über **URL-Pfade** der gemeinsamen Codebasis ausgewählt (`window.DIALOGUE_LAB_CONFIG` in `index.html` erkennt den Pfad automatisch):
-
-- **Standardpfad (z. B. `.../dialogue_lab/`):** Vollversion mit Modus-Auswahl (Simulation + Transformation).
-- **`/simulation/` bzw. `/simulation-lab/`:** Nur Simulations-Modus.
-- **`/practice/` bzw. `/practice-edition/`:** Nur Transformations-Übungen.
+3. **Konfiguration:** Die `PROXY_URL` in `src/js/config.js` an den Pfad deines Proxy-Skripts anpassen.
 
 ### Multi-Branch Deployment
 
-Der Workflow deployt bei Push auf `main` sowie auf die Produktions-Branches `simulation-lab` und `practice-edition`:
+Jeder Push auf einen Branch löst ein automatisches Deployment aus:
 
-- **Main-Branch:** Hauptversion.
-- **Feature-Branches:** Werden nicht automatisch deployed.
+- **Main-Branch:** Hauptversion unter der Root-URL.
+- **Featu
+re-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
 
 ## 7. Neues Szenario hinzufügen
 
@@ -191,7 +181,8 @@ _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht d
 
 ## 1. Project at a Glance
 
-The **Socio-Informatics Lab: Dialogue Lab** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. Users can practice complex conversation scenarios in a safe environment and receive direct feedback.
+The **Socio-Informatics Lab: Dialogue Lab** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. Users can practice complex conversation scenari
+os in a safe environment and receive direct feedback.
 
 ### Core Functions & Modes
 
@@ -208,7 +199,8 @@ The application offers two specialized training environments:
 - **Visual Feedback:** An animated **typing indicator** signals when the AI is generating a response, enhancing the interactive feel.
 - **Natural Speech Flow:** Integrated **Text-to-Speech (TTS)** with context-aware rate and pitch modulation creates lifelike dialogues. Optimized for Microsoft Edge (Neural Voices).
 - **Track Your Progress:** Use the **Transcript Export** feature to save the entire conversation history, including the briefing, as a structured text file (`[Mode]_[Title]_[Date].txt`) with a single click—perfect for review or documenting learning progress.
-- **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions engaging.
+- **Varied Training:** Exercises in transformation mode are automatically randomized upon every start to enhance the learning effect and keep repetitions eng
+aging.
 
 ## 2. Technical Architecture
 
@@ -216,8 +208,6 @@ The application combines a static frontend with a server-side proxy (for API key
 
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g., hosted on **GitHub Pages**.
 - **Architecture**: Modular structure based on **Separation of Concerns**. Clear distinction between UI management, API communication, and utility logic.
-- **Path-Based Editions**: A single shared codebase; editions are selected via the URL (`window.DIALOGUE_LAB_CONFIG` in `index.html`). All resource paths are resolved centrally via `getFullPath()` (in `src/js/core/config.js`) using the dynamic `BASE_PATH`.
-- **Prompt Management**: The `promptBuilder.js` core module assembles system prompts centrally; absolute AI behavior rules live as data in `src/data/promptRules.js` and are placed at the end of prompts for maximum priority.
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is necessary because API keys must never be exposed in client-side code (JavaScript).
 - **Modular Graphics System:** The representation of partners is handled via an "Avatar Stack" (CSS Grid). Images are combined at runtime to represent different skin tones, accessories, and animations (blinking, mouth movements).
 - **Security (CORS):** The proxy should only accept requests from the **Origin** where the web app is running (e.g., `https://ryanaella.github.io`). Important: **Origin = Scheme + Domain**, not the path (i.e., not `.../dialogue_lab/`).
@@ -234,20 +224,18 @@ The application combines a static frontend with a server-side proxy (for API key
 | **`ui.js`**       | **View-Manager**: Manages DOM elements, event listeners, and chat rendering.          |
 | **`avatar.js`**   | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-syncing. |
 | **`speech.js`**   | **Audio-Service**: Encapsulates TTS (Speech Output) and STT (Dictation).              |
-| **`chat.js`**     | **State-Manager**: Maintains conversation history and prepares transcripts.           |
+| **`chat.js`**     | **State-Mana
+ger**: Maintains conversation history and prepares transcripts.           |
 | **`scenario.js`** | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
 | **`api.js`**      | **Network**: Handles API requests with integrated caching.                            |
-| **`promptBuilder.js`** | **Prompts**: Central assembly of system prompts from scenario configuration and rules. |
-| **`state.js`**    | **State**: Central runtime state (mode, exercise progress) of the application.       |
 | **`utils.js`**    | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
 | **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                      |
 
 ### Data & Content
 
-- `src/data/exercises.json`: The central catalog of all available simulations and exercises.
-- `src/data/promptRules.js`: Absolute AI behavior rules and mode-specific base prompts.
+- `src/data/exercises.json`: The central catalog of all available simulations.
 - `scenarios/`: Markdown-like scenario descriptions and GUI instructions.
-- `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`, `trainer/`).
+- `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`).
 
 > **Note:** A server-side proxy script like `chat.php` is **not necessarily part of this repository**. It can be stored separately on the server to ensure no secrets are committed to the repo.
 
@@ -291,7 +279,8 @@ partner_prompt: reporting_partner_prompt
 mentor_prompt: reporting_mentor_prompt
 
 ### GUI INSTRUCTION ###
-Here follows the briefing shown to the user before starting...
+Here follows the briefing shown to the user before starti
+ng...
 ```
 
 **Variant B: Transformations (Exercise Mode)**
@@ -320,22 +309,14 @@ The script receives the payload from the frontend, adds the Authorization header
 
 1.  **Frontend:** Host the repository on GitHub Pages.
 2.  **Proxy:** Place `chat.php` on a web server with HTTPS support.
-3.  **Configuration:** Update the `PROXY_URL` in `src/js/core/config.js` to the path of your proxy script.
-
-### Path-Based Edition Deployment
-
-Editions are no longer selected via separate branches but via **URL paths** of the shared codebase (`window.DIALOGUE_LAB_CONFIG` in `index.html` detects the path automatically):
-
-- **Default path (e.g., `.../dialogue_lab/`):** Full version with mode selection (Simulation + Transformation).
-- **`/simulation/` or `/simulation-lab/`:** Simulation mode only.
-- **`/practice/` or `/practice-edition/`:** Transformation exercises only.
+3.  **Configuration:** Update the `PROXY_URL` in `src/js/config.js` to the path of your proxy script.
 
 ### Multi-Branch Deployment
 
-The workflow deploys on push to `main` and to the production branches `simulation-lab` and `practice-edition`:
+Every push to a branch triggers an automated deployment:
 
-- **Main branch:** Primary version.
-- **Feature branches:** Not deployed automatically.
+- **Main Branch:** Main version under the root URL.
+- **Feature Branches:** Automatically deployed to subdirectories (e.g., `.../feature-xyz/`), enabling parallel testing of features.
 
 ## 7. Adding a New Scenario
 
@@ -348,7 +329,8 @@ The workflow deploys on push to `main` and to the production branches `simulatio
 
 ## 8. Content Maintenance
 
-### Best Practices for Prompts
+### B
+est Practices for Prompts
 
 - **Avoid Meta-Talk:** AI partners should never discuss "phases" or "prompts"; they must remain in character.
 - **Objection Rotation:** Include a list of 4-5 objections in the partner prompt to ensure variety across sessions.
