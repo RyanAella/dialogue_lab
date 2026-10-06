@@ -6,7 +6,8 @@
 import { API } from "../services/api.js";
 import { Chat } from "../features/chat.js";
 import { DataLogger } from "../services/dataLogger.js";
-import { APP_CONFIG, APP_MODES, UI_TEXTS, PROMPT_TEMPLATES } from "../core/config.js";
+import { APP_CONFIG, APP_MODES, UI_TEXTS } from "../core/config.js";
+import { setupSystemPrompt, getFallbackPrompt, PROMPT_TEMPLATES } from "../core/promptBuilder.js";
 import { UI } from "../ui/ui.js";
 import { ScenarioService } from "../features/scenario.js";
 import { STATE, enableSidebarButtons } from "../core/state.js";
@@ -68,7 +69,7 @@ export async function handleTransformationSend(config, userVal) {
 
   // Get immediate feedback
   try {
-    const evalPrompt = config.prompts.trainer || APP_CONFIG.FALLBACK_PROMPTS.transformation;
+    const evalPrompt = config.prompts.trainer || getFallbackPrompt(APP_MODES.TRANSFORMATION);
     const userPrompt = PROMPT_TEMPLATES.transformation.userEvaluation(
       STATE.activeStatements[STATE.exerciseIndex],
       STATE.answers[STATE.answers.length - 1].userResponse
@@ -126,12 +127,7 @@ export async function handleRoleplaySend(config) {
   UI.showTypingIndicator(config.roleName);
 
   if (!Chat.hasSystemPrompt()) {
-    Chat.setSystemPrompt(
-      PROMPT_TEMPLATES.roleplay.systemPrompt(
-        `${PROMPT_TEMPLATES.roleplay.roleAdherence}\n\n${config.prompts.system}\n\n${PROMPT_TEMPLATES.roleplay.initialTopicGuidance}`,
-        config.prompts.partner
-      )
-    );
+    setupSystemPrompt(config, false);
   }
 
   try {
