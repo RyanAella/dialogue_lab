@@ -4,6 +4,8 @@
  */
 
 import { APP_CONFIG, APP_MODES, EXERCISE_TYPES, FEEDBACK_MESSAGES } from '../core/config.js';
+import { getFallbackPrompt } from '../core/promptBuilder.js';
+import { STATE } from '../core/state.js';
 import { API } from '../services/api.js';
 import { Chat } from './chat.js';
 import { DataLogger } from '../services/dataLogger.js';
@@ -19,12 +21,9 @@ export async function handleFeedback() {
   const config = ScenarioService.getActive();
   if (!config || !config.prompts) return;
 
-  const STATE = window.STATE;
   const isTransform = config.type === EXERCISE_TYPES.TRANSFORMATION;
   const evalPrompt = isTransform ? config.prompts.trainer : config.prompts.mentor;
-  const finalPrompt = evalPrompt || (isTransform
-    ? APP_CONFIG.FALLBACK_PROMPTS.transformation
-    : APP_CONFIG.FALLBACK_PROMPTS.simulation);
+  const finalPrompt = evalPrompt || getFallbackPrompt(isTransform ? APP_MODES.TRANSFORMATION : APP_MODES.SIMULATION);
 
   if (UI.elements.loadingTitle) {
     UI.elements.loadingTitle.textContent = isTransform 
@@ -107,7 +106,6 @@ export async function closeFeedbackModal() {
  * @async
  */
 export async function confirmReset() {
-  const STATE = window.STATE;
   
   // Close reset modal
   const resetModal = UI.elements.resetModal || document.getElementById("reset-modal");

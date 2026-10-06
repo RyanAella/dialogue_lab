@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.32.3] - 2026-10-06
+### Changed
+- **Prompt Builder Module**: Ported centralized prompt management from the `dialogue_lab-refactor` repository (first of three incremental packages):
+  - Added `src/data/promptRules.js` with absolute AI behavior rules (wait for user input, handle greetings neutrally, stay in character), mode-specific base prompts, and fallback prompts as centralized data.
+  - Added `src/js/core/promptBuilder.js` as the single source of truth for system prompt assembly. Absolute rules are placed at the end of the prompt for maximum priority (OpenAI behavior).
+  - `messageHandlers.js` now builds the simulation system prompt via `setupSystemPrompt(config, false)` instead of hand-concatenated `PROMPT_TEMPLATES` strings.
+  - `feedback.js` uses `getFallbackPrompt()` instead of `APP_CONFIG.FALLBACK_PROMPTS` and imports `STATE` as an ES module instead of reading `window.STATE` (first step towards removing global state exposure).
+
 
 ## [0.32.2] - 2026-08-19
 
