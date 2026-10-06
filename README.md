@@ -42,6 +42,8 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 
 - **Frontend**: Statische Website (HTML5, Tailwind CSS, Vanilla JavaScript), z.B. gehostet auf **GitHub Pages**.
 - **Architektur**: Modulare Struktur nach dem **Separation of Concerns** Prinzip. Klare Trennung zwischen UI-Steuerung, API-Kommunikation und Hilfsfunktionen.
+- **Editionen über Pfade**: Eine gemeinsame Codebasis; Editionen werden über die URL ausgewählt (`window.DIALOGUE_LAB_CONFIG` in `index.html`). Alle Ressourcen-Pfade werden zentral über `getFullPath()` (in `src/js/core/config.js`) mit dem dynamischen `BASE_PATH` aufgelöst.
+- **Prompt-Verwaltung**: Der `promptBuilder.js` (Kernmodul) baut System-Prompts zentral zusammen; absolute KI-Verhaltensregeln liegen datengetrieben in `src/data/promptRules.js` und werden für maximale Priorität am Prompt-Ende platziert.
 - **Backend-Proxy**: Ein kleines serverseitiges Skript (z.B. PHP `chat.php`) auf einem beliebigen Webserver/Hosting. Das ist notwendig, da API-Keys niemals im Client-Code (JavaScript) stehen dürfen.
 - **Modulares Grafik-System**: Die Darstellung der Partner erfolgt über einen "Avatar-Stack" (CSS Grid). Bilder werden zur Laufzeit kombiniert, um verschiedene Hauttöne, Accessoires und Animationen (Blinzeln, Mundbewegungen) darzustellen.
 - **Sicherheit (CORS)**: Der Proxy sollte nur Anfragen vom **Origin** akzeptieren, auf dem die Web-App läuft (z.B. `https://ryanaella.github.io`). Wichtig: **Origin = Schema + Domain**, nicht der Pfad (also nicht `.../dialogue_lab/`).
@@ -62,14 +64,17 @@ epository-Dateistruktur
 | **`chat.js`**     | **State-Manager**: Hält die Gesprächshistorie und bereitet Transkripte vor.                |
 | **`scenario.js`** | **Data-Service**: Lädt Übungspools und verwaltet das aktive Szenario-State.                |
 | **`api.js`**      | **Network**: Handling der API-Anfragen mit integriertem Caching.                           |
+| **`promptBuilder.js`** | **Prompts**: Zentraler Aufbau der System-Prompts aus Szenario-Konfiguration und Regelwerk. |
+| **`state.js`**    | **State**: Zentraler Laufzeit-State (Modus, Übungsfortschritt) der Anwendung.            |
 | **`utils.js`**    | **Helpers**: Statische Funktionen für Markdown-Parsing und Text-Bereinigung.               |
 | **`profiles.js`** | **Assets**: Konfiguration der Charakter-Pools und Grafik-Ebenen.                           |
 
 ### Daten & Inhalte
 
-- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen.
+- `src/data/exercises.json`: Der zentrale Katalog aller verfügbaren Simulationen und Übungen.
+- `src/data/promptRules.js`: Absolute KI-Verhaltensregeln und modusspezifische Basis-Prompts.
 - `scenarios/`: Markdown-ähnliche Szenario-Beschreibungen und GUI-Instruktionen.
-- `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`).
+- `prompts/`: Unterordner für KI-Prompts (`system/`, `partner/`, `mentor/`, `trainer/`).
 
 ## 4. Szenarien und Konfiguration
 
@@ -140,15 +145,22 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 
 1. **Frontend:** Repository auf GitHub Pages hosten.
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
-3. **Konfiguration:** Die `PROXY_URL` in `src/js/config.js` an den Pfad deines Proxy-Skripts anpassen.
+3. **Konfiguration:** Die `PROXY_URL` in `src/js/core/config.js` an den Pfad deines Proxy-Skripts anpassen.
+
+### Editions-Deployment über Pfade
+
+Editionen werden nicht mehr über separate Branches, sondern über **URL-Pfade** der gemeinsamen Codebasis ausgewählt (`window.DIALOGUE_LAB_CONFIG` in `index.html` erkennt den Pfad automatisch):
+
+- **Standardpfad (z. B. `.../dialogue_lab/`):** Vollversion mit Modus-Auswahl (Simulation + Transformation).
+- **`/simulation/` bzw. `/simulation-lab/`:** Nur Simulations-Modus.
+- **`/practice/` bzw. `/practice-edition/`:** Nur Transformations-Übungen.
 
 ### Multi-Branch Deployment
 
-Jeder Push auf einen Branch löst ein automatisches Deployment aus:
+Der Workflow deployt bei Push auf `main` sowie auf die Produktions-Branches `simulation-lab` und `practice-edition`:
 
-- **Main-Branch:** Hauptversion unter der Root-URL.
-- **Featu
-re-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
+- **Main-Branch:** Hauptversion.
+- **Feature-Branches:** Werden nicht automatisch deployed.
 
 ## 7. Neues Szenario hinzufügen
 
@@ -208,6 +220,8 @@ The application combines a static frontend with a server-side proxy (for API key
 
 - **Frontend:** Static website (HTML5, Tailwind CSS, Vanilla JavaScript), e.g., hosted on **GitHub Pages**.
 - **Architecture**: Modular structure based on **Separation of Concerns**. Clear distinction between UI management, API communication, and utility logic.
+- **Path-Based Editions**: A single shared codebase; editions are selected via the URL (`window.DIALOGUE_LAB_CONFIG` in `index.html`). All resource paths are resolved centrally via `getFullPath()` (in `src/js/core/config.js`) using the dynamic `BASE_PATH`.
+- **Prompt Management**: The `promptBuilder.js` core module assembles system prompts centrally; absolute AI behavior rules live as data in `src/data/promptRules.js` and are placed at the end of prompts for maximum priority.
 - **Backend Proxy:** A small server-side script (e.g., PHP `chat.php`) on any web server/hosting. This is necessary because API keys must never be exposed in client-side code (JavaScript).
 - **Modular Graphics System:** The representation of partners is handled via an "Avatar Stack" (CSS Grid). Images are combined at runtime to represent different skin tones, accessories, and animations (blinking, mouth movements).
 - **Security (CORS):** The proxy should only accept requests from the **Origin** where the web app is running (e.g., `https://ryanaella.github.io`). Important: **Origin = Scheme + Domain**, not the path (i.e., not `.../dialogue_lab/`).
@@ -228,14 +242,17 @@ The application combines a static frontend with a server-side proxy (for API key
 ger**: Maintains conversation history and prepares transcripts.           |
 | **`scenario.js`** | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
 | **`api.js`**      | **Network**: Handles API requests with integrated caching.                            |
+| **`promptBuilder.js`** | **Prompts**: Central assembly of system prompts from scenario configuration and rules. |
+| **`state.js`**    | **State**: Central runtime state (mode, exercise progress) of the application.       |
 | **`utils.js`**    | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
 | **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                      |
 
 ### Data & Content
 
-- `src/data/exercises.json`: The central catalog of all available simulations.
+- `src/data/exercises.json`: The central catalog of all available simulations and exercises.
+- `src/data/promptRules.js`: Absolute AI behavior rules and mode-specific base prompts.
 - `scenarios/`: Markdown-like scenario descriptions and GUI instructions.
-- `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`).
+- `prompts/`: Subfolders for AI prompts (`system/`, `partner/`, `mentor/`, `trainer/`).
 
 > **Note:** A server-side proxy script like `chat.php` is **not necessarily part of this repository**. It can be stored separately on the server to ensure no secrets are committed to the repo.
 
@@ -309,14 +326,22 @@ The script receives the payload from the frontend, adds the Authorization header
 
 1.  **Frontend:** Host the repository on GitHub Pages.
 2.  **Proxy:** Place `chat.php` on a web server with HTTPS support.
-3.  **Configuration:** Update the `PROXY_URL` in `src/js/config.js` to the path of your proxy script.
+3.  **Configuration:** Update the `PROXY_URL` in `src/js/core/config.js` to the path of your proxy script.
+
+### Path-Based Edition Deployment
+
+Editions are no longer selected via separate branches but via **URL paths** of the shared codebase (`window.DIALOGUE_LAB_CONFIG` in `index.html` detects the path automatically):
+
+- **Default path (e.g., `.../dialogue_lab/`):** Full version with mode selection (Simulation + Transformation).
+- **`/simulation/` or `/simulation-lab/`:** Simulation mode only.
+- **`/practice/` or `/practice-edition/`:** Transformation exercises only.
 
 ### Multi-Branch Deployment
 
-Every push to a branch triggers an automated deployment:
+The workflow deploys on push to `main` and to the production branches `simulation-lab` and `practice-edition`:
 
-- **Main Branch:** Main version under the root URL.
-- **Feature Branches:** Automatically deployed to subdirectories (e.g., `.../feature-xyz/`), enabling parallel testing of features.
+- **Main branch:** Primary version.
+- **Feature branches:** Not deployed automatically.
 
 ## 7. Adding a New Scenario
 
