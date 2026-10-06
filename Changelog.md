@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.32.4] - 2026-10-06
+### Added
+- **Path-Based Edition Configuration**: Ported the single-branch architecture from the `dialogue_lab-refactor` repository (second of three incremental packages). Editions are now selected by URL path instead of dedicated branches:
+  - `index.html` computes `BASE_PATH` dynamically from `window.location.pathname` and exposes `window.DIALOGUE_LAB_CONFIG` (`MODE`, `ALLOWED_MODES`, `HIDE_SIMULATION`, `HIDE_TRANSFORMATION`, `DEFAULT_MODE`, `BASE_PATH`) before the app module loads.
+  - The app entry script is now injected dynamically with the correct `BASE_PATH`, fixing module loading under GitHub Pages sub-paths (e.g. `/dialogue_lab/`).
+  - CSS mode classes (`.mode-full`, `.mode-simulation`, `.mode-practice`) hide/show the mode selector, scenario section, and exercise section per edition.
+- **`getFullPath()` Helper**: New centralized path resolution function in `config.js` that combines relative paths with `BASE_PATH`, eliminating scattered path correction logic.
+
+### Changed
+- **Dynamic Resource Loading**: `api.js`, `scenario.js`, and `avatar.js` resolve prompts, scenarios, statements, exercises, and character images via `getFullPath()`.
+- **Dynamic Mode Initialization**: `state.js` initializes `currentMode` from `DIALOGUE_LAB_CONFIG.DEFAULT_MODE`/`ALLOWED_MODES`; `initializeCurrentMode()` in `modeManager.js` selects the start mode from the edition config.
+- **Simplified Mode Switching**: Removed the obsolete roleplay branch from the mode selector (`eventListeners.js`, `app.js`, `feedback.js`) as part of the path-based edition approach; simulation mode is the consistent fallback.
+- **Global State Access**: `export.js` now imports `STATE` as an ES module instead of reading `window.STATE` (last consumer removed; the global itself will be dropped with the state store package).
+
 ## [0.32.3] - 2026-10-06
 ### Changed
 - **Prompt Builder Module**: Ported centralized prompt management from the `dialogue_lab-refactor` repository (first of three incremental packages):

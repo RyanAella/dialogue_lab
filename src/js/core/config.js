@@ -2,7 +2,35 @@
  * @module Config
  * Centralized configuration settings for the Dialogue Lab application.
  * This file manages API endpoints, model parameters, and static resource paths.
+ * Reads edition settings from window.DIALOGUE_LAB_CONFIG (set in index.html).
  */
+
+/**
+ * Default edition configuration used when window.DIALOGUE_LAB_CONFIG is not set.
+ * @type {Object}
+ */
+const DEFAULT_EDITION_CONFIG = {
+  MODE: 'full',
+  ALLOWED_MODES: ['SIMULATION', 'TRANSFORMATION'],
+  HIDE_SIMULATION: false,
+  HIDE_TRANSFORMATION: false,
+  DEFAULT_MODE: 'SIMULATION',
+  BASE_PATH: ''
+};
+
+/**
+ * Edition configuration derived from window.DIALOGUE_LAB_CONFIG (set in index.html).
+ * @type {Object}
+ */
+export const DIALOGUE_LAB_CONFIG =
+  (typeof window !== 'undefined' && window.DIALOGUE_LAB_CONFIG) || DEFAULT_EDITION_CONFIG;
+
+/**
+ * Base path for asset resolution, derived from the edition configuration.
+ * @type {string}
+ */
+const basePath = DIALOGUE_LAB_CONFIG.BASE_PATH || '';
+
 
 /**
  * Global application configuration object.
@@ -20,7 +48,7 @@ export const APP_CONFIG = {
   CHAT_TEMPERATURE: 0.7,
   COACH_TEMPERATURE: 0.3,
   ICH_BOTSCHAFT_TEMPERATURE: 0.4,
-  EXERCISES_FILE: "src/data/exercises.json",
+  EXERCISES_FILE: `${basePath}src/data/exercises.json`,
   FALLBACK_PROMPTS: {
     transformation: "Du bist ein erfahrener Kommunikations-Coach. Analysiere die Umformulierungen des Nutzers kritisch und gib konstruktives Feedback.",
     simulation: "Du bist ein Mentor. Analysiere das Gesprächsprotokoll und gib hilfreiches Feedback."
@@ -354,3 +382,16 @@ export const PROMPT_TEMPLATES = {
       `Aufgabe: Formuliere die Aussage "${statement}" um.\n\nEingabe des Nutzers: "${userVal}"\n\nGib eine kurze, hilfreiche Rückmeldung (max. 2-3 Sätze) zu dieser spezifischen Umformulierung.`,
   },
 };
+
+/**
+ * Combines a relative path with the configured BASE_PATH.
+ * Strips leading slashes from the relative path and prepends BASE_PATH.
+ * @param {string} relativePath - Relative path (e.g. "src/data/exercises.json" or "scenarios/...")
+ * @returns {string} Full path including BASE_PATH
+ */
+export function getFullPath(relativePath) {
+  if (typeof window === 'undefined') return relativePath;
+  const fullPath = window.DIALOGUE_LAB_CONFIG?.BASE_PATH || '';
+  const cleanPath = relativePath.replace(/^\/+/, '');
+  return fullPath + cleanPath;
+}
