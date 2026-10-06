@@ -111,14 +111,19 @@ Jedes Szenario besteht aus einem **META-Block** (Referenzierung der Prompts) und
 
 ```text
 ### META ###
-title: Kritikgespräch: Verspätetes Reportingsystem_prompt: reporting_system_promptpartner_prompt: reporting_partner_promptmentor_prompt: reporting_mentor_prompt
+title: Kritikgespräch: Verspätetes Reporting
+system_prompt: reporting_system_prompt
+partner_prompt: reporting_partner_prompt
+mentor_prompt: reporting_mentor_prompt
 ```
 
 **Variante B: Transformationen (Übungs-Modus)**
 
 ```text
 ### META ###
-title: Ich-Botschaften Basistrainer_prompt: ich_botschaft_trainershort_instruction: Formuliere den Vorwurf in eine Ich-Botschaft um.
+title: Ich-Botschaften Basis
+trainer_prompt: ich_botschaft_trainer
+short_instruction: Formuliere den Vorwurf in eine Ich-Botschaft um.
 ```
 
 ## 5. Proxy-Setup & Sicherheit
@@ -280,7 +285,10 @@ Each scenario consists of a **META block** and the **GUI Instruction**.
 
 ```text
 ### META ###
-title: Performance Review: Delayed Reportingsystem_prompt: reporting_system_promptpartner_prompt: reporting_partner_promptmentor_prompt: reporting_mentor_prompt
+title: Performance Review: Delayed Reporting
+system_prompt: reporting_system_prompt
+partner_prompt: reporting_partner_prompt
+mentor_prompt: reporting_mentor_prompt
 
 ### GUI INSTRUCTION ###
 Here follows the briefing shown to the user before starting...
@@ -290,7 +298,9 @@ Here follows the briefing shown to the user before starting...
 
 ```text
 ### META ###
-title: I-Statements Basicstrainer_prompt: ich_botschaft_trainershort_instruction: Rephrase the accusation into an I-statement.
+title: I-Statements Basics
+trainer_prompt: ich_botschaft_trainer
+short_instruction: Rephrase the accusation into an I-statement.
 ```
 
 ## 5. Proxy Setup & Security
