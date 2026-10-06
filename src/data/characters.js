@@ -6,10 +6,9 @@
 
 /**
  * Base directory for all character-related image assets.
- * Note: Empty string - will be combined with global BASE_PATH via getFullPath()
  * @constant {string}
  */
-export const BASE_PATH = "";
+export const BASE_PATH = "src/assets/Character/";
 
 /**
  * Shared head assets for female characters to reduce redundancy.

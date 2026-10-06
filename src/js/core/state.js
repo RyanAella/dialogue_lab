@@ -3,7 +3,7 @@
  * Centralized application state management for Dialogue Lab.
  */
 
-import { APP_MODES, DIALOGUE_LAB_CONFIG } from "./config.js";
+import { APP_MODES } from "./config.js";
 import { Chat } from "../features/chat.js";
 import { UI } from "../ui/ui.js";
 
@@ -20,10 +20,7 @@ import { UI } from "../ui/ui.js";
  */
 export let STATE = {
   answers: [],
-  // Dynamic initialization: use DEFAULT_MODE from edition config, fallback to SIMULATION
-  currentMode: (DIALOGUE_LAB_CONFIG?.DEFAULT_MODE?.toLowerCase() ||
-      DIALOGUE_LAB_CONFIG?.ALLOWED_MODES?.[0]?.toLowerCase() ||
-      APP_MODES.SIMULATION),
+  currentMode: APP_MODES.SIMULATION,
   exerciseIndex: 0,
   activeStatements: [],
   ttsEnabled: false,

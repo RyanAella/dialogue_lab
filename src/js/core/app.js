@@ -17,6 +17,7 @@ import { loadContent } from "../services/contentLoader.js";
 import {
   resetAppForMode,
   loadExercises,
+  switchToRoleplayMode,
   switchToSimulationMode,
   switchToTransformationMode,
   initializeCurrentMode,
@@ -45,6 +46,7 @@ async function startApp() {
   await UI.init();
   setupEventListeners({
     switchToTransformationMode,
+    switchToRoleplayMode,
     switchToSimulationMode,
     loadContent
   });
@@ -64,6 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Make key functions globally available for export.js and onclick attributes in index.html
 window.restartTransformationExercise = restartTransformationExercise;
+window.switchToRoleplayMode = switchToRoleplayMode;
 window.switchToTransformationMode = switchToTransformationMode;
 window.handleNextExercise = handleNextExercise;
 window.handleSend = handleSend;
