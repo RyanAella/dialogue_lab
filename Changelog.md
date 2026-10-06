@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.32.5] - 2026-10-06
+### Fixed
+- **Safari Const Collision in App Loader**: The inline script that injects `app.js` declared `const basePath` at global script scope. Safari/WebKit reports a redeclaration in the shared global lexical environment as "Attempt to assign to const or readonly variable", which aborted the loader and prevented the app from starting. The loader is now wrapped in an IIFE so its bindings stay function-local.
+- **Full Mode Section Visibility**: The ported CSS visibility rules for path-based editions overrode the JavaScript-controlled visibility of the scenario and exercise sections in full mode (`.mode-full` rules with `display: ... !important` blocked the `hidden` class toggling in `updateSidebarVisibility()`), leaving the exercise section permanently hidden after switching to transformation mode. Full mode is now controlled by JavaScript alone; the CSS rules only apply to the path-based editions (simulation-only, practice-only).
+
 ## [0.32.4] - 2026-10-06
 ### Added
 - **Path-Based Edition Configuration**: Ported the single-branch architecture from the `dialogue_lab-refactor` repository (second of three incremental packages). Editions are now selected by URL path instead of dedicated branches:

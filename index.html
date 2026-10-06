@@ -100,11 +100,9 @@
     </script>
     <style>
       /* Custom "Modern Chat" Styles */
-      /* Mode visibility: path-based editions hide UI sections via CSS */
-      .mode-full .mode-select-container { display: block !important; }
-      .mode-full #scenario-section { display: block !important; }
-      .mode-full #exercise-section { display: none !important; }
-
+      /* Mode visibility: path-based editions hide UI sections via CSS.
+         Full mode is controlled by JS (updateSidebarVisibility) via the
+         "hidden" class, so no !important rules here. */
       .mode-simulation .mode-select-container { display: none !important; }
       .mode-simulation #scenario-section { display: block !important; }
       .mode-simulation #exercise-section { display: none !important; }
@@ -454,12 +452,17 @@
     </div>
 
     <script>
-      // Load app.js with the correct BASE_PATH before DOMContentLoaded fires
-      const basePath = window.DIALOGUE_LAB_CONFIG.BASE_PATH;
-      const appScript = document.createElement('script');
-      appScript.type = 'module';
-      appScript.src = `${basePath}src/js/core/app.js`;
-      document.head.appendChild(appScript);
+      // Load app.js with the correct BASE_PATH before DOMContentLoaded fires.
+      // Wrapped in an IIFE so the local declarations never collide with
+      // other global lexical bindings (Safari/JSC treats such collisions
+      // as 'Attempt to assign to const or readonly variable').
+      (function() {
+        const loaderBasePath = window.DIALOGUE_LAB_CONFIG.BASE_PATH;
+        const appScript = document.createElement('script');
+        appScript.type = 'module';
+        appScript.src = `${loaderBasePath}src/js/core/app.js`;
+        document.head.appendChild(appScript);
+      })();
     </script>
   </body>
 </html>
