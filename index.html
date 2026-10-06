@@ -37,7 +37,11 @@
       // Detects the current path and derives BASE_PATH and edition settings
       // ============================================
       (function() {
-        const path = window.location.pathname.toLowerCase();
+        const rawPath = window.location.pathname.toLowerCase();
+
+        // Strip the document filename so BASE_PATH always points at a directory
+        // Handles /dialogue_lab/, /dialogue_lab/index.html and / alike
+        const path = rawPath.replace(/\/index\.html$/, '/') .replace(/\/[a-z_-]+\.html$/, '/');
 
         // Compute BASE_PATH dynamically
         // On GitHub Pages: /dialogue_lab/
