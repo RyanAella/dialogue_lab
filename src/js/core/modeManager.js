@@ -146,12 +146,16 @@ export async function switchToTransformationMode(exerciseId = "ich_botschaften_b
  * @async
  */
 export async function initializeCurrentMode() {
-  if (STATE.currentMode === APP_MODES.TRANSFORMATION) {
+  const config = (typeof window !== 'undefined' && window.DIALOGUE_LAB_CONFIG) || {};
+  const defaultMode = (config.DEFAULT_MODE || 'SIMULATION').toLowerCase();
+
+  // Set STATE.currentMode before calling any mode functions
+  STATE.currentMode = defaultMode;
+
+  if (defaultMode === 'transformation') {
     await switchToTransformationMode();
-  } else if (STATE.currentMode === APP_MODES.SIMULATION) {
-    await switchToSimulationMode();
   } else {
-    await switchToRoleplayMode();
+    await switchToSimulationMode(); // Always fall back to SIMULATION
   }
 }
 

@@ -1,5 +1,5 @@
 import { API } from '../services/api.js';
-import { APP_CONFIG, EXERCISE_TYPES, SCENARIO_DEFAULTS, SCENARIO_FILE_KEYS } from '../core/config.js';
+import { APP_CONFIG, EXERCISE_TYPES, SCENARIO_DEFAULTS, SCENARIO_FILE_KEYS, getFullPath } from '../core/config.js';
 import { Utils } from '../utils/utils.js';
 
 /**
@@ -71,7 +71,7 @@ export const ScenarioService = {
       ? exercise.config[SCENARIO_FILE_KEYS.INSTRUCTION_FILE]
       : exercise.config[SCENARIO_FILE_KEYS.SCENARIO_FILE];
 
-    const data = await API.fetchCompleteScenario(filePath);
+    const data = await API.fetchCompleteScenario(getFullPath(filePath));
 
     // Compute additional metadata for the active session
     this._active = {
@@ -86,7 +86,8 @@ export const ScenarioService = {
 
     // Load additional statements if it's a transformation exercise
     if (isTransform && exercise.config[SCENARIO_FILE_KEYS.SOURCE_FILE]) {
-      const resp = await fetch(`${exercise.config[SCENARIO_FILE_KEYS.SOURCE_FILE]}?t=${Date.now()}`);
+      const sourceUrl = getFullPath(exercise.config[SCENARIO_FILE_KEYS.SOURCE_FILE]);
+      const resp = await fetch(`${sourceUrl}?t=${Date.now()}`);
       const text = await resp.text();
       this._statements = text
         .split(/\r?\n/)
