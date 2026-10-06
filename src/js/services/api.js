@@ -1,5 +1,4 @@
 import { Utils } from "../utils/utils.js";
-import { getFullPath } from "../core/config.js";
 
 /**
  * @module API
@@ -91,7 +90,7 @@ export const API = {
       return cached.content;
     }
 
-    const response = await this._request(getFullPath(`prompts/${type}/${promptName}.txt`));
+    const response = await this._request(`prompts/${type}/${promptName}.txt`);
     const content = (await response.text()).trim();
     CACHE.set(cacheKey, { content, timestamp: Date.now() });
     return content;
@@ -106,7 +105,7 @@ export const API = {
    * @async
    */
   async fetchCompleteScenario(filePath) {
-    const response = await this._request(getFullPath(filePath));
+    const response = await this._request(filePath);
     const text = await response.text();
     const { metaSection, instructionSection } = Utils.parseScenarioContent(text);
 
@@ -146,7 +145,7 @@ export const API = {
    * @async
    */
   async fetchScenarioTitle(filePath) {
-    const response = await this._request(getFullPath(filePath)).catch(() => null);
+    const response = await this._request(filePath).catch(() => null);
     if (!response) return null;
     const content = await response.text();
     const titleMatch = content.match(/title:\s*(.*)/);

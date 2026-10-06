@@ -17,6 +17,7 @@ export function downloadCurrentTranscript() {
   const config = ScenarioService.getActive();
   if (!config) return;
 
+  const STATE = window.STATE;
   const isTransform = STATE.currentMode === EXERCISE_TYPES.TRANSFORMATION;
   const briefing = UI.elements.briefingContent?.innerText.trim() || "";
   const dateString = new Date().toLocaleString();
