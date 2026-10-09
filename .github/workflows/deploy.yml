@@ -18,6 +18,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: JS Syntax Check
+        run: |
+          set -e
+          find src/js -name '*.js' -exec node --check {} \;
+
       - name: Create Public Artifact Folder
         run: |
           mkdir -p public
