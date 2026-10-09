@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+---
+
+## [Unreleased]
+
+### Added
+- **Repository conventions**: New `CONTRIBUTING.md` with a Git workflow reference (branch naming `feature/`/`fix/`, merge and release process, `git release` alias). The changelog is now maintained continuously under `## [Unreleased]`.
+- **Line endings**: New `.gitattributes` — LF in the repo, native checkout on Windows; binary assets (images, fonts, audio) explicitly marked as `binary`.
+- **Deploy workflow**: JS syntax check (`node --check` across all `src/js` modules) before deploying to GitHub Pages — broken modules can no longer go live.
+
+### Changed
+- **Deployment**: GitHub Pages deploy now runs from `main` only. The former product branches `simulation-lab` and `practice-edition` are obsolete and no longer deployed.
+
+---
+
 ## [0.32.3] - 2026-10-06
 ### Changed
 - **Prompt Builder Module**: Ported centralized prompt management from the `dialogue_lab-refactor` repository (first of three incremental packages):
