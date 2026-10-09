@@ -26,6 +26,16 @@ Kurze Nachschlage-Referenz für den Git-Workflow in diesem Repo. Ziel: nicht mer
   ```
 - Die früheren Produkt-Branches (`simulation-lab`, `practice-edition`) sind **obsolet** und werden nicht mehr gepflegt. Keine neuen Branches dieser Art anlegen.
 
+### Pull Requests: wann sinnvoll?
+
+Bei Solo-Entwicklung sind PRs kein Pflicht-Schritt – der Standard-Weg ist der direkte `--no-ff`-Merge auf `main`. Ein PR (reines Selbst-Review) lohnt sich aber für:
+
+- Änderungen an `deploy.yml` / CI / Release-Versionslogik
+- Riskante oder experimentelle Änderungen, bei denen du einen Abbruch-Punkt vor dem Live-Deploy willst
+- Sobald mehrere Personen am Repo arbeiten
+
+Dafür gibt es einen Sicherheits-Puffer: Jeder Push auf `main` deployt sofort live nach GitHub Pages – vor dem Merge im Browser testen, ein kaputter Zustand ist per Revert in Minuten behoben.
+
 ## Zeilenenden (`.gitattributes`)
 
 Das Repo speichert LF und checkt auf Windows nativ aus (`.gitattributes`, `* text=auto`). Binär-Assets (Bilder, Fonts, Audio) sind explizit als `binary` markiert – nie manuell an den Zeilenenden "reparieren", das übernimmt Git.
@@ -64,7 +74,12 @@ Nach dem Release zeigt `git diff vVorherige vX.Y.Z` sofort, was in der Version g
 
 ## CI / Deployment
 
-Bei jedem Push auf `main` läuft der Workflow **Deploy** (`.github/workflows/deploy.yml`): Das Build-Artefakt (`index.html`, `src/`, `scenarios/`, `prompts/`) wird automatisch nach GitHub Pages veröffentlicht. Es gibt hier keinen separaten Validate-Workflow – deswegen gilt: **App nach dem Merge im Browser testen**, rotes Deploy = sofort fixen.
+Bei jedem Push auf `main` läuft der Workflow **Deploy** (`.github/workflows/deploy.yml`) in zwei Schritten:
+
+1. **JS-Syntax-Check:** alle Module unter `src/js` werden mit `node --check` geparst. Vorsicht bei ES-Modul-Syntax (Import/Export): Der Check schlägt fehl, wenn ein Modul nicht geparst werden kann – das fängt kaputte Builds, bevor sie live gehen.
+2. **Deployment:** Das Build-Artefakt (`index.html`, `src/`, `scenarios/`, `prompts/`) wird automatisch nach GitHub Pages veröffentlicht.
+
+Es gibt hier keinen separaten Validate-Workflow – deswegen gilt: **App nach dem Merge im Browser testen**, rotes Deploy = sofort fixen.
 
 ## Optional: `git release`-Alias (lokales Setup)
 
