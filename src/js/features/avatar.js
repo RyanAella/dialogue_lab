@@ -3,7 +3,7 @@
  * This module manages a multi-layered SVG/PNG character system.
  */
 
-import { AVATAR_CONFIG, AVATAR_ANIMATION } from "../core/config.js";
+import { AVATAR_CONFIG, AVATAR_ANIMATION, getFullPath } from "../core/config.js";
 
 const { TRANSPARENT_PIXEL, LAYERS } = AVATAR_CONFIG;
 const { MOUTH_INTERVAL, BLINK_DURATION, BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX } = AVATAR_ANIMATION;
@@ -70,7 +70,7 @@ export const Avatar = {
       ...(profile.hair || []),
       ...(profile.eyesOpen || []),
       ...(profile.mouthsClosed || []),
-    ].map((p) => String(profile.basePath + p));
+    ].map((p) => String(getFullPath("src/assets/Character/" + profile.basePath + p)));
 
     const promises = paths.slice(0, 15).map((src) => {
       return new Promise((resolve) => {
@@ -188,7 +188,7 @@ export const Avatar = {
         ];
         break;
     }
-    return file && file.trim() !== "" ? s.config.basePath + file : "";
+    return file && file.trim() !== "" ? getFullPath("src/assets/Character/" + s.config.basePath + file) : "";
   },
 
   /**

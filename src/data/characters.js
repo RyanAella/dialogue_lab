@@ -8,7 +8,7 @@
  * Base directory for all character-related image assets.
  * @constant {string}
  */
-export const BASE_PATH = "src/assets/Character/";
+export const BASE_PATH = "";
 
 /**
  * Shared head assets for female characters to reduce redundancy.

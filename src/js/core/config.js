@@ -5,6 +5,40 @@
  */
 
 /**
+ * Default configuration used when window.DIALOGUE_LAB_CONFIG is not set.
+ * @type {Object}
+ */
+export const DEFAULT_EDITION_CONFIG = {
+  MODE: "full",
+  ALLOWED_MODES: ["SIMULATION", "TRANSFORMATION"],
+  HIDE_SIMULATION: false,
+  HIDE_TRANSFORMATION: false,
+  DEFAULT_MODE: "SIMULATION",
+  BASE_PATH: "",
+};
+
+/**
+ * Edition configuration exposed by index.html via window.DIALOGUE_LAB_CONFIG.
+ * @type {Object}
+ */
+export const DIALOGUE_LAB_CONFIG =
+  (typeof window !== "undefined" && window.DIALOGUE_LAB_CONFIG) ||
+  DEFAULT_EDITION_CONFIG;
+
+/**
+ * Combines a relative path with the configured BASE_PATH.
+ * Leading slashes are stripped from the relative path.
+ * @param {string} relativePath - Relative path (e.g. "src/data/exercises.json").
+ * @returns {string} Full path prefixed with BASE_PATH.
+ */
+export function getFullPath(relativePath) {
+  if (typeof window === "undefined") return relativePath;
+  const basePath = window.DIALOGUE_LAB_CONFIG?.BASE_PATH || "";
+  const cleanPath = relativePath.replace(/^\/+/, "");
+  return basePath + cleanPath;
+}
+
+/**
  * Global application configuration object.
  * @type {Object}
  * @property {string} PROXY_URL - The destination endpoint for the server-side API proxy.
