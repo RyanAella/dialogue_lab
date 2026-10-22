@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Mentor analysiert falsches Gespräch**: `loadContent()` leert jetzt die Chat-History (`Chat.clear()`), nicht nur das Chat-Fenster im DOM. Bisher blieben die Turns eines vorherigen Gesprächs (z.B. Reporting) im Protokoll, wenn direkt ein zweites Szenario gestartet wurde – die Mentor-Auswertung bezog sich dann auf das alte Gespräch. Beim Szenariowechsel wird außerdem laufende Sprachausgabe gestoppt.
+- **Spracherkennung bricht nach wenigen Sekunden ab**: `Speech.initSTT()` nutzt jetzt `continuous = true` und startet die Erkennung nach einem browserseitigen Stopp automatisch neu, solange der Mikrofon-Button nicht explizit ausgeschaltet wurde. Erkannte Zwischenergebnisse werden korrekt gesammelt, erwartbare Fehler (`no-speech`, `aborted`) unterdrückt.
+
+### Changed
+- **Feedback-Vorlesen stoppbar**: Neuer Button „🔇 Vorlesen stoppen“ im Mentor-Feedback-Modal – laufende Sprachausgabe lässt sich jetzt innerhalb des Analysefensters beenden, ohne das Modal zu schließen. Schließen des Modals stoppt die Ausgabe ebenfalls.
+- **Mentor-Sprechtempo**: Vorlesen des Mentor-Feedbacks ist schneller (rate 1.0–1.05 statt 0.85–0.88).
+- **Realistischere Simulationspartnerin (Szenario „Schwierigkeiten“)**: Der Partner-Prompt regelt jetzt explizit die Reaktion auf unsachliche Führung. Bei direkten Vorwürfen, Schuldzuweisungen oder Unterstellungen (z.B. „mangelndes Engagement“) wehrt sich die Mitarbeiterin realistisch, wird knapp und blockiert – kooperative Verbesserungsvorschläge gibt es erst, wenn die Führungskraft sachlich und respektvoll führt. Unfaire Ansprache allein löst keine positive Reaktion mehr aus.
+
 ### Added
 - **Repository conventions**: New `CONTRIBUTING.md` with a Git workflow reference (branch naming `feature/`/`fix/`, merge and release process, `git release` alias). The changelog is now maintained continuously under `## [Unreleased]`.
 - **Line endings**: New `.gitattributes` — LF in the repo, native checkout on Windows; binary assets (images, fonts, audio) explicitly marked as `binary`.
