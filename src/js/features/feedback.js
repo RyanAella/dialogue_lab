@@ -8,6 +8,7 @@ import { getFallbackPrompt } from '../core/promptBuilder.js';
 import { STATE } from '../core/state.js';
 import { API } from '../services/api.js';
 import { Chat } from './chat.js';
+import { Speech } from './speech.js';
 import { DataLogger } from '../services/dataLogger.js';
 import { UI } from '../ui/ui.js';
 import { ScenarioService } from './scenario.js';
@@ -98,6 +99,7 @@ export async function closeFeedbackModal() {
   const modal = UI.elements.feedbackModal;
   if (modal) modal.classList.add("hidden");
   document.body.style.overflow = "auto";
+  Speech.stop();
   await confirmReset();
 }
 
