@@ -7,6 +7,8 @@ import { UI } from "../ui/ui.js";
 import { DataLogger } from "./dataLogger.js";
 import { EXERCISE_TYPES, UI_TEXTS } from "../core/config.js";
 import { ScenarioService } from "../features/scenario.js";
+import { Chat } from "../features/chat.js";
+import { Speech } from "../features/speech.js";
 import { STATE } from "../core/state.js";
 import { Utils } from "../utils/utils.js";
 import { getProfilePool } from "../features/profiles.js";
@@ -24,6 +26,13 @@ export async function loadContent(exerciseId) {
   UI.updateStatus("loading", UI_TEXTS.status.loading);
   UI.setBriefingLoading(true);
   UI.elements.chatWindow.innerHTML = "";
+  // The chat history is the source for the mentor transcript, so it must be
+  // cleared whenever a new scenario or exercise is loaded. Otherwise the
+  // mentor analysis would also include turns from a previous conversation.
+  Chat.clear();
+  Speech.stop();
+  STATE.exerciseIndex = 0;
+  STATE.answers = [];
   UI.setExerciseActionsVisible(false);
   if (UI.elements.exportTranscriptBtn) {
     UI.elements.exportTranscriptBtn.classList.add("hidden");

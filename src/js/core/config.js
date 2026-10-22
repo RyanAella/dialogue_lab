@@ -121,6 +121,7 @@ export const DOM_ELEMENT_IDS = [
   "exercise-actions", "feedback-btn", "export-transcript-btn",
   "modal-download-btn", "reset-btn", "auto-speak-toggle",
   "speak-briefing-btn", "stop-speech-btn", "mic-btn",
+  "feedback-stop-speech-btn",
   "loading-overlay", "loading-title", "feedback-modal",
   "feedback-modal-title", "modal-close-feedback", "modal-close-reset",
   "reset-modal", "partner-name-display",

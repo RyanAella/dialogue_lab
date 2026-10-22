@@ -29,6 +29,12 @@ export const Speech = {
 
     this._recognition = new SpeechRecognition();
     this._recognition.lang = SPEECH_CONFIG.LANG;
+    this._recognition.continuous = true;
+    this._recognition.interimResults = false;
+    // Some browsers (e.g. Chrome) stop the recognition on their own after a
+    // few seconds of silence. Restart it as long as the user has not
+    // explicitly stopped it by toggling the microphone button.
+    this._recognition.autoRestart = false;
 
     this._recognition.onstart = () => {
       this._isListening = true;
@@ -37,22 +43,60 @@ export const Speech = {
     };
 
     this._recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
+      let transcript = "";
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
+      }
+      if (!transcript) return;
       const currentVal = userInput.value.trim();
-      userInput.value = currentVal + (currentVal ? " " : "") + transcript;
+      userInput.value = currentVal + (currentVal ? " " : "") + transcript.trim();
       userInput.focus();
       // Trigger das Event manuell, damit der Senden-Button aktiviert wird
       userInput.dispatchEvent(new Event("input", { bubbles: true }));
     };
 
     this._recognition.onend = () => {
+      if (this._recognition.autoRestart) {
+        // Slight delay: calling start() synchronously inside onend can throw
+        // an InvalidStateError in some browsers.
+        setTimeout(() => {
+          if (!this._recognition.autoRestart) return;
+          try {
+            this._recognition.start();
+          } catch (e) {
+            this._isListening = false;
+            micBtn.classList.remove("text-red-600", "animate-pulse");
+            statusCallback("default", "Bereit");
+          }
+        }, 250);
+        return;
+      }
       this._isListening = false;
       micBtn.classList.remove("text-red-600", "animate-pulse");
       statusCallback("default", "Bereit");
     };
 
-    micBtn.onclick = () =>
-      this._isListening ? this._recognition.stop() : this._recognition.start();
+    this._recognition.onerror = (e) => {
+      // "no-speech" and "aborted" are expected during continuous listening;
+      // everything else is surfaced to the user via the status line.
+      if (e.error !== "no-speech" && e.error !== "aborted") {
+        statusCallback("error", `Spracherkennung: ${e.error}`);
+      }
+    };
+
+    micBtn.onclick = () => {
+      if (this._isListening) {
+        this._recognition.autoRestart = false;
+        this._recognition.stop();
+      } else {
+        this._recognition.autoRestart = true;
+        try {
+          this._recognition.start();
+        } catch (e) {
+          this._isListening = false;
+        }
+      }
+    };
     return true;
   },
 
@@ -129,7 +173,7 @@ export const Speech = {
     const isHQ = voice?.name.toLowerCase().includes("neural");
     const isMentor = roleName && MENTOR_KEYWORDS.some(kw => roleName.toLowerCase().includes(kw));
 
-    utterance.rate = isMentor ? (isHQ ? 0.88 : 0.85) : isHQ ? 0.95 : 0.9;
+    utterance.rate = isMentor ? (isHQ ? 1.05 : 1.0) : isHQ ? 0.95 : 0.9;
     utterance.pitch = isMentor ? 0.95 : isFemale ? 1.05 : 0.98;
     utterance.volume = SPEECH_CONFIG.VOLUME;
 

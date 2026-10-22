@@ -9,6 +9,7 @@ import { APP_MODES } from "../core/config.js";
 import { switchToSimulationMode } from "../core/modeManager.js";
 import { handleFeedback, closeFeedbackModal } from "../features/feedback.js";
 import { downloadCurrentTranscript } from "../features/export.js";
+import { Speech } from "../features/speech.js";
 import { STATE } from "../core/state.js";
 import { handleSend, handleNextExercise } from "./messageHandlers.js";
 
@@ -70,6 +71,12 @@ export function setupEventListeners(handlers) {
   // Export Buttons
   UI.elements.exportTranscriptBtn?.addEventListener("click", downloadCurrentTranscript);
   UI.elements.modalDownloadBtn?.addEventListener("click", downloadCurrentTranscript);
+
+  // Stop feedback read-aloud without closing the modal
+  UI.elements.feedbackStopSpeechBtn?.addEventListener("click", () => {
+    Speech.stop();
+    UI.updateStatus("idle", "Bereit");
+  });
 
   // Modal close buttons
   UI.elements.modalCloseFeedback?.addEventListener("click", closeFeedbackModal);
