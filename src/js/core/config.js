@@ -22,8 +22,10 @@ export const DEFAULT_EDITION_CONFIG = {
  * @type {Object}
  */
 export const DIALOGUE_LAB_CONFIG =
-  (typeof window !== "undefined" && window.DIALOGUE_LAB_CONFIG) ||
-  DEFAULT_EDITION_CONFIG;
+    (typeof window !== "undefined" &&
+        typeof window.DIALOGUE_LAB_CONFIG !== "undefined" &&
+        window.DIALOGUE_LAB_CONFIG) ||
+    DEFAULT_EDITION_CONFIG;
 
 /**
  * Combines a relative path with the configured BASE_PATH.

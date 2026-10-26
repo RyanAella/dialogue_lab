@@ -54,15 +54,22 @@ async function startApp() {
   initResearcherMenu();
 }
 
-// Initialization on DOM ready
-document.addEventListener("DOMContentLoaded", async () => {
+// Initialization on DOM ready. app.js is loaded dynamically by index.html,
+// so DOMContentLoaded may already have fired when this module executes.
+async function init() {
   try {
     await startApp();
   } catch (error) {
     console.error("Critical initialization error:", error);
     UI.updateStatus("error", UI_TEXTS.errors.initializationError);
   }
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 
 // Make key functions globally available for export.js and onclick attributes in index.html
 window.restartTransformationExercise = restartTransformationExercise;

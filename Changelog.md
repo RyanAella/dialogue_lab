@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- **Single-page `index.html` with path-based editions (part 1)**: `index.html` now detects the URL path (`/simulation-lab/`, `/practice-edition/`) and derives `BASE_PATH` and the mode configuration (`full` / `simulation-only` / `practice-only`) dynamically. The document filename is stripped from `BASE_PATH` so direct `index.html` access works locally. `app.js` is loaded with the correct `BASE_PATH` via an IIFE-wrapped dynamic loader (avoids a Safari/WebKit const-redeclaration crash) and handles `DOMContentLoaded` having already fired.
+
+### Changed
+- **Dynamic module loading**: The static `<script src="src/js/core/app.js">` tag is replaced by a dynamic loader that respects `BASE_PATH`.
+
 ---
 
 ## [0.33.0] - 2026-10-26
