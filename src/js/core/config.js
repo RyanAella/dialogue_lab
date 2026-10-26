@@ -117,7 +117,7 @@ export const MODE_BADGE_CONFIG = {
  */
 export const DOM_ELEMENT_IDS = [
   "briefing-header", "briefing-content", "chevron", "scenarios", "exercises",
-  "scenario-section", "exercise-section", "mode-select", "mode-badge",
+  "scenario-section", "exercise-section", "mode-select", "mode-select-container", "mode-badge",
   "chat-window", "start-info", "user-input", "send-btn", "next-task-btn",
   "status-box", "mobile-menu-btn", "sidebar", "sidebar-overlay",
   "exercise-actions", "feedback-btn", "export-transcript-btn",

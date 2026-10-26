@@ -41,8 +41,8 @@ export function setupEventListeners(handlers) {
     }
   });
 
-  // Scenario Selector
-  UI.elements.scenarioSelect.addEventListener("change", async (e) => {
+  // Scenario Selector (absent/hidden in practice edition)
+  UI.elements.scenarioSelect?.addEventListener("change", async (e) => {
     await DataLogger.endConversation();
     await loadContent(e.target.value);
   });
@@ -91,7 +91,7 @@ export function setupEventListeners(handlers) {
   });
 
   // Briefing Header Toggle
-  UI.elements.briefingHeader.addEventListener("click", () => {
+  UI.elements.briefingHeader?.addEventListener("click", () => {
     const h = UI.elements.briefingContent.classList.toggle("hidden");
     UI.elements.chevron.style.transform = h ? "rotate(-90deg)" : "rotate(0deg)";
   });

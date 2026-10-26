@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Dynamic module loading**: The static `<script src="src/js/core/app.js">` tag is replaced by a dynamic loader that respects `BASE_PATH`.
 - **Dynamic mode initialization**: `STATE.currentMode` is now initialized from the edition configuration (`DEFAULT_MODE`) instead of a hardcoded simulation mode, so restricted editions (simulation-only, practice-only) start in the correct mode.
 - **Exercise loading failure handling**: `loadExercises()` returns a success flag; `startApp()` aborts initialization with a clear error message when the exercise pool cannot be loaded, instead of leaving empty dropdowns. `EXERCISES_FILE` is now resolved via `getFullPath()` so exercise loading works from path-based editions.
+- **Edition-aware sidebar visibility**: `updateSidebarVisibility()` respects the path-based edition (`mode-simulation` / `mode-practice` class on `<html>`): restricted editions hide the mode selector (and its label) and show only their own section, without fighting the full edition's JS-controlled visibility. Event listeners for scenario selection and briefing toggle are now defensive (optional chaining), preventing crashes when elements are absent in restricted editions.
 
 ---
 
