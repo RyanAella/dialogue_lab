@@ -51,9 +51,18 @@ export function resetAppForMode(mode) {
 export async function loadExercises() {
   try {
     await ScenarioService.loadPool();
+    if (ScenarioService._exercises.length === 0) {
+      const errorMsg = `${UI_TEXTS.errors.prefix} ${UI_TEXTS.errors.exercisesLoadFailed}`;
+      UI.updateStatus("error", errorMsg);
+      showBriefingError(errorMsg);
+      return false;
+    }
+    return true;
   } catch (error) {
-    UI.updateStatus("error", `${UI_TEXTS.errors.prefix} ${error.message}`);
-    showBriefingError(`${UI_TEXTS.errors.prefix} ${error.message}`);
+    const errorMsg = `${UI_TEXTS.errors.prefix} ${error.message}`;
+    UI.updateStatus("error", errorMsg);
+    showBriefingError(errorMsg);
+    return false;
   }
 }
 

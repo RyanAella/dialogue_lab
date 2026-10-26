@@ -354,6 +354,7 @@ export const UI_TEXTS = {
     loadingError: "Ladefehler.",
     contentLoadingError: "Ladefehler",
     initializationError: "Die Anwendung konnte nicht korrekt initialisiert werden.",
+    exercisesLoadFailed: "Übungen konnten nicht geladen werden. Bitte Seite neu laden.",
   },
   // Input placeholders
   input: {

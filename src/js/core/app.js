@@ -42,7 +42,12 @@ async function startApp() {
   DataLogger.setAutoUpload(true);
   DataLogger.init();
 
-  await loadExercises();
+  const exercisesLoaded = await loadExercises();
+  if (!exercisesLoaded) {
+    UI.updateStatus("error", UI_TEXTS.errors.exercisesLoadFailed);
+    return;
+  }
+
   await UI.init();
   setupEventListeners({
     switchToTransformationMode,

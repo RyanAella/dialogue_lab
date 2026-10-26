@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - **Dynamic module loading**: The static `<script src="src/js/core/app.js">` tag is replaced by a dynamic loader that respects `BASE_PATH`.
+- **Dynamic mode initialization**: `STATE.currentMode` is now initialized from the edition configuration (`DEFAULT_MODE`) instead of a hardcoded simulation mode, so restricted editions (simulation-only, practice-only) start in the correct mode.
+- **Exercise loading failure handling**: `loadExercises()` returns a success flag; `startApp()` aborts initialization with a clear error message when the exercise pool cannot be loaded, instead of leaving empty dropdowns. `EXERCISES_FILE` is now resolved via `getFullPath()` so exercise loading works from path-based editions.
 
 ---
 
