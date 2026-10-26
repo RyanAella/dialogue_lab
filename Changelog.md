@@ -8,14 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Fixed
-- **Mentor analysiert falsches Gespräch**: `loadContent()` leert jetzt die Chat-History (`Chat.clear()`), nicht nur das Chat-Fenster im DOM. Bisher blieben die Turns eines vorherigen Gesprächs (z.B. Reporting) im Protokoll, wenn direkt ein zweites Szenario gestartet wurde – die Mentor-Auswertung bezog sich dann auf das alte Gespräch. Beim Szenariowechsel wird außerdem laufende Sprachausgabe gestoppt.
-- **Spracherkennung bricht nach wenigen Sekunden ab**: `Speech.initSTT()` nutzt jetzt `continuous = true` und startet die Erkennung nach einem browserseitigen Stopp automatisch neu, solange der Mikrofon-Button nicht explizit ausgeschaltet wurde. Erkannte Zwischenergebnisse werden korrekt gesammelt, erwartbare Fehler (`no-speech`, `aborted`) unterdrückt.
+---
 
-### Changed
-- **Feedback-Vorlesen stoppbar**: Neuer Button „🔇 Vorlesen stoppen“ im Mentor-Feedback-Modal – laufende Sprachausgabe lässt sich jetzt innerhalb des Analysefensters beenden, ohne das Modal zu schließen. Schließen des Modals stoppt die Ausgabe ebenfalls.
-- **Mentor-Sprechtempo**: Vorlesen des Mentor-Feedbacks ist schneller (rate 1.0–1.05 statt 0.85–0.88).
-- **Realistischere Simulationspartnerin (Szenario „Schwierigkeiten“)**: Der Partner-Prompt regelt jetzt explizit die Reaktion auf unsachliche Führung. Bei direkten Vorwürfen, Schuldzuweisungen oder Unterstellungen (z.B. „mangelndes Engagement“) wehrt sich die Mitarbeiterin realistisch, wird knapp und blockiert – kooperative Verbesserungsvorschläge gibt es erst, wenn die Führungskraft sachlich und respektvoll führt. Unfaire Ansprache allein löst keine positive Reaktion mehr aus.
+## [0.33.0] - 2026-10-26
+
+### Fixed
+- **Mentor analyzed the wrong conversation**: `loadContent()` now clears the chat history (`Chat.clear()`), not just the chat window in the DOM. Previously, the turns of an earlier conversation (e.g. Reporting) stayed in the transcript when a second scenario was started directly — the mentor's analysis then referred to the old conversation. Switching scenarios also stops any ongoing speech output.
+- **Speech recognition stopped after a few seconds**: `Speech.initSTT()` now uses `continuous = true` and automatically restarts recognition after a browser-side stop, as long as the microphone button has not been explicitly turned off. Intermediate results are collected correctly; expected errors (`no-speech`, `aborted`) are suppressed.
 
 ### Added
 - **Repository conventions**: New `CONTRIBUTING.md` with a Git workflow reference (branch naming `feature/`/`fix/`, merge and release process, `git release` alias). The changelog is now maintained continuously under `## [Unreleased]`.
@@ -23,6 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Deploy workflow**: JS syntax check (`node --check` across all `src/js` modules) before deploying to GitHub Pages — broken modules can no longer go live.
 
 ### Changed
+- **Stoppable feedback read-aloud**: New "🔇 Vorlesen stoppen" (stop read-aloud) button in the mentor feedback modal — running speech output can now be stopped inside the analysis window without closing the modal. Closing the modal also stops the output.
+- **Mentor speaking rate**: Reading the mentor feedback aloud is faster (rate 1.0–1.05 instead of 0.85–0.88).
+- **More realistic simulation partner (scenario "Schwierigkeiten")**: The partner prompt now explicitly governs the reaction to unprofessional leadership. When confronted with direct accusations, blame, or insinuations (e.g. "lack of engagement"), the employee defends herself realistically, becomes curt and blocked — cooperative suggestions for improvement only come once the manager leads factually and respectfully. Unfair address alone no longer triggers a positive reaction.
 - **Deployment**: GitHub Pages deploy now runs from `main` only. The former product branches `simulation-lab` and `practice-edition` are obsolete and no longer deployed.
 
 ---
