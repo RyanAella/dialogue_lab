@@ -36,7 +36,6 @@ export function prepareMessageSend(userVal) {
 
   UI.prepareForInteraction();
   UI.appendMessage(userVal, "user");
-  if (STATE.ttsEnabled) UI.speak(userVal, UI_TEXTS.tts.userLabel);
 
   DataLogger.addTurn("user", userVal, {
     mode: STATE.currentMode,
