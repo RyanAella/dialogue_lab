@@ -74,12 +74,14 @@ export const UI = {
     // Path-based editions hide sections via the mode class on <html>;
     if (document.documentElement.classList.contains("mode-simulation")) {
       document.getElementById("mode-select-label")?.classList.add("hidden");
+      this.elements.modeSelect?.classList.add("hidden");
       this.elements.scenarioSection?.classList.remove("hidden");
       this.elements.exerciseSection?.classList.add("hidden");
       return;
     }
     if (document.documentElement.classList.contains("mode-practice")) {
       document.getElementById("mode-select-label")?.classList.add("hidden");
+      this.elements.modeSelect?.classList.add("hidden");
       this.elements.scenarioSection?.classList.add("hidden");
       this.elements.exerciseSection?.classList.remove("hidden");
       return;
