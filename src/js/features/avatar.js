@@ -69,18 +69,25 @@ export const Avatar = {
       ...(profile.clothes || []),
       ...(profile.hair || []),
       ...(profile.eyesOpen || []),
+      ...(profile.eyesClosed || []),
       ...(profile.mouthsClosed || []),
+      ...(profile.mouthsOpen || []),
+      ...(profile.glasses || []),
+      ...(profile.headset || []),
     ].map((p) => String(getFullPath("src/assets/Character/" + profile.basePath + p)));
 
-    const promises = paths.slice(0, 15).map((src) => {
+    const promises = paths.map((src) => {
       return new Promise((resolve) => {
         const img = new Image();
         img.onload = resolve;
-        img.onerror = resolve; // Continue even if one fails
+        img.onerror = () => {
+          console.warn(`[Avatar] Failed to preload image: ${src}`);
+          resolve();
+        };
         img.src = src;
       });
     });
-    
+
     await Promise.all(promises);
   },
 

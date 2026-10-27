@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Less cooperative simulation partner (scenario "Schwierigkeiten")**: Removed the "konstruktiv" framing from the partner prompt's role setup, which biased the AI towards a cooperative mood against the intended defensive reaction.
+- **Partner no longer takes over conversation leadership**: The partner prompt now explicitly forbids structuring the conversation, summarizing, or proposing next steps on its own — the manager leads, the partner reacts. Own ideas are only offered when explicitly asked for.
+- **User input is no longer read aloud**: Previously, the user's own message was spoken when auto-read-aloud was enabled, only to be interrupted by the partner's response. Own messages are now silent; only partner and feedback text is spoken.
+- **Complete avatar preloading**: `preloadProfile()` now preloads all asset types (eyes closed, mouth open, glasses, headset) instead of a 15-image subset, preventing flicker on blinking and speaking animations. Failed preloads log a warning.
+
+### Changed
+- **Console cleanup**: Removed the remaining 10 `console.log` statements from `dataLogger.js`; `console.warn`/`console.error` are preserved for error diagnostics.
+
 ---
 
 ## [0.34.0] - 2026-10-27
