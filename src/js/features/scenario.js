@@ -37,7 +37,7 @@ export const ScenarioService = {
    * @throws {Error} If the network request fails or the response is invalid.
    */
   async loadPool() {
-    const url = `${APP_CONFIG.EXERCISES_FILE}?t=${Date.now()}`;
+    const url = `${getFullPath(APP_CONFIG.EXERCISES_FILE)}?t=${Date.now()}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error("Exercises could not be loaded");
 

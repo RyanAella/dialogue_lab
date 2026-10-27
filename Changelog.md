@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- **Single-page `index.html` with path-based editions (part 1)**: `index.html` now detects the URL path (`/simulation-lab/`, `/practice-edition/`) and derives `BASE_PATH` and the mode configuration (`full` / `simulation-only` / `practice-only`) dynamically. The document filename is stripped from `BASE_PATH` so direct `index.html` access works locally. `app.js` is loaded with the correct `BASE_PATH` via an IIFE-wrapped dynamic loader (avoids a Safari/WebKit const-redeclaration crash) and handles `DOMContentLoaded` having already fired.
+
+### Changed
+- **Dynamic module loading**: The static `<script src="src/js/core/app.js">` tag is replaced by a dynamic loader that respects `BASE_PATH`.
+- **Dynamic mode initialization**: `STATE.currentMode` is now initialized from the edition configuration (`DEFAULT_MODE`) instead of a hardcoded simulation mode, so restricted editions (simulation-only, practice-only) start in the correct mode.
+- **Exercise loading failure handling**: `loadExercises()` returns a success flag; `startApp()` aborts initialization with a clear error message when the exercise pool cannot be loaded, instead of leaving empty dropdowns. `EXERCISES_FILE` is now resolved via `getFullPath()` so exercise loading works from path-based editions.
+- **Edition-aware sidebar visibility**: `updateSidebarVisibility()` respects the path-based edition (`mode-simulation` / `mode-practice` class on `<html>`): restricted editions hide the mode selector (and its label) and show only their own section, without fighting the full edition's JS-controlled visibility. Event listeners for scenario selection and briefing toggle are now defensive (optional chaining), preventing crashes when elements are absent in restricted editions.
+- **State access in export**: `export.js` now imports `STATE` as an ES module instead of reading `window.STATE`, continuing the removal of global state exposure (started with `feedback.js` in 0.32.3).
+- **Deployment**: The GitHub Pages workflow now builds edition subfolders (`simulation-lab/`, `practice-edition/`) containing identical copies of `index.html` and deploys via the official Pages actions (`configure-pages`, `upload-pages-artifact`, `deploy-pages`). The mode is determined at runtime from the URL path. The `gh-pages` branch is no longer the deploy target.
+
 ---
 
 ## [0.33.0] - 2026-10-26

@@ -31,6 +31,83 @@
       }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // ============================================
+      // Dynamic mode configuration for Dialogue Lab
+      // index.html acts as single-page app for all paths:
+      // / (full), /simulation-lab/ (simulation only), /practice-edition/ (practice only)
+      // ============================================
+      (function() {
+        const rawPath = window.location.pathname.toLowerCase();
+
+        // Strip the document filename so BASE_PATH always points at a directory
+        // (handles /dialogue_lab/, /dialogue_lab/index.html and / alike)
+        let path = rawPath;
+        if (path.endsWith('.html')) {
+          const lastSlash = path.lastIndexOf('/');
+          if (lastSlash > -1) path = path.slice(0, lastSlash + 1);
+        }
+
+        // Derive the true BASE_PATH by stripping mode-specific path segments.
+        // On GitHub Pages the app lives under a repo subpath (e.g. /dialogue_lab/).
+        let basePath = path;
+        const modePaths = ['/simulation-lab', '/simulation', '/practice-edition', '/practice'];
+        for (const mp of modePaths) {
+          if (basePath.includes(mp)) {
+            basePath = basePath.split(mp)[0];
+            break;
+          }
+        }
+        // Ensure trailing slash
+        if (!basePath.endsWith('/')) basePath += '/';
+
+        // Fallback: repo subpath if the app is served from there
+        if (basePath === '/' && path.includes('/dialogue_lab/')) {
+          basePath = '/dialogue_lab/';
+        }
+
+        let modeClass = 'mode-full';
+        let config;
+
+        if (path.includes('/simulation-lab/') || path.includes('/simulation/')) {
+          modeClass = 'mode-simulation';
+          config = {
+            MODE: 'simulation-only',
+            ALLOWED_MODES: ['SIMULATION'],
+            HIDE_SIMULATION: false,
+            HIDE_TRANSFORMATION: true,
+            DEFAULT_MODE: 'SIMULATION',
+            BASE_PATH: basePath
+          };
+        } else if (path.includes('/practice-edition/') || path.includes('/practice/')) {
+          modeClass = 'mode-practice';
+          config = {
+            MODE: 'practice-only',
+            ALLOWED_MODES: ['TRANSFORMATION'],
+            HIDE_SIMULATION: true,
+            HIDE_TRANSFORMATION: false,
+            DEFAULT_MODE: 'TRANSFORMATION',
+            BASE_PATH: basePath
+          };
+        } else {
+          modeClass = 'mode-full';
+          config = {
+            MODE: 'full',
+            ALLOWED_MODES: ['SIMULATION', 'TRANSFORMATION'],
+            HIDE_SIMULATION: false,
+            HIDE_TRANSFORMATION: false,
+            DEFAULT_MODE: 'SIMULATION',
+            BASE_PATH: basePath
+          };
+        }
+
+        // Expose configuration globally
+        window.DIALOGUE_LAB_CONFIG = config;
+
+        // Add mode class to the html element (basis for CSS-based hiding in AP 4)
+        document.documentElement.classList.add(modeClass);
+      })();
+    </script>
     <style>
       /* Custom "Modern Chat" Styles */
       @keyframes pulse-soft {
@@ -88,7 +165,7 @@
       class="fixed inset-y-0 left-0 z-[60] w-64 bg-white border-r border-gray-200 p-6 shadow-xl flex flex-col h-full transform -translate-x-full transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:flex-shrink-0"
     >
       <div class="sidebar-section mb-6">
-        <label class="block font-semibold mb-2 text-slate-700 text-sm">Modus</label>
+        <label id="mode-select-label" class="block font-semibold mb-2 text-slate-700 text-sm">Modus</label>
         <label for="mode-select"></label>
         <select
           id="mode-select"
@@ -374,6 +451,18 @@
       </div>
     </div>
 
-    <script src="src/js/core/app.js" type="module"></script>
+    <script>
+      // Load app.js with the correct BASE_PATH before DOMContentLoaded fires.
+      // Wrapped in an IIFE so the local declarations never collide with
+      // other global lexical bindings (Safari/JSC treats such collisions
+      // as 'Attempt to assign to const or readonly variable').
+      (function() {
+        const loaderBasePath = window.DIALOGUE_LAB_CONFIG.BASE_PATH;
+        const appScript = document.createElement('script');
+        appScript.type = 'module';
+        appScript.src = `${loaderBasePath}src/js/core/app.js`;
+        document.head.appendChild(appScript);
+      })();
+    </script>
   </body>
 </html>

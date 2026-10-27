@@ -22,8 +22,10 @@ export const DEFAULT_EDITION_CONFIG = {
  * @type {Object}
  */
 export const DIALOGUE_LAB_CONFIG =
-  (typeof window !== "undefined" && window.DIALOGUE_LAB_CONFIG) ||
-  DEFAULT_EDITION_CONFIG;
+    (typeof window !== "undefined" &&
+        typeof window.DIALOGUE_LAB_CONFIG !== "undefined" &&
+        window.DIALOGUE_LAB_CONFIG) ||
+    DEFAULT_EDITION_CONFIG;
 
 /**
  * Combines a relative path with the configured BASE_PATH.
@@ -115,7 +117,7 @@ export const MODE_BADGE_CONFIG = {
  */
 export const DOM_ELEMENT_IDS = [
   "briefing-header", "briefing-content", "chevron", "scenarios", "exercises",
-  "scenario-section", "exercise-section", "mode-select", "mode-badge",
+  "scenario-section", "exercise-section", "mode-select", "mode-select-container", "mode-badge",
   "chat-window", "start-info", "user-input", "send-btn", "next-task-btn",
   "status-box", "mobile-menu-btn", "sidebar", "sidebar-overlay",
   "exercise-actions", "feedback-btn", "export-transcript-btn",
@@ -352,6 +354,7 @@ export const UI_TEXTS = {
     loadingError: "Ladefehler.",
     contentLoadingError: "Ladefehler",
     initializationError: "Die Anwendung konnte nicht korrekt initialisiert werden.",
+    exercisesLoadFailed: "Übungen konnten nicht geladen werden. Bitte Seite neu laden.",
   },
   // Input placeholders
   input: {

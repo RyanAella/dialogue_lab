@@ -69,9 +69,23 @@ export const UI = {
   /**
    * Updates the sidebar visibility or layout based on the current application mode.
    * @param {string} mode - The active mode (e.g., 'roleplay', 'transformation').
-   * @todo Implement logic for transformation mode if needed.
    */
   updateSidebarVisibility(mode) {
+    // Path-based editions hide sections via the mode class on <html>;
+    if (document.documentElement.classList.contains("mode-simulation")) {
+      document.getElementById("mode-select-label")?.classList.add("hidden");
+      this.elements.modeSelect?.classList.add("hidden");
+      this.elements.scenarioSection?.classList.remove("hidden");
+      this.elements.exerciseSection?.classList.add("hidden");
+      return;
+    }
+    if (document.documentElement.classList.contains("mode-practice")) {
+      document.getElementById("mode-select-label")?.classList.add("hidden");
+      this.elements.modeSelect?.classList.add("hidden");
+      this.elements.scenarioSection?.classList.add("hidden");
+      this.elements.exerciseSection?.classList.remove("hidden");
+      return;
+    }
     const isTransformation = mode === "transformation";
     this.elements.scenarioSection?.classList.toggle("hidden", isTransformation);
     this.elements.exerciseSection?.classList.toggle("hidden", !isTransformation);

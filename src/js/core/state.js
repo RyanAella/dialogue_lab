@@ -20,7 +20,9 @@ import { UI } from "../ui/ui.js";
  */
 export let STATE = {
   answers: [],
-  currentMode: APP_MODES.SIMULATION,
+  currentMode: (typeof window !== "undefined" &&
+          window.DIALOGUE_LAB_CONFIG?.DEFAULT_MODE?.toLowerCase()) ||
+      APP_MODES.SIMULATION,
   exerciseIndex: 0,
   activeStatements: [],
   ttsEnabled: false,
