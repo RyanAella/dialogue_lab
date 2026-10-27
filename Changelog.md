@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Exercise loading failure handling**: `loadExercises()` returns a success flag; `startApp()` aborts initialization with a clear error message when the exercise pool cannot be loaded, instead of leaving empty dropdowns. `EXERCISES_FILE` is now resolved via `getFullPath()` so exercise loading works from path-based editions.
 - **Edition-aware sidebar visibility**: `updateSidebarVisibility()` respects the path-based edition (`mode-simulation` / `mode-practice` class on `<html>`): restricted editions hide the mode selector (and its label) and show only their own section, without fighting the full edition's JS-controlled visibility. Event listeners for scenario selection and briefing toggle are now defensive (optional chaining), preventing crashes when elements are absent in restricted editions.
 - **State access in export**: `export.js` now imports `STATE` as an ES module instead of reading `window.STATE`, continuing the removal of global state exposure (started with `feedback.js` in 0.32.3).
+- **Deployment**: The GitHub Pages workflow now builds edition subfolders (`simulation-lab/`, `practice-edition/`) containing identical copies of `index.html` and deploys via the official Pages actions (`configure-pages`, `upload-pages-artifact`, `deploy-pages`). The mode is determined at runtime from the URL path. The `gh-pages` branch is no longer the deploy target.
 
 ---
 

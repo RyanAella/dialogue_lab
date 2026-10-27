@@ -1,6 +1,5 @@
-name: Deployment to GitHub Pages
+name: Deploy to GitHub Pages
 
-# Trigger only for the main product branch
 on:
   push:
     branches:
@@ -8,12 +7,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,7 +26,10 @@ jobs:
           set -e
           find src/js -name '*.js' -exec node --check {} \;
 
-      - name: Create Public Artifact Folder
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build and copy files
         run: |
           mkdir -p public
           cp index.html public/
@@ -32,20 +38,18 @@ jobs:
           cp -r prompts public/
           touch public/.nojekyll
 
-      - name: Determine Deployment Path
-        id: subpath
-        run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "SUB_PATH=" >> $GITHUB_OUTPUT  # Leerer Pfad = Root
-          else
-            CLEAN_NAME=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
-            echo "SUB_PATH=$CLEAN_NAME" >> $GITHUB_OUTPUT
-          fi
+          # Edition subfolders: identical copies of index.html;
+          # the SPA config derives the mode from the URL path
+          mkdir -p public/simulation-lab
+          mkdir -p public/practice-edition
+          cp index.html public/simulation-lab/
+          cp index.html public/practice-edition/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: public
-          target-folder: ${{ steps.subpath.outputs.SUB_PATH }}
-          branch: gh-pages
-          clean: false
+        id: deployment
+        uses: actions/deploy-pages@v4
