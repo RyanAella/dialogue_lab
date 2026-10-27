@@ -9,6 +9,7 @@ import { Utils } from '../utils/utils.js';
 import { Chat } from './chat.js';
 import { ScenarioService } from './scenario.js';
 import { EXERCISE_TYPES, EXPORT_MESSAGES } from '../core/config.js';
+import { STATE } from '../core/state.js';
 
 /**
  * Downloads the current chat transcript as a text file.
@@ -17,7 +18,6 @@ export function downloadCurrentTranscript() {
   const config = ScenarioService.getActive();
   if (!config) return;
 
-  const STATE = window.STATE;
   const isTransform = STATE.currentMode === EXERCISE_TYPES.TRANSFORMATION;
   const briefing = UI.elements.briefingContent?.innerText.trim() || "";
   const dateString = new Date().toLocaleString();
