@@ -9,9 +9,6 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 ![Web Speech API](https://img.shields.io/badge/Web_Speech_API-4285F4?style=flat-square&logo=googlechrome&logoColor=white)
 
-<!-- TODO: Add a screenshot or GIF of the chat interface here, e.g.: -->
-<!-- ![Dialogue Lab chat interface](docs/screenshot.png) -->
-
 ## 1. Das Projekt auf einen Blick
 
 Das **Lab für Sozioinformatik: Simulation Lab** ist eine interaktive Web-Anwendung, die die Brücke zwischen psychologischer Gesprächsführung und moderner KI schlägt. Nutzer können hier in einem geschützten Raum komplexe Gesprächssituationen trainieren und direktes Feedback erhalten.
@@ -48,8 +45,7 @@ Die Anwendung kombiniert ein statisches Frontend mit einem serverseitigen Proxy 
 - **Schnittstellen:** Nutzt die native **Web Speech API** für Audio-Ein- und Ausgabe (lokale/Browser-seitige Verarbeitung).
 - **Robuste Kommunikation**: Implementierung von `AbortController` zur Vermeidung von Race-Conditions bei API-Anfragen.
 
-## 3. R
-epository-Dateistruktur
+## 3. Repository-Dateistruktur
 
 ### Kern-Module (`src/js/`)
 
@@ -82,8 +78,7 @@ Diese Datei steuert alle verfügbaren Inhalte und unterscheidet zwischen den Typ
 ```json
 [
   {
-    "id": "
-ich_botschaften_basis",
+    "id": "ich_botschaften_basis",
     "type": "TRANSFORMATION",
     "config": {
       "sourceFile": "scenarios/transformations/ich_botschaft_statements.txt",
@@ -142,13 +137,17 @@ Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hi
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
 3. **Konfiguration:** Die `PROXY_URL` in `src/js/config.js` an den Pfad deines Proxy-Skripts anpassen.
 
-### Multi-Branch Deployment
+### Editions über URL-Pfade (Single-Branch)
 
-Jeder Push auf einen Branch löst ein automatisches Deployment aus:
+Das Deployment läuft ausschließlich über den `main`-Branch. Die Anwendung existiert als eine einzige `index.html`, die ihren Modus zur Laufzeit aus der URL ableitet:
 
-- **Main-Branch:** Hauptversion unter der Root-URL.
-- **Featu
-re-Branches:** Werden automatisch in Unterverzeichnisse (z. B. `.../feature-xyz/`) bereitgestellt, was paralleles Testen ermöglicht.
+- **Vollversion:** `https://ryanaella.github.io/dialogue_lab/`
+- **Nur Simulation:** `https://ryanaella.github.io/dialogue_lab/simulation-lab/`
+- **Nur Transformation:** `https://ryanaella.github.io/dialogue_lab/practice-edition/`
+
+Der Workflow (`.github/workflows/deploy.yml`) legt die Unterordner `simulation-lab/` und `practice-edition/` mit identischen Kopien der `index.html` als Deploy-Artefakt an. Die Edition-Konfiguration (`window.DIALOGUE_LAB_CONFIG`) wird beim Seitenaufruf aus `location.pathname` berechnet — derselbe Code, andere URL, anderer Modus.
+
+Ehemalige Produkt-Branches (`simulation-lab`, `practice-edition`) sind obsolet.
 
 ## 7. Neues Szenario hinzufügen
 
@@ -181,8 +180,7 @@ _Hinweis: Ein Klick auf „Neustart“ setzt die Anwendung zurück und löscht d
 
 ## 1. Project at a Glance
 
-The **Socio-Informatics Lab: Dialogue Lab** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. Users can practice complex conversation scenari
-os in a safe environment and receive direct feedback.
+The **Socio-Informatics Lab: Dialogue Lab** is an interactive web application that bridges the gap between psychological communication techniques and modern AI. Users can practice complex conversation scenarios in a safe environment and receive direct feedback.
 
 ### Core Functions & Modes
 
@@ -190,8 +188,7 @@ The application offers two specialized training environments:
 
 - **Interactive Simulations (Roleplay):** Immerse yourself in realistic conversation scenarios. An AI counterpart reacts dynamically to your input, while an optional **AI Mentor** provides valuable background feedback on your strategy.
 - **Targeted Exercises (Transformation):** This mode focuses on technique. Practice rephrasing accusations into constructive messages (e.g., "I-statements" or positive assumptions). The AI generates a comprehensive overall evaluation of your phrasing after the exercise series is completed or upon request.
-- **Visual Immersion:**
-  A modular **Avatar System** generates dynamic portraits based on character pools. By layering heads (with automatic skin tone detection), clothing, hair, glasses, and headsets, varied and appropriate conversation partners are created each time you start.
+- **Visual Immersion:** A modular **Avatar System** generates dynamic portraits based on character pools. By layering heads (with automatic skin tone detection), clothing, hair, glasses, and headsets, varied and appropriate conversation partners are created each time you start.
 
 ### User Experience Highlights
 
@@ -218,18 +215,18 @@ The application combines a static frontend with a server-side proxy (for API key
 
 ### Core Modules (`src/js/`)
 
-| Module            | Responsibility                                                                        |
-| :---------------- | :------------------------------------------------------------------------------------ |
-| **`app.js`**      | **Controller**: Orchestrates the application flow and initializes services.           |
-| **`ui.js`**       | **View-Manager**: Manages DOM elements, event listeners, and chat rendering.          |
-| **`avatar.js`**   | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-syncing. |
-| **`speech.js`**   | **Audio-Service**: Encapsulates TTS (Speech Output) and STT (Dictation).              |
-| **`chat.js`**     | **State-Mana
-ger**: Maintains conversation history and prepares transcripts.           |
-| **`scenario.js`** | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
-| **`api.js`**      | **Network**: Handles API requests with integrated caching.                            |
-| **`utils.js`**    | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
-| **`profiles.js`** | **Assets**: Configuration of character pools and graphic layers.                      |
+| Module                                                          | Responsibility                                                                        |
+|:----------------------------------------------------------------|:--------------------------------------------------------------------------------------|
+| **`app.js`**                                                    | **Controller**: Orchestrates the application flow and initializes services.           |
+| **`ui.js`**                                                     | **View-Manager**: Manages DOM elements, event listeners, and chat rendering.          |
+| **`avatar.js`**                                                 | **Visuals**: Controls the multi-layer system, animations (blinking), and lip-syncing. |
+| **`speech.js`**                                                 | **Audio-Service**: Encapsulates TTS (Speech Output) and STT (Dictation).              |
+| **`chat.js`**                                                   | **State-Mana                                                                          |
+| ger**: Maintains conversation history and prepares transcripts. |                                                                                       |
+| **`scenario.js`**                                               | **Data-Service**: Loads exercise pools and manages the active scenario state.         |
+| **`api.js`**                                                    | **Network**: Handles API requests with integrated caching.                            |
+| **`utils.js`**                                                  | **Helpers**: Static functions for markdown parsing and text cleaning.                 |
+| **`profiles.js`**                                               | **Assets**: Configuration of character pools and graphic layers.                      |
 
 ### Data & Content
 
@@ -311,12 +308,17 @@ The script receives the payload from the frontend, adds the Authorization header
 2.  **Proxy:** Place `chat.php` on a web server with HTTPS support.
 3.  **Configuration:** Update the `PROXY_URL` in `src/js/config.js` to the path of your proxy script.
 
-### Multi-Branch Deployment
+### Editions via URL Paths (Single Branch)
 
-Every push to a branch triggers an automated deployment:
+Deployment runs exclusively from the `main` branch. The application is a single `index.html` that derives its mode from the URL at runtime:
 
-- **Main Branch:** Main version under the root URL.
-- **Feature Branches:** Automatically deployed to subdirectories (e.g., `.../feature-xyz/`), enabling parallel testing of features.
+- **Full version:** `https://ryanaella.github.io/dialogue_lab/`
+- **Simulation only:** `https://ryanaella.github.io/dialogue_lab/simulation-lab/`
+- **Transformation only:** `https://ryanaella.github.io/dialogue_lab/practice-edition/`
+
+The workflow (`.github/workflows/deploy.yml`) creates the `simulation-lab/` and `practice-edition/` subfolders with identical copies of `index.html` in the deploy artifact. The edition configuration (`window.DIALOGUE_LAB_CONFIG`) is computed from `location.pathname` on page load — same code, different URL, different mode.
+
+The former product branches (`simulation-lab`, `practice-edition`) are obsolete.
 
 ## 7. Adding a New Scenario
 
@@ -329,8 +331,7 @@ Every push to a branch triggers an automated deployment:
 
 ## 8. Content Maintenance
 
-### B
-est Practices for Prompts
+### Best Practices for Prompts
 
 - **Avoid Meta-Talk:** AI partners should never discuss "phases" or "prompts"; they must remain in character.
 - **Objection Rotation:** Include a list of 4-5 objections in the partner prompt to ensure variety across sessions.
