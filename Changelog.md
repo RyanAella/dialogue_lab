@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.34.1] - 2026-10-30
+
 ### Fixed
 - **Less cooperative simulation partner (scenario "Schwierigkeiten")**: Removed the "konstruktiv" framing from the partner prompt's role setup, which biased the AI towards a cooperative mood against the intended defensive reaction.
 - **Partner no longer takes over conversation leadership**: The partner prompt now explicitly forbids structuring the conversation, summarizing, or proposing next steps on its own — the manager leads, the partner reacts. Own ideas are only offered when explicitly asked for.
