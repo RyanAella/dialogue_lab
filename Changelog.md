@@ -32,6 +32,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **State access in export**: `export.js` now imports `STATE` as an ES module instead of reading `window.STATE`, continuing the removal of global state exposure (started with `feedback.js` in 0.32.3).
 - **Deployment**: The GitHub Pages workflow now builds edition subfolders (`simulation-lab/`, `practice-edition/`) containing identical copies of `index.html` and deploys via the official Pages actions (`configure-pages`, `upload-pages-artifact`, `deploy-pages`). The mode is determined at runtime from the URL path. The `gh-pages` branch is no longer the deploy target.
 
+### Fixed
+- **Safari Const Collision in App Loader**: The inline script that injects `app.js` declared `const basePath` at global script scope. Safari/WebKit reports a redeclaration in the shared global lexical environment as "Attempt to assign to const or readonly variable", which aborted the loader and prevented the app from starting. The loader is now wrapped in an IIFE so its bindings stay function-local.
+- **Full Mode Section Visibility**: The ported CSS visibility rules for path-based editions overrode the JavaScript-controlled visibility of the scenario and exercise sections in full mode (`.mode-full` rules with `display: ... !important` blocked the `hidden` class toggling in `updateSidebarVisibility()`), leaving the exercise section permanently hidden after switching to transformation mode. Full mode is now controlled by JavaScript alone; the CSS override rules were removed.
+
 ---
 
 ## [0.33.0] - 2026-10-26
