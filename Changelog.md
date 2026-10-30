@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - **Console cleanup**: Removed the remaining 10 `console.log` statements from `dataLogger.js`; `console.warn`/`console.error` are preserved for error diagnostics.
+- **Revised partner prompts**: Both scenario prompts (difficulties, reporting) consolidated — clearer role definition, refined behavior rules, reduced redundancy.
 
 ---
 
