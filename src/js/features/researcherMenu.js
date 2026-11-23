@@ -59,53 +59,61 @@ async function downloadAsZIP(conversations, filenamePrefix = "dialogue_lab_resea
 }
 
 /**
- * Deletes all server dialogue logs.
- * Requires valid researcher token.
+ * Opens the admin token dialog and, on confirm, deletes all server dialogue logs.
+ * The admin token is deliberately NOT taken from the URL or localStorage;
+ * it is entered manually and held in memory only for the duration of the request.
  */
 async function deleteServerData() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  
-  if (!token) {
-    alert('❌ Kein Forscher-Token vorhanden. Server-Daten können nicht gelöscht werden.');
+  const adminToken = promptAdminToken();
+  if (!adminToken) return; // dialog cancelled
+
+  const backendUrl = DataLogger._backendEndpoint || APP_CONFIG.DATALOGGER_BACKEND;
+  if (!backendUrl) {
+    alert('❌ Backend-Endpoint nicht konfiguriert.');
     return;
   }
-  
+  const deleteEndpoint = backendUrl.replace('save_dialogue.php', 'delete_dialogue.php');
+
   try {
-    // Build the endpoint URL for delete operation
-    const backendUrl = DataLogger._backendEndpoint || APP_CONFIG.DATALOGGER_BACKEND;
-    if (!backendUrl) {
-      alert('❌ Backend-Endpoint nicht konfiguriert.');
-      return;
-    }
-    
-    // Replace save_dialogue.php with delete_dialogue.php
-    const deleteEndpoint = backendUrl.replace('save_dialogue.php', 'delete_dialogue.php');
-    
-    const response = await fetch(deleteEndpoint, {
+    // 1) Dry run: how many files would be deleted?
+    const countRes = await fetch(deleteEndpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Researcher-Token': token
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
+      body: JSON.stringify({ action: 'count' })
+    });
+    if (countRes.status === 429) { alert('⛔ Zu viele Versuche. Bitte später erneut versuchen.'); return; }
+    if (countRes.status === 403) { alert('❌ Admin-Token ungültig.'); return; }
+    if (!countRes.ok) throw new Error(`Server: ${countRes.status}`);
+    const countData = await countRes.json();
+    const n = countData.count ?? 0;
+
+    // 2) Explicit confirm with real number
+    if (!confirm(`Es werden ${n} gespeicherte Konversation(en) auf dem Server UNWIDERRUFLICH gelöscht. Fortfahren?`)) return;
+
+    // 3) Delete
+    const res = await fetch(deleteEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
       body: JSON.stringify({ action: 'delete_all' })
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(errorData.error || `Server responded with ${response.status}`);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: `Server: ${res.status}` }));
+      throw new Error(errorData.error || `Server: ${res.status}`);
     }
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      alert(`✅ Server-Daten gelöscht!\n${result.deleted || 0} Dateien wurden entfernt.`);
-    } else {
-      alert(`❌ Fehler: ${result.error || 'Unbekannter Fehler'}`);
-    }
+    const result = await res.json();
+    alert(result.success ? `✅ Server-Daten gelöscht!\n${result.deleted || 0} Dateien entfernt.` : `❌ ${result.error}`);
   } catch (error) {
     alert(`❌ Fehler beim Löschen: ${error.message}`);
   }
+}
+
+/**
+ * Minimal dialog that asks for the admin token.
+ * Returns the token or null if cancelled/empty.
+ */
+function promptAdminToken() {
+  const token = window.prompt('Admin-Token für Server-Löschung eingeben:');
+  return token && token.trim() ? token.trim() : null;
 }
 
 /**
@@ -131,8 +139,6 @@ function showResearcherStats() {
     `Ausstehende Uploads: ${stats.pendingUploads}\n` +
     `Backend konfiguriert: ${stats.backendConfigured ? 'Ja' : 'Nein'}`);
 }
-
-
 
 /**
  * Checks if a researcher token is present in the URL.
@@ -179,7 +185,7 @@ function createResearcherMenu() {
       </button>
     </div>
     <div class="mt-3 pt-3 border-t border-blue-100 text-[10px] text-blue-500 text-center">
-      Forscher-Token aktiv
+      Forscher-Token aktiv · Export: URL-Token · Löschen: Admin-Token
     </div>
   `;
   
@@ -198,11 +204,9 @@ function createResearcherMenu() {
   document.getElementById('researcher-export-json')?.addEventListener('click', () => {
     DataLogger.exportAllAsJSON('dialogue_lab_researcher');
   });
-  
+
   document.getElementById('researcher-delete-server')?.addEventListener('click', () => {
-    if (confirm('Alle Server-Daten unwiderruflich löschen?')) {
-      deleteServerData();
-    }
+    deleteServerData();
   });
   
   document.getElementById('researcher-stats')?.addEventListener('click', showResearcherStats);
