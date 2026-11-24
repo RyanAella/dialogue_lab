@@ -8,15 +8,12 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  deploy:
+  # Build job: checks out, runs the JS syntax check, assembles the site
+  # and uploads it as the 'github-pages' artifact.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,6 +47,19 @@ jobs:
         with:
           path: public
 
+  # Deploy job: waits for the build job, so the artifact is fully
+  # registered before deploy-pages looks it up (avoids the
+  # "No artifacts named 'github-pages' were found" race condition).
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Deployment:** Consolidated Pages deployment into a single workflow (`deploy.yml`); the duplicate draft `deploy.new.yml` and the legacy single-job workflow no longer run in parallel, fixing the "No artifacts named 'github-pages' were found" deployment failure.
+
 ---
 
 ## [0.34.1] - 2026-10-30
