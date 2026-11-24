@@ -1,0 +1,128 @@
+<?php
+// delete_dialogue.php
+// Endpoint for deleting dialogue data for researchers with a valid token
+
+// =========================================================
+// 1. CONFIGURATION: VALID RESEARCHER TOKENS
+// =========================================================
+$validTokens = [
+    '',    // ← Insert your token here
+    // 'additional_token_for_colleague1',
+    // 'additional_token_for_colleague2'
+];
+
+// =========================================================
+// 2. SECURITY: CORS for Dialogue Lab
+// =========================================================
+$allowed_origins = [
+    "https://ryanaella.github.io",
+    "http://localhost",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "https://kite2.site"
+];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: " . $origin);
+} else {
+    // Allow all localhost/127.0.0.1 requests for development
+    if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
+        header("Access-Control-Allow-Origin: " . $origin);
+    } else {
+        header("Access-Control-Allow-Origin: *");
+    }
+}
+
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, X-Researcher-Token");
+header("Access-Control-Max-Age: 86400"); // 24h cache
+
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// =========================================================
+// 3. TOKEN VALIDATION
+// =========================================================
+$receivedToken = $_SERVER['HTTP_X_RESEARCHER_TOKEN'] ?? 'anonymous';
+
+if (!in_array($receivedToken, $validTokens)) {
+    http_response_code(403);
+    die(json_encode([
+        'success' => false,
+        'error' => 'Ungültiger Forscher-Token',
+        'hint' => 'Bitte verwenden Sie einen gültigen Token aus der Forscher-Liste'
+    ]));
+}
+
+// =========================================================
+// 4. DELETE DATA
+// =========================================================
+header('Content-Type: application/json');
+
+$jsonInput = file_get_contents('php://input');
+$data = json_decode($jsonInput, true);
+
+if ($data === null) {
+    http_response_code(400);
+    die(json_encode([
+        'success' => false,
+        'error' => 'Ungültige JSON-Daten empfangen',
+        'hint' => json_last_error_msg()
+    ]));
+}
+
+// Only the delete_all action is allowed
+if (!isset($data['action']) || $data['action'] !== 'delete_all') {
+    http_response_code(400);
+    die(json_encode([
+        'success' => false,
+        'error' => 'Ungültige Action. Nur delete_all ist erlaubt.'
+    ]));
+}
+
+// =========================================================
+// DIRECTORY WITH LOG FILES
+// =========================================================
+$logDir = __DIR__ . '/dialogue_logs';
+
+if (!file_exists($logDir)) {
+    http_response_code(200);
+    die(json_encode([
+        'success' => true,
+        'message' => 'Keine Dialog-Dateien zum Löschen gefunden.',
+        'deleted' => 0
+    ]));
+}
+
+// =========================================================
+// DELETE FILES
+// =========================================================
+$files = glob($logDir . '/*.json');
+if ($files === false) {
+    $files = [];
+}
+
+$deletedCount = 0;
+$errors = [];
+
+foreach ($files as $file) {
+    if (is_file($file)) {
+        if (unlink($file)) {
+            $deletedCount++;
+        } else {
+            $errors[] = basename($file);
+        }
+    }
+}
+
+// =========================================================
+// RESULT
+// =========================================================
+echo json_encode([
+    'success' => true,
+    'message' => 'Dialog-Dateien erfolgreich gelöscht',
+    'deleted' => $deletedCount,
+    'errors' => $errors
+]);

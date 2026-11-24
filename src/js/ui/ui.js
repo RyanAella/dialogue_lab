@@ -156,8 +156,8 @@ export const UI = {
   },
 
   /**
-   * Steuert die Mund-Animation des Avatars.
-   * @param {boolean} isTalking - Ob der Avatar die Sprechanimation zeigen soll.
+   * Controls the avatar's mouth animation.
+   * @param {boolean} isTalking - Whether the avatar should show the talking animation.
    */
   setAvatarTalking(isTalking) {
     Avatar.setTalking(isTalking);

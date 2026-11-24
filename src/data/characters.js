@@ -159,7 +159,7 @@ export const FEMALE_CHARACTERS = [
     mouthsClosed: ["FaceImages/Smiling/Fine_Smiling.png"],
     mouthsOpen: ["FaceImages/Smiling/Fine_Smiling_Speaking.png"],
   },
-  // Hier weitere weibliche Charakter-Modelle hinzufügen
+  // Add more female character models here
 ];
 
 /**
@@ -254,7 +254,7 @@ export const MALE_CHARACTERS = [
     mouthsClosed: ["FaceImages/Smiling/Strong_Smiling.png"],
     mouthsOpen: ["FaceImages/Smiling/Strong_Smiling_Speaking.png"],
   },
-  // Hier weitere männliche Charakter-Modelle hinzufügen
+  // Add more male character models here
 ];
 
 /**

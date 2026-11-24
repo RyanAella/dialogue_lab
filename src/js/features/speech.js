@@ -51,7 +51,7 @@ export const Speech = {
       const currentVal = userInput.value.trim();
       userInput.value = currentVal + (currentVal ? " " : "") + transcript.trim();
       userInput.focus();
-      // Trigger das Event manuell, damit der Senden-Button aktiviert wird
+      // Trigger the event manually so the send button gets enabled
       userInput.dispatchEvent(new Event("input", { bubbles: true }));
     };
 
@@ -163,7 +163,7 @@ export const Speech = {
     utterance.lang = SPEECH_CONFIG.LANG;
 
     const config = avatar?.getConfig();
-    // Korrektur der Logik: kein !! bei String-Vergleich
+    // Logic fix: no !! for string comparison
     let isFemale = roleName?.toLowerCase().endsWith("in") || config?.gender === "female";
     if (config?.gender) isFemale = (config.gender === "female");
 
