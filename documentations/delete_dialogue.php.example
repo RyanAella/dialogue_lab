@@ -1,15 +1,25 @@
 <?php
 // delete_dialogue.php
-// Endpoint for deleting dialogue data for researchers with a valid token
+// Endpoint for counting and deleting ALL dialogue logs on the server.
+//
+// TWO-TOKEN MODEL (separation of concerns):
+//   - Researcher URL tokens (see save_dialogue.php) have NO delete rights.
+//   - One separate admin token authorizes the destructive actions below.
+//
+// Actions (POST, JSON body):
+//   - count:      dry run, returns the number of stored dialogue files
+//   - delete_all: irreversibly deletes all dialogue log files
+//
+// Frontend contract (src/js/features/researcherMenu.js):
+//   - Header X-Admin-Token carries the admin token
+//   - 403 = invalid admin token, 429 = rate limited
 
 // =========================================================
-// 1. CONFIGURATION: VALID RESEARCHER TOKENS
+// 1. CONFIGURATION: ADMIN TOKEN
+//    Keep this token ONLY in your password manager.
+//    Never put it into URLs, links or the researcher token list.
 // =========================================================
-$validTokens = [
-    '',    // ← Insert your token here
-    // 'additional_token_for_colleague1',
-    // 'additional_token_for_colleague2'
-];
+$adminToken = 'XXXX'; // ← Insert your admin token here (server-side only)
 
 // =========================================================
 // 2. SECURITY: CORS for Dialogue Lab
@@ -34,7 +44,7 @@ if (in_array($origin, $allowed_origins)) {
 }
 
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, X-Researcher-Token");
+header("Access-Control-Allow-Headers: Content-Type, X-Researcher-Token, X-Admin-Token");
 header("Access-Control-Max-Age: 86400"); // 24h cache
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -42,25 +52,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit;
 }
 
-// =========================================================
-// 3. TOKEN VALIDATION
-// =========================================================
-$receivedToken = $_SERVER['HTTP_X_RESEARCHER_TOKEN'] ?? 'anonymous';
+header('Content-Type: application/json');
 
-if (!in_array($receivedToken, $validTokens)) {
+// =========================================================
+// 3. RATE LIMIT (file-based, per IP)
+//    Must run BEFORE token validation: it counts every attempt,
+//    including invalid ones, so brute-force is actually throttled.
+//    Requires a writable sys_get_temp_dir().
+// =========================================================
+$rateFile   = sys_get_temp_dir() . '/dl_delete_' . md5($_SERVER['REMOTE_ADDR'] ?? 'unknown') . '.json';
+$rateWindow = 600; // 10 minutes
+$rateMax    = 15;  // max requests per window (one delete run = count + delete_all)
+$now = time();
+$timestamps = [];
+if (is_file($rateFile)) {
+    $timestamps = array_filter(
+        json_decode((string) file_get_contents($rateFile), true) ?: [],
+        static function ($ts) use ($now, $rateWindow) {
+            return is_numeric($ts) && ($now - (int) $ts) < $rateWindow;
+        }
+    );
+    $timestamps = array_values($timestamps);
+}
+if (count($timestamps) >= $rateMax) {
+    http_response_code(429);
+    header('Retry-After: ' . $rateWindow);
+    die(json_encode([
+        'success' => false,
+        'error' => 'Zu viele Versuche. Bitte später erneut versuchen.'
+    ]));
+}
+$timestamps[] = $now;
+file_put_contents($rateFile, json_encode($timestamps), LOCK_EX);
+
+// =========================================================
+// 4. ADMIN TOKEN VALIDATION (timing-safe)
+//    The researcher token from the URL is NOT accepted here.
+// =========================================================
+$receivedAdminToken = $_SERVER['HTTP_X_ADMIN_TOKEN'] ?? '';
+
+if ($adminToken === '' || !hash_equals($adminToken, (string) $receivedAdminToken)) {
     http_response_code(403);
     die(json_encode([
         'success' => false,
-        'error' => 'Ungültiger Forscher-Token',
-        'hint' => 'Bitte verwenden Sie einen gültigen Token aus der Forscher-Liste'
+        'error' => 'Ungültiger Admin-Token',
+        'hint' => 'Löschen erfordert den separaten Admin-Token (X-Admin-Token-Header)'
     ]));
 }
 
 // =========================================================
-// 4. DELETE DATA
+// 5. PARSE REQUEST / VALIDATE ACTION
 // =========================================================
-header('Content-Type: application/json');
-
 $jsonInput = file_get_contents('php://input');
 $data = json_decode($jsonInput, true);
 
@@ -73,20 +115,35 @@ if ($data === null) {
     ]));
 }
 
-// Only the delete_all action is allowed
-if (!isset($data['action']) || $data['action'] !== 'delete_all') {
+$action = $data['action'] ?? '';
+if ($action !== 'count' && $action !== 'delete_all') {
     http_response_code(400);
     die(json_encode([
         'success' => false,
-        'error' => 'Ungültige Action. Nur delete_all ist erlaubt.'
+        'error' => 'Ungültige Action. Nur count und delete_all sind erlaubt.'
     ]));
 }
 
 // =========================================================
-// DIRECTORY WITH LOG FILES
+// 6. DIRECTORY WITH LOG FILES
 // =========================================================
 $logDir = __DIR__ . '/dialogue_logs';
 
+// --- Action: count (dry run for the confirmation dialog) ---
+if ($action === 'count') {
+    $files = is_dir($logDir) ? glob($logDir . '/*.json') : [];
+    if ($files === false) {
+        $files = [];
+    }
+    $files = array_values(array_filter($files, 'is_file'));
+    echo json_encode([
+        'success' => true,
+        'count' => count($files)
+    ]);
+    exit;
+}
+
+// --- Action: delete_all (irreversible) ---
 if (!file_exists($logDir)) {
     http_response_code(200);
     die(json_encode([
@@ -96,14 +153,21 @@ if (!file_exists($logDir)) {
     ]));
 }
 
-// =========================================================
-// DELETE FILES
-// =========================================================
 $files = glob($logDir . '/*.json');
 if ($files === false) {
     $files = [];
 }
 
+// =========================================================
+// 7. AUDIT LOG (written before the actual deletion)
+//    Survives the deletion: lives next to, not inside, the log dir.
+// =========================================================
+$auditLine = date('c') . ' action=delete_all files=' . count($files) . ' ip=' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown') . "\n";
+file_put_contents(__DIR__ . '/delete_audit.log', $auditLine, FILE_APPEND | LOCK_EX);
+
+// =========================================================
+// 8. DELETE FILES
+// =========================================================
 $deletedCount = 0;
 $errors = [];
 
@@ -118,7 +182,7 @@ foreach ($files as $file) {
 }
 
 // =========================================================
-// RESULT
+// 9. RESULT
 // =========================================================
 echo json_encode([
     'success' => true,

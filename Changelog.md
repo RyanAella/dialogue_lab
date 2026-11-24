@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Deployment:** Consolidated Pages deployment into a single workflow (`deploy.yml`); the duplicate draft `deploy.new.yml` and the legacy single-job workflow no longer run in parallel, fixing the "No artifacts named 'github-pages' were found" deployment failure.
 
+### Security
+
+- **Researcher login:** Server-side dialogue deletion is now separated from the researcher URL token. The `count` (dry run) and `delete_all` actions in `delete_dialogue.php` require a separate admin token sent via the `X-Admin-Token` header (manually entered, timing-safe comparison, per-IP rate limiting, audit log). The URL researcher token only unlocks the researcher menu and data export.
+
 ---
 
 ## [0.34.1] - 2026-10-30
