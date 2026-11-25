@@ -8,17 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.35.0] - 2026-11-25
+
+### Added
+
+- **Researcher login:** Server-side dialogue deletion is now separated from the researcher URL token. The `count` (dry run) and `delete_all` actions in `delete_dialogue.php` require a separate admin token via the `X-Admin-Token` header (manually entered, timing-safe comparison, per-IP rate limiting, audit log). The URL researcher token only unlocks the researcher menu and data export.
+
+### Changed
+
+- **Research data saving:** `save_dialogue.php` now accepts study participants without a researcher token (token is recorded as metadata only). Spam protection via mandatory Origin allowlist and file-based per-IP rate limit, replacing the ineffective session-based limit.
+
 ### Fixed
 
 - **Deployment:** Consolidated Pages deployment into a single workflow (`deploy.yml`); the duplicate draft `deploy.new.yml` and the legacy single-job workflow no longer run in parallel, fixing the "No artifacts named 'github-pages' were found" deployment failure.
 
 ### Security
 
-- **Researcher login:** Server-side dialogue deletion is now separated from the researcher URL token. The `count` (dry run) and `delete_all` actions in `delete_dialogue.php` require a separate admin token sent via the `X-Admin-Token` header (manually entered, timing-safe comparison, per-IP rate limiting, audit log). The URL researcher token only unlocks the researcher menu and data export.
-
 - **LLM proxy hardening:** `chat.php` now requires an allowlisted Origin (requests without Origin are rejected), enforces a model whitelist, a max-tokens cap and a per-IP rate limit, and rebuilds the API payload from whitelisted fields instead of forwarding raw client input.
-
-- **Research data saving:** `save_dialogue.php` now accepts study participants without a researcher token (token is recorded as metadata only). Spam protection via mandatory Origin allowlist and file-based per-IP rate limit, replacing the ineffective session-based limit. Server-side read access does not exist; deletion remains behind the admin token.
 
 ---
 
