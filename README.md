@@ -131,11 +131,21 @@ Die Kommunikation erfolgt über einen PHP-Proxy, um den API-Key sicher zu verwah
 
 Das Skript empfängt den Payload vom Frontend, fügt den Authorization-Header hinzu und leitet die Anfrage an OpenAI weiter. (Eine Vorlage befindet sich im Dokumentations-Ordner).
 
+### 5.3 Forschungsdaten-Backend
+
+Gesprächsdaten können serverseitig gespeichert werden. Drei Endpoints (Vorlagen in `documentations/`):
+
+- `chat.php` (LLM-Proxy, siehe oben): Origin-Allowlist, Modell-Whitelist, Token-Cap, Rate-Limit.
+- `save_dialogue.php`: Speichert Gespräche aller Nutzer:innen (Origin-Pflicht, Rate-Limit); ein eventuelles Forscher-Token wird nur als Metadatum protokolliert.
+- `delete_dialogue.php`: Serverseitige Löschung (`count` / `delete_all`) nur mit separatem Admin-Token (`X-Admin-Token`-Header, Rate-Limit, Audit-Log).
+
+**Zwei-Token-Modell:** Der URL-Parameter `?token=...` schaltet ausschließlich das Forschenden-Menü (Export, Statistiken) frei. Die Server-Löschung erfordert den separaten Admin-Token, der niemals in URLs oder Links transportiert wird.
+
 ## 6. Deployment & Konfiguration
 
 1. **Frontend:** Repository auf GitHub Pages hosten.
 2. **Proxy:** `chat.php` auf einem Webserver mit HTTPS-Support ablegen.
-3. **Konfiguration:** Die `PROXY_URL` in `src/js/config.js` an den Pfad deines Proxy-Skripts anpassen.
+3. **Konfiguration:** Die `PROXY_URL` in `src/js/core/config.js` an den Pfad deines Proxy-Skripts anpassen.
 
 ### Editions über URL-Pfade (Single-Branch)
 
@@ -302,11 +312,21 @@ Communication is handled via a PHP proxy to keep the API key secure.
 
 The script receives the payload from the frontend, adds the Authorization header, and forwards the request to OpenAI. (A template is located in the documentation folder).
 
+### 5.3 Research Data Backend
+
+Conversation data can be stored server-side. Three endpoints (templates in `documentations/`):
+
+- `chat.php` (LLM proxy, see above): origin allowlist, model whitelist, token cap, rate limit.
+- `save_dialogue.php`: stores conversations from all users (mandatory origin check, rate limit); an optional researcher token is only recorded as metadata.
+- `delete_dialogue.php`: server-side deletion (`count` / `delete_all`) only with a separate admin token (`X-Admin-Token` header, rate limit, audit log).
+
+**Two-token model:** The URL parameter `?token=...` only unlocks the researcher menu (export, statistics). Server-side deletion requires the separate admin token, which is never transported in URLs or links.
+
 ## 6. Deployment & Configuration
 
 1.  **Frontend:** Host the repository on GitHub Pages.
 2.  **Proxy:** Place `chat.php` on a web server with HTTPS support.
-3.  **Configuration:** Update the `PROXY_URL` in `src/js/config.js` to the path of your proxy script.
+3.  **Configuration:** Update the `PROXY_URL` in `src/js/core/config.js` to the path of your proxy script.
 
 ### Editions via URL Paths (Single Branch)
 
