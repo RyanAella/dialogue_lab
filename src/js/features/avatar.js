@@ -74,7 +74,7 @@ export const Avatar = {
       ...(profile.mouthsOpen || []),
       ...(profile.glasses || []),
       ...(profile.headset || []),
-    ].map((p) => String(getFullPath("src/assets/Character/" + profile.basePath + p)));
+    ].map((p) => String(getFullPath("src/assets/Character/" + profile.basePath + p))).filter((src) => !src.endsWith("/"));
 
     const promises = paths.map((src) => {
       return new Promise((resolve) => {

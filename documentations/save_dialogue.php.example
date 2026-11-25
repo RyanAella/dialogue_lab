@@ -2,80 +2,80 @@
 // save_dialogue.php
 // Endpoint for saving dialogue data for research
 // Saves each conversation as: {mode}_{scenario}_YYYY-MM-DD_HH-MM-SS.json
+//
+// DESIGN: Saving is open to all study participants (researcher token is
+// optional and only recorded as metadata). Reading/deleting server data
+// stays restricted: deletion requires the admin token (delete_dialogue.php),
+// reading server data does not exist as an endpoint at all.
+// Spam protection: mandatory Origin allowlist + file-based per-IP rate limit.
 
 // =========================================================
-// 1. CONFIGURATION: VALID RESEARCHER TOKENS
-// =========================================================
-$validTokens = [
-    '',    // ← Insert your token here
-    // 'additional_token_1',
-    // 'additional_token_2'
-];
-
-// =========================================================
-// 2. SECURITY: CORS for Dialogue Lab
+// 2. SECURITY: CORS / Origin allowlist
+//    (Access-Control-Allow-Origin goes out BEFORE the OPTIONS preflight exit)
 // =========================================================
 $allowed_origins = [
     "https://ryanaella.github.io",
     "http://localhost",
     "http://localhost:5500",
+    "http://127.0.0.1",
     "http://127.0.0.1:5500",
     "https://kite2.site"
 ];
+
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowed_origins)) {
+
+if ($origin !== '' && in_array($origin, $allowed_origins)) {
     header("Access-Control-Allow-Origin: " . $origin);
-} else {
-    // Allow all localhost/127.0.0.1 requests for development
-    if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
-        header("Access-Control-Allow-Origin: " . $origin);
-    } else {
-        header("Access-Control-Allow-Origin: *");
-    }
 }
 
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, X-Researcher-Token");
 header("Access-Control-Max-Age: 86400"); // 24h cache
 
+if (!in_array($origin, $allowed_origins)) {
+    // Covers both a foreign origin and a missing Origin header (curl etc.)
+    http_response_code(403);
+    header('Content-Type: application/json');
+    die(json_encode([
+        'error' => 'Ungültige Origin. Zugriff nicht erlaubt.'
+    ]));
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// =========================================================
-// 3. TOKEN VALIDATION (NEW!)
-// =========================================================
-$receivedToken = $_SERVER['HTTP_X_RESEARCHER_TOKEN'] ?? 'anonymous';
-
-if (!in_array($receivedToken, $validTokens)) {
-    http_response_code(403);
-    die(json_encode([
-        'error' => 'Ungültiger Forscher-Token',
-        'hint' => 'Bitte verwenden Sie einen gültigen Token aus der Forscher-Liste'
-    ]));
-}
+header('Content-Type: application/json');
 
 // =========================================================
-// 4. RATE LIMITING (protection against mass uploads)
+// 3. RATE LIMIT (file-based, per IP)
+//    Replaces the old session-based limit (ineffective: fetch requests
+//    carry no session cookie, so the counter never accumulated).
+//    Generous for study use and shared NAT IPs.
+//    Requires a writable sys_get_temp_dir().
 // =========================================================
-session_start();
-if (!isset($_SESSION['last_upload'])) {
-    $_SESSION['last_upload'] = 0;
-    $_SESSION['upload_count'] = 0;
-}
-
+$rateFile   = sys_get_temp_dir() . '/dl_save_' . md5($_SERVER['REMOTE_ADDR'] ?? 'unknown') . '.json';
+$rateWindow = 600; // 10 minutes
+$rateMax    = 60;
 $now = time();
-if ($now - $_SESSION['last_upload'] < 1) { // Max 1 Upload per second
-    $_SESSION['upload_count']++;
-    if ($_SESSION['upload_count'] > 10) { // Max 10 Uploads in 1 second
-        http_response_code(429);
-        die(json_encode(['error' => 'Too many requests. Please wait a moment.']));
-    }
-} else {
-    $_SESSION['last_upload'] = $now;
-    $_SESSION['upload_count'] = 1;
+$timestamps = [];
+if (is_file($rateFile)) {
+    $timestamps = array_filter(
+        json_decode((string) file_get_contents($rateFile), true) ?: [],
+        static function ($ts) use ($now, $rateWindow) {
+            return is_numeric($ts) && ($now - (int) $ts) < $rateWindow;
+        }
+    );
+    $timestamps = array_values($timestamps);
 }
+if (count($timestamps) >= $rateMax) {
+    http_response_code(429);
+    header('Retry-Until: ' . $rateWindow);
+    die(json_encode(['error' => 'Too many requests. Please wait a moment.']));
+}
+$timestamps[] = $now;
+file_put_contents($rateFile, json_encode($timestamps), LOCK_EX);
 
 // =========================================================
 // PAYLOAD SIZE LIMIT
@@ -89,7 +89,6 @@ if (strlen($jsonInput) > 100000) { // Max 100KB
 // =========================================================
 // PROCESS DATA
 // =========================================================
-header('Content-Type: application/json');
 $data = json_decode($jsonInput, true);
 
 if ($data === null) {
@@ -107,7 +106,10 @@ if (!isset($data['conversationId'])) {
 
 // =========================================================
 // ADD METADATA FOR RESEARCH
+// (token is recorded, NOT validated: participants have none)
 // =========================================================
+$receivedToken = $_SERVER['HTTP_X_RESEARCHER_TOKEN'] ?? 'anonymous';
+
 $data['_uploadMetadata'] = [
     'uploadedAt' => date('c'),
     'token' => $receivedToken,
